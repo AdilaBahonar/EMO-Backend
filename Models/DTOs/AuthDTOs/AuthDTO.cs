@@ -1,0 +1,32 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace P3AHR.Models.DTOs.AuthDTOs
+{
+    public class UserLoginDTO
+    {
+        [Required]
+        public string userOfficalEmailAddress { get; set; } = string.Empty;
+        [Required]
+        public string password { get; set; } = string.Empty;
+        public bool isRememberMe = false;
+    }
+    public class UserAppLoginDTO
+    {
+        [Required]
+        public string userPhoneNo { get; set; } = string.Empty;
+        [Required]
+        public string password { get; set; } = string.Empty;
+    }
+    public class ForgotPasswordDTO
+    {
+        [Required]
+        public string userOfficalEmailAddress { get; set; } = string.Empty;
+    }
+    public class UserLoginResponseDTO
+    {
+        public string userId { get; set; } = string.Empty;
+        public string userName { get; set; } = string.Empty;
+        public string userOfficialEmail { get; set; } = string.Empty;
+        public string userToken { get; set; } = string.Empty;
+    }
+}
