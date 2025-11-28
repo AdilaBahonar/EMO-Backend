@@ -47,7 +47,7 @@ namespace P3AHR.Repositories.UserServicesRepo
             {
                 return new ResponseModel<UserResponseDTO>()
                 {
-                    remarks = $"There was a  fatal error: {ex.ToString()}",
+                    remarks = $"There was a  fatal error.",
                     success = false,
                 };
             }
