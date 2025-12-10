@@ -1,5 +1,4 @@
 ﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DBModels.tbl_Configuration;
 using Microsoft.EntityFrameworkCore;
 using P3AHR.Models.DBModels.DBTables;
 using System.Linq;
@@ -37,13 +36,72 @@ namespace P3AHR.Models.DBModels
                 .HasOne(p => p.user_type)
                 .WithMany(b => b.users)
                 .HasForeignKey(p => p.fk_user_type)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_business>()
+               .HasOne(p => p.user)
+               .WithMany(b => b.businesses)
+               .HasForeignKey(p => p.fk_user)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_facility>()
+               .HasOne(p => p.business)
+               .WithMany(b => b.facilities)
+               .HasForeignKey(p => p.fk_business)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_building>()
+             .HasOne(p => p.facility)
+             .WithMany(b => b.buildings)
+             .HasForeignKey(p => p.fk_facility)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_floor>()
+               .HasOne(p => p.building)
+               .WithMany(b => b.floors)
+               .HasForeignKey(p => p.fk_building)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_section>()
+             .HasOne(p => p.floor)
+             .WithMany(b => b.sections)
+             .HasForeignKey(p => p.fk_floor)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_office>()
+               .HasOne(p => p.section)
+               .WithMany(b => b.offices)
+               .HasForeignKey(p => p.fk_section)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_device>()
+              .HasOne(p => p.office)
+              .WithMany(b => b.devices)
+              .HasForeignKey(p => p.fk_office)
+              .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<tbl_device>()
+              .HasOne(p => p.control_type)
+              .WithMany(b => b.devices)
+              .HasForeignKey(p => p.fk_control_type)
+              .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<tbl_device>()
+             .HasOne(p => p.device_type)
+             .WithMany(b => b.devices)
+             .HasForeignKey(p => p.fk_device_type)
+             .OnDelete(DeleteBehavior.Restrict);
             #endregion
-           // modelBuilder.ApplyConfiguration(new tbl_user_type_config());
-           // modelBuilder.ApplyConfiguration(new tbl_user_Config());
 
         }
         public DbSet<tbl_user> tbl_user { get; set; }
         public DbSet<tbl_user_type> tbl_user_type { get; set; }
+        public DbSet<tbl_device> tbl_device { get; set; }
+        public DbSet<tbl_device_type> tbl_device_type { get; set; }
+        public DbSet<tbl_control_type> tbl_control_type { get; set; }
+        public DbSet<tbl_business> tbl_business { get; set; }
+        public DbSet<tbl_facility> tbl_facility { get; set; }
+        public DbSet<tbl_building> tbl_building { get; set; }
+        public DbSet<tbl_floor> tbl_floor { get; set; }
+        public DbSet<tbl_section> tbl_section { get; set; }
+        public DbSet<tbl_office> tbl_office { get; set; }
     }
 }
