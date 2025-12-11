@@ -16,6 +16,7 @@ namespace P3AHR.Models.DBModels.DBTables
         public string user_password { get; set; } = new OtherServices().encodePassword("12345");
         public Guid? fk_user_type { get; set; } = Guid.Empty;
         public tbl_user_type user_type { get; set; } = default!;
+        public IEnumerable<tbl_business> businesses { get; set; } = default!;
         //public Guid fk_user_type { get; set; } = default!;
         //public tbl_user_type user_type { get; set; } = default!;
         //public tbl_user_designation user_designation { get; set; } = default!;

@@ -7,6 +7,12 @@ using P3AHR.Repositories.UserServicesRepo;
 using P3AHR.Repositories.AuthServicesRepo;
 using P3AHR.Repositories.InnerServicesRepo;
 using APIProduct.Repositories.UserTypeServicesRepo;
+using APIProduct.Repositories.BusinessServicesRepo;
+using APIProduct.Repositories.BuildingServicesRepo;
+using APIProduct.Repositories.FacilityServicesRepo;
+using APIProduct.Repositories.SectionServicesRepo;
+using APIProduct.Repositories.FloorServicesRepo;
+using APIProduct.Repositories.OfficeServicesRepo;
 
 namespace P3AHR.Extensions
 {
@@ -44,7 +50,12 @@ namespace P3AHR.Extensions
             services.AddTransient<IAuthServices, AuthServices>();
             services.AddTransient<IInnerServices, InnerServices>();
             services.AddTransient<IUserTypeService, UserTypeService>();
-
+            services.AddTransient<IBusinessServices, BusinessServices>();
+            services.AddTransient<IBuildingServices, BuildingServices>();
+            services.AddTransient<IFacilityServices, FacilityServices>();
+            services.AddTransient<ISectionServices, SectionServices>();
+            services.AddTransient<IFloorServices, FloorServices>();
+            services.AddTransient<IOfficeServices, OfficeServices>();
         }
     }
 }

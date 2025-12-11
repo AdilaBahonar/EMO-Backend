@@ -7,41 +7,47 @@ namespace P3AHR.Extensions
     {
         public bool Check(object model)
         {
-
-            if (model != null)
-            {
-                if (model.GetType() == typeof(byte[]))
-                {
-                    try
-                    {
-                        byte[] newLogo = Convert.FromBase64String(model.ToString());
-                        if (newLogo.Length > 0 && newLogo != null)
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return false;
-                    }
-                }
-                if (!string.IsNullOrEmpty(model.ToString()))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
+            if (model == null)
             {
                 return false;
             }
+
+            if (model is int intValue)
+            {
+                return intValue != 0;
+            }
+
+            if (model is byte[] byteArray)
+            {
+                return byteArray.Length > 0;
+            }
+
+            if (model is string str)
+            {
+                return !string.IsNullOrEmpty(str);
+            }
+
+            if (model is bool boolValue)
+            {
+                return boolValue;
+            }
+
+            if (model is float floatValue)
+            {
+                return floatValue != 0.0f;
+            }
+
+            if (model is double doubleValue)
+            {
+                return doubleValue != 0.0;
+            }
+
+            if (model is decimal decimalValue)
+            {
+                return decimalValue != 0.0m;
+            }
+
+            return false;
         }
         public Guid[] ConvertIntoGuidLists(List<string> model)
         {

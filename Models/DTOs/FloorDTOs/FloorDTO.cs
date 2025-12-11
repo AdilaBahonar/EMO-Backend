@@ -1,0 +1,30 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace APIProduct.Models.DTOs.FloorDTOs
+{
+    public class AddFloorDTO
+    {
+        [Required]
+        public string floorName { get; set; } = string.Empty;
+        [Required]
+        public string fkBuilding { get; set; } = string.Empty;
+        public int floorNo { get; set; } = 0;
+    }
+    public class UpdateFloorDTO
+    {
+        [Required]
+        public string floorId { get; set; } = string.Empty;
+        public string floorName { get; set; } = string.Empty;
+        public int floorNo { get; set; } = 0;
+        public string fkBuilding { get; set; } = string.Empty;
+    }
+    public class FloorResponseDTO
+    {
+        [Required]
+        public string floorId { get; set; } = string.Empty;
+        public string floorName { get; set; } = string.Empty;
+        public int floorNo { get; set; } = 0;
+        public string fkBuilding { get; set; } = string.Empty;
+        public string buildingName { get; set; } = string.Empty;
+    }
+}
