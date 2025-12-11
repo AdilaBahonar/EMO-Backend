@@ -1,37 +1,38 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using APIProduct.Models.DTOs.BuildingDTOs;
+using APIProduct.Repositories.BuildingServicesRepo;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions.MiddleWare;
 using P3AHR.Extensions;
+using P3AHR.Extensions.MiddleWare;
 using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.InnerServicesRepo;
-using APIProduct.Repositories.UserTypeServicesRepo;
-using APIProduct.Models.DTOs.UserTypeDTOs;
 
 namespace APIProduct.Controllers
 {
     [ApiKey]
     [Route("api/[controller]")]
     [ApiController]
-    public class UserTypeController : ControllerBase
+    public class BuildingController : ControllerBase
     {
-        private readonly IUserTypeService UserTypeService;
+        private readonly IBuildingServices BuildingServices;
         private readonly OtherServices otherServices;
-        public UserTypeController(IUserTypeService UserTypeService, OtherServices otherServices)
+
+        public BuildingController(IBuildingServices BuildingServices, OtherServices otherServices)
         {
-            this.UserTypeService = UserTypeService;
+            this.BuildingServices = BuildingServices;
             this.otherServices = otherServices;
         }
+
         [HttpPost]
-        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> Post(AddUserTypeDTO model)
+        public async Task<ActionResult<ResponseModel<BuildingResponseDTO>>> Post(AddBuildingDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = UserTypeService.AddUserType(model);
+                var Response = BuildingServices.AddBuilding(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<BuildingResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -39,17 +40,18 @@ namespace APIProduct.Controllers
                 return BadRequest(Response);
             }
         }
+
         [HttpPut]
-        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> Put(UpdateUserTypeDTO model)
+        public async Task<ActionResult<ResponseModel<BuildingResponseDTO>>> Put(UpdateBuildingDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = UserTypeService.UpdateUserType(model);
+                var Response = BuildingServices.UpdateBuilding(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<BuildingResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -57,36 +59,38 @@ namespace APIProduct.Controllers
                 return BadRequest(Response);
             }
         }
+
         [HttpGet("GetById")]
-        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> GetById(string id)
+        public async Task<ActionResult<ResponseModel<BuildingResponseDTO>>> GetById(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = UserTypeService.GetUserTypeById(id);
+                var Response = BuildingServices.GetBuildingById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<BuildingResponseDTO>()
                 {
-                    remarks = "UserType not found by ID",
+                    remarks = "Building not found by ID",
                     success = false
                 };
                 return BadRequest(Response);
             }
         }
+
         [HttpGet]
-        public async Task<ActionResult<ResponseModel<List<UserTypeResponseDTO>>>> Get()
+        public async Task<ActionResult<ResponseModel<List<BuildingResponseDTO>>>> Get()
         {
-            var UserTypes = await UserTypeService.GetAllUserTypes();
-            if (UserTypes != null)
+            var Buildings = await BuildingServices.GetAllBuildings();
+            if (Buildings != null)
             {
-                var Response = UserTypes;
+                var Response = Buildings;
                 return Ok(Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<BuildingResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -94,23 +98,25 @@ namespace APIProduct.Controllers
                 return BadRequest(Response);
             }
         }
+
         [HttpDelete]
         public async Task<ActionResult<ResponseModel>> Delete(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = UserTypeService.DeleteUserTypeById(id);
+                var Response = BuildingServices.DeleteBuildingById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<BuildingResponseDTO>()
                 {
-                    remarks = "UserType not found",
+                    remarks = "Building not found",
                     success = false
                 };
                 return BadRequest(Response);
             }
         }
     }
+
 }

@@ -1,37 +1,38 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using APIProduct.Models.DTOs.FloorDTOs;
+using APIProduct.Repositories.FloorServicesRepo;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions.MiddleWare;
 using P3AHR.Extensions;
+using P3AHR.Extensions.MiddleWare;
 using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.InnerServicesRepo;
-using APIProduct.Repositories.UserTypeServicesRepo;
-using APIProduct.Models.DTOs.UserTypeDTOs;
 
 namespace APIProduct.Controllers
 {
     [ApiKey]
     [Route("api/[controller]")]
     [ApiController]
-    public class UserTypeController : ControllerBase
+    public class FloorController : ControllerBase
     {
-        private readonly IUserTypeService UserTypeService;
+        private readonly IFloorServices FloorServices;
         private readonly OtherServices otherServices;
-        public UserTypeController(IUserTypeService UserTypeService, OtherServices otherServices)
+
+        public FloorController(IFloorServices FloorServices, OtherServices otherServices)
         {
-            this.UserTypeService = UserTypeService;
+            this.FloorServices = FloorServices;
             this.otherServices = otherServices;
         }
+
         [HttpPost]
-        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> Post(AddUserTypeDTO model)
+        public async Task<ActionResult<ResponseModel<FloorResponseDTO>>> Post(AddFloorDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = UserTypeService.AddUserType(model);
+                var Response = FloorServices.AddFloor(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<FloorResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -39,17 +40,18 @@ namespace APIProduct.Controllers
                 return BadRequest(Response);
             }
         }
+
         [HttpPut]
-        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> Put(UpdateUserTypeDTO model)
+        public async Task<ActionResult<ResponseModel<FloorResponseDTO>>> Put(UpdateFloorDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = UserTypeService.UpdateUserType(model);
+                var Response = FloorServices.UpdateFloor(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<FloorResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -57,36 +59,38 @@ namespace APIProduct.Controllers
                 return BadRequest(Response);
             }
         }
+
         [HttpGet("GetById")]
-        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> GetById(string id)
+        public async Task<ActionResult<ResponseModel<FloorResponseDTO>>> GetById(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = UserTypeService.GetUserTypeById(id);
+                var Response = FloorServices.GetFloorById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<FloorResponseDTO>()
                 {
-                    remarks = "UserType not found by ID",
+                    remarks = "Floor not found by ID",
                     success = false
                 };
                 return BadRequest(Response);
             }
         }
+
         [HttpGet]
-        public async Task<ActionResult<ResponseModel<List<UserTypeResponseDTO>>>> Get()
+        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> Get()
         {
-            var UserTypes = await UserTypeService.GetAllUserTypes();
-            if (UserTypes != null)
+            var Floors = await FloorServices.GetAllFloors();
+            if (Floors != null)
             {
-                var Response = UserTypes;
+                var Response = Floors;
                 return Ok(Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<FloorResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -94,23 +98,25 @@ namespace APIProduct.Controllers
                 return BadRequest(Response);
             }
         }
+
         [HttpDelete]
         public async Task<ActionResult<ResponseModel>> Delete(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = UserTypeService.DeleteUserTypeById(id);
+                var Response = FloorServices.DeleteFloorById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<UserTypeResponseDTO>()
+                var Response = new ResponseModel<FloorResponseDTO>()
                 {
-                    remarks = "UserType not found",
+                    remarks = "Floor not found",
                     success = false
                 };
                 return BadRequest(Response);
             }
         }
     }
+
 }
