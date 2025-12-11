@@ -1,5 +1,4 @@
 ﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DBModels.tbl_Configuration;
 using Microsoft.EntityFrameworkCore;
 using P3AHR.Models.DBModels.DBTables;
 using System.Linq;
@@ -45,5 +44,7 @@ namespace P3AHR.Models.DBModels
         }
         public DbSet<tbl_user> tbl_user { get; set; }
         public DbSet<tbl_user_type> tbl_user_type { get; set; }
+       
+      
     }
 }
