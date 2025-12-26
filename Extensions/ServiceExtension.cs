@@ -13,6 +13,9 @@ using APIProduct.Repositories.FacilityServicesRepo;
 using APIProduct.Repositories.SectionServicesRepo;
 using APIProduct.Repositories.FloorServicesRepo;
 using APIProduct.Repositories.OfficeServicesRepo;
+using APIProduct.Repositories.DeviceServicesRepo;
+using APIProduct.Repositories.DeviceTypeServicesRepo;
+using APIProduct.Repositories.PocServicesRepo;
 
 namespace P3AHR.Extensions
 {
@@ -56,6 +59,10 @@ namespace P3AHR.Extensions
             services.AddTransient<ISectionServices, SectionServices>();
             services.AddTransient<IFloorServices, FloorServices>();
             services.AddTransient<IOfficeServices, OfficeServices>();
+            services.AddTransient<IControlTypeServices, ControlTypeServices>();
+            services.AddTransient<IDeviceServices, DeviceServices>();
+            services.AddTransient<IDeviceTypeServices, DeviceTypeServices>();
+            services.AddTransient<IPocServices, PocServices>();
         }
     }
 }

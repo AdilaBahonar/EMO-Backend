@@ -11,9 +11,9 @@ namespace APIProduct.Extensions.AutoMapper
         private readonly OtherServices otherServices = new();
         public BuildingMapper()
         {
-            CreateMap<AddBusinessDTO, tbl_building>()
-             .ForMember(d => d.building_name, opt => opt.MapFrom(src => src.businessName))
-             .ForMember(d => d.fk_facility, opt => opt.MapFrom(src => Guid.Parse(src.fkUser)));
+            CreateMap<AddBuildingDTO, tbl_building>()
+             .ForMember(d => d.building_name, opt => opt.MapFrom(src => src.buildingName))
+             .ForMember(d => d.fk_facility, opt => opt.MapFrom(src => Guid.Parse(src.fkFacility)));
             CreateMap<UpdateBuildingDTO, tbl_building>()
               .ForMember(d => d.building_name, opt => opt.MapFrom((src, dest) => otherServices.Check(src.buildingName) ? src.buildingName : dest.building_name))
               .ForMember(d => d.fk_facility, opt => opt.MapFrom((src, dest) => otherServices.Check(src.fkFacility) ? Guid.Parse(src.fkFacility) : dest.fk_facility));

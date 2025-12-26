@@ -1,5 +1,7 @@
-﻿using APIProduct.Models.DTOs.SectionDTOs;
-using APIProduct.Repositories.SectionServicesRepo;
+﻿using APIProduct.Models.DTOs.BuildingDTOs;
+using APIProduct.Models.DTOs.ControlTypeDTOs;
+using APIProduct.Repositories.BuildingServicesRepo;
+using APIProduct.Repositories.BusinessServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using P3AHR.Extensions;
@@ -8,31 +10,30 @@ using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace APIProduct.Controllers
 {
-  
     [Route("api/[controller]")]
     [ApiController]
-    public class SectionController : ControllerBase
+    public class ControlTypeController : ControllerBase
     {
-        private readonly ISectionServices SectionServices;
+        private readonly IControlTypeServices ControlTypeServices;
         private readonly OtherServices otherServices;
 
-        public SectionController(ISectionServices SectionServices, OtherServices otherServices)
+        public ControlTypeController(IControlTypeServices ControlTypeServices, OtherServices otherServices)
         {
-            this.SectionServices = SectionServices;
+            this.ControlTypeServices = ControlTypeServices;
             this.otherServices = otherServices;
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseModel<SectionResponseDTO>>> Post(AddSectionDTO model)
+        public async Task<ActionResult<ResponseModel<ControlTypeResponseDTO>>> Post(AddControlTypeDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = SectionServices.AddSection(model);
+                var Response = ControlTypeServices.AddControlType(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<ControlTypeResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -42,16 +43,16 @@ namespace APIProduct.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<ResponseModel<SectionResponseDTO>>> Put(UpdateSectionDTO model)
+        public async Task<ActionResult<ResponseModel<ControlTypeResponseDTO>>> Put(UpdateControlTypeDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = SectionServices.UpdateSection(model);
+                var Response = ControlTypeServices.UpdateControlType(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<ControlTypeResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -61,18 +62,18 @@ namespace APIProduct.Controllers
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<ResponseModel<SectionResponseDTO>>> GetById(string id)
+        public async Task<ActionResult<ResponseModel<ControlTypeResponseDTO>>> GetById(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = SectionServices.GetSectionById(id);
+                var Response = ControlTypeServices.GetControlTypeById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<ControlTypeResponseDTO>()
                 {
-                    remarks = "Section not found by ID",
+                    remarks = "Control Type not found by ID",
                     success = false
                 };
                 return BadRequest(Response);
@@ -80,17 +81,17 @@ namespace APIProduct.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseModel<List<SectionResponseDTO>>>> Get()
+        public async Task<ActionResult<ResponseModel<List<ControlTypeResponseDTO>>>> Get()
         {
-            var Sections = await SectionServices.GetAllSections();
-            if (Sections != null)
+            var ControlTypes = await ControlTypeServices.GetAllControlTypes();
+            if (ControlTypes != null)
             {
-                var Response = Sections;
+                var Response = ControlTypes;
                 return Ok(Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<ControlTypeResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -104,14 +105,14 @@ namespace APIProduct.Controllers
         {
             if (otherServices.Check(id))
             {
-                var Response = SectionServices.DeleteSectionById(id);
+                var Response = ControlTypeServices.DeleteControlTypeById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<ControlTypeResponseDTO>()
                 {
-                    remarks = "Section not found",
+                    remarks = "Control Type not found",
                     success = false
                 };
                 return BadRequest(Response);
@@ -120,3 +121,5 @@ namespace APIProduct.Controllers
     }
 
 }
+   
+

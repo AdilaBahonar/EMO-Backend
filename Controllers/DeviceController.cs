@@ -1,5 +1,7 @@
-﻿using APIProduct.Models.DTOs.SectionDTOs;
-using APIProduct.Repositories.SectionServicesRepo;
+﻿using APIProduct.Models.DTOs.BuildingDTOs;
+using APIProduct.Models.DTOs.DeviceDTOs;
+using APIProduct.Repositories.BuildingServicesRepo;
+using APIProduct.Repositories.DeviceServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using P3AHR.Extensions;
@@ -8,31 +10,31 @@ using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace APIProduct.Controllers
 {
-  
+    [ApiKey]
     [Route("api/[controller]")]
     [ApiController]
-    public class SectionController : ControllerBase
+    public class DeviceController : ControllerBase
     {
-        private readonly ISectionServices SectionServices;
+        private readonly  IDeviceServices DeviceServices;
         private readonly OtherServices otherServices;
 
-        public SectionController(ISectionServices SectionServices, OtherServices otherServices)
+        public DeviceController(IDeviceServices DeviceServices, OtherServices otherServices)
         {
-            this.SectionServices = SectionServices;
+            this.DeviceServices = DeviceServices;
             this.otherServices = otherServices;
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseModel<SectionResponseDTO>>> Post(AddSectionDTO model)
+        public async Task<ActionResult<ResponseModel<DeviceResponseDTO>>> Post(AddDeviceDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = SectionServices.AddSection(model);
+                var Response = DeviceServices.AddDevice(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<DeviceResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -42,16 +44,16 @@ namespace APIProduct.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<ResponseModel<SectionResponseDTO>>> Put(UpdateSectionDTO model)
+        public async Task<ActionResult<ResponseModel<DeviceResponseDTO>>> Put(UpdateDeviceDTO model)
         {
             if (ModelState.IsValid)
             {
-                var Response = SectionServices.UpdateSection(model);
+                var Response = DeviceServices.UpdateDevice(model);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<DeviceResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -61,18 +63,18 @@ namespace APIProduct.Controllers
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<ResponseModel<SectionResponseDTO>>> GetById(string id)
+        public async Task<ActionResult<ResponseModel<DeviceResponseDTO>>> GetById(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = SectionServices.GetSectionById(id);
+                var Response = DeviceServices.GetDeviceById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<DeviceResponseDTO>()
                 {
-                    remarks = "Section not found by ID",
+                    remarks = "Device not found by ID",
                     success = false
                 };
                 return BadRequest(Response);
@@ -80,17 +82,17 @@ namespace APIProduct.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseModel<List<SectionResponseDTO>>>> Get()
+        public async Task<ActionResult<ResponseModel<List<DeviceResponseDTO>>>> Get()
         {
-            var Sections = await SectionServices.GetAllSections();
-            if (Sections != null)
+            var Devices = await DeviceServices.GetAllDevices();
+            if (Devices != null)
             {
-                var Response = Sections;
+                var Response = Devices;
                 return Ok(Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<DeviceResponseDTO>()
                 {
                     remarks = "Model Not Verified",
                     success = false
@@ -104,19 +106,18 @@ namespace APIProduct.Controllers
         {
             if (otherServices.Check(id))
             {
-                var Response = SectionServices.DeleteSectionById(id);
+                var Response = DeviceServices.DeleteDeviceById(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<SectionResponseDTO>()
+                var Response = new ResponseModel<DeviceResponseDTO>()
                 {
-                    remarks = "Section not found",
+                    remarks = "Device not found",
                     success = false
                 };
                 return BadRequest(Response);
             }
         }
     }
-
 }

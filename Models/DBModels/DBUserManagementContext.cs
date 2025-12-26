@@ -94,10 +94,6 @@ namespace P3AHR.Models.DBModels
         }
         public DbSet<tbl_user> tbl_user { get; set; }
         public DbSet<tbl_user_type> tbl_user_type { get; set; }
-<<<<<<< HEAD
-       
-      
-=======
         public DbSet<tbl_device> tbl_device { get; set; }
         public DbSet<tbl_device_type> tbl_device_type { get; set; }
         public DbSet<tbl_control_type> tbl_control_type { get; set; }
@@ -107,6 +103,6 @@ namespace P3AHR.Models.DBModels
         public DbSet<tbl_floor> tbl_floor { get; set; }
         public DbSet<tbl_section> tbl_section { get; set; }
         public DbSet<tbl_office> tbl_office { get; set; }
->>>>>>> ae95e1bf571281b2dac8150d3f5eaa2abf4d25d6
+        public DbSet<tbl_poc> tbl_poc { get; set; }
     }
 }

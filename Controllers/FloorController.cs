@@ -22,7 +22,8 @@ namespace APIProduct.Controllers
             this.otherServices = otherServices;
         }
 
-        [HttpPost]
+        [HttpPost("AddFloor")]
+
         public async Task<ActionResult<ResponseModel<FloorResponseDTO>>> Post(AddFloorDTO model)
         {
             if (ModelState.IsValid)

@@ -40,7 +40,6 @@ namespace P3AHR.Repositories.AuthServicesRepo
                     if (existingUser.data.userPassword == otherServices.encodePassword(requestDto.password))
                     {
                         var response = await Login(existingUser.data, requestDto.isRememberMe);
-                        // Authentication successful
                         return new ResponseModel<UserLoginResponseDTO>
                         {
                             data = response.data,
@@ -50,7 +49,6 @@ namespace P3AHR.Repositories.AuthServicesRepo
                     }
                     else
                     {
-                        // Authentication failed
 
                         return new ResponseModel<UserLoginResponseDTO>
                         {
