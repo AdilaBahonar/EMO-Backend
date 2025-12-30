@@ -1,11 +1,11 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.FacilityDTOs;
-using EMO.Models.DTOs.FloorDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.FacilityDTOs;
+using APIProduct.Models.DTOs.FloorDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore.Update.Internal;
-using EMO.Extensions;
+using P3AHR.Extensions;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class FloorMapper : Profile
     {

@@ -1,6 +1,6 @@
-﻿using EMO.Models.DTOs.ResponseDTO;
+﻿using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Models.DTOs.LoginDTOs
+namespace P3AHR.Models.DTOs.LoginDTOs
 {
     public class LoginResponseDTO : ResponseModel
     {

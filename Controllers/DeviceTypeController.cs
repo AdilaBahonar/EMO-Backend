@@ -1,13 +1,13 @@
-﻿using EMO.Models.DTOs.BuildingDTOs;
-using EMO.Models.DTOs.DeviceTypeDTOs;
-using EMO.Repositories.BuildingServicesRepo;
-using EMO.Repositories.DeviceTypeServicesRepo;
+﻿using APIProduct.Models.DTOs.BuildingDTOs;
+using APIProduct.Models.DTOs.DeviceTypeDTOs;
+using APIProduct.Repositories.BuildingServicesRepo;
+using APIProduct.Repositories.DeviceTypeServicesRepo;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Extensions;
+using P3AHR.Extensions.MiddleWare;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Controllers
+namespace APIProduct.Controllers
 {
     
     [Route("api/[controller]")]

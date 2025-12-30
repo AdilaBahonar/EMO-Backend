@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
-namespace EMO.Extensions
+namespace P3AHR.Extensions
 {
     public static class AuthorizationExtension
     {

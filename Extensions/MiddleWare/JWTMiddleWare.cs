@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using EMO.Repositories.JWTUtilsRepo;
+using P3AHR.Repositories.JWTUtilsRepo;
 
-namespace EMO.Extensions.MiddleWare
+namespace P3AHR.Extensions.MiddleWare
 {
     public class JWTMiddleWare
     {

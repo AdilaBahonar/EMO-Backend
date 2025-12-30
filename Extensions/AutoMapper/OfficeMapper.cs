@@ -1,10 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.OfficeDTOs;
-using EMO.Models.DTOs.SectionDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.OfficeDTOs;
+using APIProduct.Models.DTOs.SectionDTOs;
 using AutoMapper;
-using EMO.Extensions;
+using P3AHR.Extensions;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class OfficeMapper : Profile
     {

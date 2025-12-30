@@ -1,8 +1,8 @@
-﻿using EMO.Models.DTOs.DeviceDTOs;
-using EMO.Models.DTOs.ResponseDTO;
+﻿using APIProduct.Models.DTOs.DeviceDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 using System.Threading.Tasks;
 
-namespace EMO.Repositories.DeviceServicesRepo
+namespace APIProduct.Repositories.DeviceServicesRepo
 {
     public interface IDeviceServices
     {

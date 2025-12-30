@@ -1,8 +1,7 @@
-﻿using EMO.Models.DTOs.BusinessDTOs;
-using 
-    .Models.DTOs.ResponseDTO;
+﻿using APIProduct.Models.DTOs.BusinessDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BusinessServicesRepo
+namespace APIProduct.Repositories.BusinessServicesRepo
 {
     public interface IBusinessServices
     {

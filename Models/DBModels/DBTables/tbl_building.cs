@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DBModels.DBTables
+namespace APIProduct.Models.DBModels.DBTables
 {
     public class tbl_building
     {

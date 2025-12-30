@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace EMO.Extensions.MiddleWare
+namespace P3AHR.Extensions.MiddleWare
 {
     public class ApiKeyAttribute : ServiceFilterAttribute
     {

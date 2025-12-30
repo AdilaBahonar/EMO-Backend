@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Drawing.Printing;
 
-namespace EMO.Models.DTOs.ControlTypeDTOs
+namespace APIProduct.Models.DTOs.ControlTypeDTOs
 {
     public class AddControlTypeDTO
     {

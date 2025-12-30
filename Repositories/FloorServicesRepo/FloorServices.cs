@@ -1,11 +1,11 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.FloorDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.FloorDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using EMO.Models.DBModels;
-using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DBModels;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.FloorServicesRepo
+namespace APIProduct.Repositories.FloorServicesRepo
 {
     public class FloorServices : IFloorServices
     {

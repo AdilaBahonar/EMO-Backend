@@ -1,12 +1,11 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BusinessDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.BusinessDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using 
-    .Models.DBModels;
-using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DBModels;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BusinessServicesRepo
+namespace APIProduct.Repositories.BusinessServicesRepo
 {
     public class BusinessServices : IBusinessServices
     {

@@ -1,7 +1,7 @@
-﻿using EMO.Models.DBModels.DBTables;
+﻿using P3AHR.Models.DBModels.DBTables;
 using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DBModels.DBTables
+namespace APIProduct.Models.DBModels.DBTables
 {
     public class tbl_facility
     {

@@ -1,8 +1,8 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Extensions;
+﻿using APIProduct.Models.DBModels.DBTables;
+using P3AHR.Extensions;
 using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DBModels.DBTables
+namespace P3AHR.Models.DBModels.DBTables
 {
     public class tbl_user
     {

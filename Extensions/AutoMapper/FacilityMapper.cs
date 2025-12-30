@@ -1,10 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BusinessDTOs;
-using EMO.Models.DTOs.FacilityDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.BusinessDTOs;
+using APIProduct.Models.DTOs.FacilityDTOs;
 using AutoMapper;
-using EMO.Extensions;
+using P3AHR.Extensions;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class FacilityMapper : Profile
     {

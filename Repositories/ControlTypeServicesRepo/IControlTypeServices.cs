@@ -1,8 +1,8 @@
-﻿using EMO.Models.DTOs.BusinessDTOs;
-using EMO.Models.DTOs.ControlTypeDTOs;
-using EMO.Models.DTOs.ResponseDTO;
+﻿using APIProduct.Models.DTOs.BusinessDTOs;
+using APIProduct.Models.DTOs.ControlTypeDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BusinessServicesRepo
+namespace APIProduct.Repositories.BusinessServicesRepo
 {
     public interface IControlTypeServices
     {

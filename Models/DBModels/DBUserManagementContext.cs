@@ -1,10 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
+﻿using APIProduct.Models.DBModels.DBTables;
 using Microsoft.EntityFrameworkCore;
-using EMO.Models.DBModels.DBTables;
+using P3AHR.Models.DBModels.DBTables;
 using System.Linq;
 using System.Net;
 
-namespace EMO.Models.DBModels
+namespace P3AHR.Models.DBModels
 {
     public class DBUserManagementContext : DbContext
     {

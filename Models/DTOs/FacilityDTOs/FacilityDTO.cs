@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DTOs.FacilityDTOs
+namespace APIProduct.Models.DTOs.FacilityDTOs
 {
     public class AddFacilityDTO
     {

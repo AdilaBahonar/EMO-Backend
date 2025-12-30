@@ -1,15 +1,15 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using EMO.Models.DBModels;
-using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.UserDTOs;
-using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DBModels;
+using P3AHR.Models.DBModels.DBTables;
+using P3AHR.Models.DTOs.UserDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace EMO.Repositories.JWTUtilsRepo
+namespace P3AHR.Repositories.JWTUtilsRepo
 {
     public class JWTUtils : IJWTUtils
     {

@@ -1,8 +1,7 @@
-﻿using EMO.Models.DTOs.OfficeDTOs;
-using 
-    .Models.DTOs.ResponseDTO;
+﻿using APIProduct.Models.DTOs.OfficeDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.OfficeServicesRepo
+namespace APIProduct.Repositories.OfficeServicesRepo
 {
     public interface IOfficeServices
     {

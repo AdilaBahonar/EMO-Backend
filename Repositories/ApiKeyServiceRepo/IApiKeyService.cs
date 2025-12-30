@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace EMO.Repositories.ApiKeyServiceRepo
+namespace P3AHR.Repositories.ApiKeyServiceRepo
 {
     public interface IApiKeyService
     {

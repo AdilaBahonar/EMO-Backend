@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using EMO.Extensions;
-using EMO.Models.DTOs.AuthDTOs;
-using EMO.Models.DTOs.UserDTOs;
+using P3AHR.Extensions;
+using P3AHR.Models.DTOs.AuthDTOs;
+using P3AHR.Models.DTOs.UserDTOs;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class AuthMapper : Profile
     {

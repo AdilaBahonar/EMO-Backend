@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DTOs.AuthDTOs
+namespace P3AHR.Models.DTOs.AuthDTOs
 {
     public class UserLoginDTO
     {

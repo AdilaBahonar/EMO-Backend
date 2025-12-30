@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.UserDTOs;
-using EMO.Models.DTOs.ResponseDTO;
-using EMO.Repositories.UserServicesRepo;
-using EMO.Repositories.InnerServicesRepo;
+using P3AHR.Extensions;
+using P3AHR.Extensions.MiddleWare;
+using P3AHR.Models.DTOs.UserDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
+using P3AHR.Repositories.UserServicesRepo;
+using P3AHR.Repositories.InnerServicesRepo;
 using Microsoft.AspNetCore.Authorization;
 
-namespace EMO.Controllers
+namespace P3AHR.Controllers
 {
     [ApiKey]
     [Route("api/[controller]")]

@@ -1,10 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.UserTypeDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.UserTypeDTOs;
 using AutoMapper;
-using EMO.Extensions;
-using EMO.Models.DTOs.UserDTOs;
+using P3AHR.Extensions;
+using P3AHR.Models.DTOs.UserDTOs;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class UserTypeMapper : Profile
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DTOs.UserTypeDTOs
+namespace APIProduct.Models.DTOs.UserTypeDTOs
 {
     public class AddUserTypeDTO
     {

@@ -1,10 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.DeviceDTOs;
-using EMO.Models.DTOs.DeviceTypeDTOs;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.DeviceDTOs;
+using APIProduct.Models.DTOs.DeviceTypeDTOs;
 using AutoMapper;
-using EMO.Extensions;
+using P3AHR.Extensions;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class DeviceTypeMapper : Profile
     {

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Repositories.ApiKeyServiceRepo;
-using EMO.Models.DTOs.UserDTOs;
+using P3AHR.Repositories.ApiKeyServiceRepo;
+using P3AHR.Models.DTOs.UserDTOs;
 
-namespace EMO.Extensions.MiddleWare
+namespace P3AHR.Extensions.MiddleWare
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class UserAuthorizeAttribute : Attribute, IAuthorizationFilter

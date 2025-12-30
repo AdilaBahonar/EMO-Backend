@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using EMO.Extensions;
-using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.UserDTOs;
+using P3AHR.Extensions;
+using P3AHR.Models.DBModels.DBTables;
+using P3AHR.Models.DTOs.UserDTOs;
 
-namespace EMO.Extensions.AutoMapper
+namespace APIProduct.Extensions.AutoMapper
 {
     public class UserMapper : Profile
     {

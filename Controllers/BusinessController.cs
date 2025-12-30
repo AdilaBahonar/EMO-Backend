@@ -1,12 +1,12 @@
-﻿using EMO.Models.DTOs.BusinessDTOs;
-using EMO.Repositories.BusinessServicesRepo;
+﻿using APIProduct.Models.DTOs.BusinessDTOs;
+using APIProduct.Repositories.BusinessServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Extensions;
+using P3AHR.Extensions.MiddleWare;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Controllers
+namespace APIProduct.Controllers
 {
     [ApiKey]
     [Route("api/[controller]")]

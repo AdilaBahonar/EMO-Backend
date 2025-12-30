@@ -1,8 +1,7 @@
-﻿using EMO.Models.DTOs.FacilityDTOs;
-using 
-    .Models.DTOs.ResponseDTO;
+﻿using APIProduct.Models.DTOs.FacilityDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.FacilityServicesRepo
+namespace APIProduct.Repositories.FacilityServicesRepo
 {
     public interface IFacilityServices
     {

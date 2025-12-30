@@ -1,15 +1,15 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BuildingDTOs;
-using EMO.Models.DTOs.DeviceDTOs;
-using EMO.Models.DTOs.DeviceTypeDTOs;
-using EMO.Repositories.DeviceServicesRepo;
-using EMO.Repositories.DeviceTypeServicesRepo;
+﻿using APIProduct.Models.DBModels.DBTables;
+using APIProduct.Models.DTOs.BuildingDTOs;
+using APIProduct.Models.DTOs.DeviceDTOs;
+using APIProduct.Models.DTOs.DeviceTypeDTOs;
+using APIProduct.Repositories.DeviceServicesRepo;
+using APIProduct.Repositories.DeviceTypeServicesRepo;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using EMO.Models.DBModels;
-using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DBModels;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BuildingServicesRepo
+namespace APIProduct.Repositories.BuildingServicesRepo
 {
     public class DeviceTypeServices : IDeviceTypeServices
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EMO.Models.DTOs.PocDTOs
+namespace APIProduct.Models.DTOs.PocDTOs
 {
     public class AddPocDTO
     {
