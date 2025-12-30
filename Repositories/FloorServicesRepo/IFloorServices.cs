@@ -1,7 +1,7 @@
-﻿using APIProduct.Models.DTOs.FloorDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.FloorDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.FloorServicesRepo
+namespace EMO.Repositories.FloorServicesRepo
 {
     public interface IFloorServices
     {

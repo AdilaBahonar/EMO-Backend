@@ -1,10 +1,10 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.BuildingDTOs;
-using APIProduct.Models.DTOs.BusinessDTOs;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.BuildingDTOs;
+using EMO.Models.DTOs.BusinessDTOs;
 using AutoMapper;
-using P3AHR.Extensions;
+using EMO.Extensions;
 
-namespace APIProduct.Extensions.AutoMapper
+namespace EMO.Extensions.AutoMapper
 {
     public class BuildingMapper : Profile
     {

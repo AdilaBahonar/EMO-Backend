@@ -1,11 +1,12 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.OfficeDTOs;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.OfficeDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DTOs.ResponseDTO;
+using 
+    .Models.DBModels;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.OfficeServicesRepo
+namespace EMO.Repositories.OfficeServicesRepo
 {
     public class OfficeServices : IOfficeServices
     {

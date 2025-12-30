@@ -1,7 +1,8 @@
-﻿using APIProduct.Models.DTOs.SectionDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.SectionDTOs;
+using 
+    .Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.SectionServicesRepo
+namespace EMO.Repositories.SectionServicesRepo
 {
     public interface ISectionServices
     {

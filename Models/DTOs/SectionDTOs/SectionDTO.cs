@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DTOs.SectionDTOs
+namespace EMO.Models.DTOs.SectionDTOs
 {
     public class AddSectionDTO
     {

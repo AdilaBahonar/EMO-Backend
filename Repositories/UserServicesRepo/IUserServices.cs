@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using P3AHR.Models.DBModels.DBTables;
-using P3AHR.Models.DTOs.UserDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.UserDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace P3AHR.Repositories.UserServicesRepo
+namespace EMO.Repositories.UserServicesRepo
 {
     public interface IUserServices
     {

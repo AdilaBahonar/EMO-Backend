@@ -1,10 +1,10 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.ControlTypeDTOs;
-using APIProduct.Models.DTOs.DeviceTypeDTOs;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.ControlTypeDTOs;
+using EMO.Models.DTOs.DeviceTypeDTOs;
 using AutoMapper;
-using P3AHR.Extensions;
+using EMO.Extensions;
 
-namespace APIProduct.Extensions.AutoMapper
+namespace EMO.Extensions.AutoMapper
 {
     public class ControlTypeMapper : Profile
     {

@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Extensions;
-using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.InnerServicesRepo;
-using APIProduct.Repositories.UserTypeServicesRepo;
-using APIProduct.Models.DTOs.UserTypeDTOs;
+using 
+    .Extensions.MiddleWare;
+using EMO.Extensions;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.InnerServicesRepo;
+using EMO.Repositories.UserTypeServicesRepo;
+using EMO.Models.DTOs.UserTypeDTOs;
 
-namespace APIProduct.Controllers
+namespace EMO.Controllers
 {
     [ApiKey]
     [Route("api/[controller]")]

@@ -1,7 +1,7 @@
-﻿using APIProduct.Models.DTOs.PocDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.PocDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.PocServicesRepo
+namespace EMO.Repositories.PocServicesRepo
 {
     public interface IPocServices
     {

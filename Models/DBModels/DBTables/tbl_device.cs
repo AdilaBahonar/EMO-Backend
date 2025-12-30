@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DBModels.DBTables
+namespace EMO.Models.DBModels.DBTables
 {
     public class tbl_device
     {

@@ -1,10 +1,10 @@
-﻿using P3AHR.Extensions;
-using P3AHR.Models.DTOs.AuthDTOs;
-using P3AHR.Models.DTOs.UserDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.InnerServicesRepo;
+﻿using EMO.Extensions;
+using EMO.Models.DTOs.AuthDTOs;
+using EMO.Models.DTOs.UserDTOs;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.InnerServicesRepo;
 
-namespace P3AHR.Repositories.AuthServicesRepo
+namespace EMO.Repositories.AuthServicesRepo
 {
     public interface IAuthServices
     {

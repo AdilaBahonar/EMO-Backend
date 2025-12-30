@@ -1,7 +1,7 @@
-﻿using P3AHR.Models.DBModels.DBTables;
+﻿using EMO.Models.DBModels.DBTables;
 using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DBModels.DBTables
+namespace EMO.Models.DBModels.DBTables
 {
     public class tbl_user_type
     {

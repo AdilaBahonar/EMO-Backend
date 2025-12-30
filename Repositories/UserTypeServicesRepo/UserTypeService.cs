@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
-using P3AHR.Models.DBModels.DBTables;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DTOs.ResponseDTO;
-using APIProduct.Models.DTOs.UserTypeDTOs;
-using APIProduct.Models.DBModels.DBTables;
+using 
+    .Models.DBModels.DBTables;
+using EMO.Models.DBModels;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.UserTypeDTOs;
+using EMO.Models.DBModels.DBTables;
 using Microsoft.EntityFrameworkCore;
 
-namespace APIProduct.Repositories.UserTypeServicesRepo
+namespace EMO.Repositories.UserTypeServicesRepo
 {
     public class UserTypeService : IUserTypeService
     {

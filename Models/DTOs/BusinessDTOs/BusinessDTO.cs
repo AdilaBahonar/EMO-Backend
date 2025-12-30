@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DTOs.BusinessDTOs
+namespace EMO.Models.DTOs.BusinessDTOs
 {
     public class AddBusinessDTO
     {

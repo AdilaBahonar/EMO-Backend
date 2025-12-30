@@ -1,13 +1,13 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.OfficeDTOs;
-using APIProduct.Models.DTOs.PocDTOs;
-using APIProduct.Repositories.PocServicesRepo;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.OfficeDTOs;
+using EMO.Models.DTOs.PocDTOs;
+using EMO.Repositories.PocServicesRepo;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Models.DBModels;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.OfficeServicesRepo
+namespace EMO.Repositories.OfficeServicesRepo
 {
     public class PocServices : IPocServices
     {

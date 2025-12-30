@@ -1,7 +1,7 @@
-﻿using P3AHR.Models.DTOs.UserDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.UserDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace P3AHR.Repositories.InnerServicesRepo
+namespace EMO.Repositories.InnerServicesRepo
 {
     public interface IInnerServices
     {

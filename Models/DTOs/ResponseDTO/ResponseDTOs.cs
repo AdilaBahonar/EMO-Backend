@@ -1,4 +1,4 @@
-﻿namespace P3AHR.Models.DTOs.ResponseDTO
+﻿namespace EMO.Models.DTOs.ResponseDTO
 {
     public class ResponseModel
     {

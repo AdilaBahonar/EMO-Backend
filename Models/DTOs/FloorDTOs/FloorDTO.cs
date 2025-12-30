@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DTOs.FloorDTOs
+namespace EMO.Models.DTOs.FloorDTOs
 {
     public class AddFloorDTO
     {

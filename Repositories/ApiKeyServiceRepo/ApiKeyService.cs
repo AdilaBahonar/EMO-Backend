@@ -1,4 +1,4 @@
-﻿namespace P3AHR.Repositories.ApiKeyServiceRepo
+﻿namespace EMO.Repositories.ApiKeyServiceRepo
 {
     public class ApiKeyService : IApiKeyService
     {
