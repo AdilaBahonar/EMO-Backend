@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace P3AHR.Extensions
+namespace EMO.Extensions
 {
     public class OtherServices
     {

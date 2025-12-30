@@ -1,11 +1,11 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.BuildingDTOs;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.BuildingDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Models.DBModels;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.BuildingServicesRepo
+namespace EMO.Repositories.BuildingServicesRepo
 {
     public class BuildingServices : IBuildingServices
     {

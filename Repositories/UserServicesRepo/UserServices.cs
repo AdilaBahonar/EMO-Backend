@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DBModels.DBTables;
-using P3AHR.Models.DTOs.UserDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.UserDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace P3AHR.Repositories.UserServicesRepo
+namespace EMO.Repositories.UserServicesRepo
 {
     public class UserServices: IUserServices
     {

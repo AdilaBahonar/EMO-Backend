@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Extensions;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DBModels;
-using P3AHR.Repositories.AuthServicesRepo;
+using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DBModels;
+using EMO.Repositories.AuthServicesRepo;
 
 var builder = WebApplication.CreateBuilder(args);
 

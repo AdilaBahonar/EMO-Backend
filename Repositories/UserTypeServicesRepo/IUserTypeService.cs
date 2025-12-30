@@ -1,7 +1,7 @@
-﻿using APIProduct.Models.DTOs.UserTypeDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.UserTypeDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.UserTypeServicesRepo
+namespace EMO.Repositories.UserTypeServicesRepo
 {
     public interface IUserTypeService
     {

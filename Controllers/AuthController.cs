@@ -1,17 +1,17 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DBModels.DBTables;
-using P3AHR.Models.DTOs.AuthDTOs;
-using P3AHR.Models.DTOs.UserDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.AuthServicesRepo;
-using P3AHR.Repositories.JWTUtilsRepo;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.AuthDTOs;
+using EMO.Models.DTOs.UserDTOs;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.AuthServicesRepo;
+using EMO.Repositories.JWTUtilsRepo;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using P3AHR.Models.DTOs.LoginDTOs;
+using EMO.Models.DTOs.LoginDTOs;
 
-namespace P3AHR.Controllers
+namespace EMO.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

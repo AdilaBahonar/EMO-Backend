@@ -1,14 +1,14 @@
-﻿using APIProduct.Models.DTOs.BuildingDTOs;
-using APIProduct.Models.DTOs.ControlTypeDTOs;
-using APIProduct.Repositories.BuildingServicesRepo;
-using APIProduct.Repositories.BusinessServicesRepo;
+﻿using EMO.Models.DTOs.BuildingDTOs;
+using EMO.Models.DTOs.ControlTypeDTOs;
+using EMO.Repositories.BuildingServicesRepo;
+using EMO.Repositories.BusinessServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Controllers
+namespace EMO.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

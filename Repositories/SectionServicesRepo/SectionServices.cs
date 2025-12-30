@@ -1,12 +1,12 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.SectionDTOs;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.SectionDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Models.DBModels;
+using EMO.Models.DTOs.ResponseDTO;
 using System.ComponentModel.Design;
 
-namespace APIProduct.Repositories.SectionServicesRepo
+namespace EMO.Repositories.SectionServicesRepo
 {
     public class SectionServices : ISectionServices
     {

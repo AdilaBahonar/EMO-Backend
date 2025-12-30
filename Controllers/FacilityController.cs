@@ -1,12 +1,12 @@
-﻿using APIProduct.Models.DTOs.FacilityDTOs;
-using APIProduct.Repositories.FacilityServicesRepo;
+﻿using EMO.Models.DTOs.FacilityDTOs;
+using EMO.Repositories.FacilityServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Controllers
+namespace EMO.Controllers
 {
     [ApiKey]
     [Route("api/[controller]")]

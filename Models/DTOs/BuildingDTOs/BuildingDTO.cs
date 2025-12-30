@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DTOs.BuildingDTOs
+namespace EMO.Models.DTOs.BuildingDTOs
 {
     public class AddBuildingDTO
     {

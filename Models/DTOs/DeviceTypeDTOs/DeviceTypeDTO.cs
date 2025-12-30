@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace APIProduct.Models.DTOs.DeviceTypeDTOs
+namespace EMO.Models.DTOs.DeviceTypeDTOs
 {
     public class AddDeviceTypeDTO
     {

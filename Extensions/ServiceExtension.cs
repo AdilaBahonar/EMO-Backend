@@ -1,23 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using P3AHR.Repositories.JWTUtilsRepo;
-using P3AHR.Repositories.ApiKeyServiceRepo;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DBModels;
-using P3AHR.Repositories.UserServicesRepo;
-using P3AHR.Repositories.AuthServicesRepo;
-using P3AHR.Repositories.InnerServicesRepo;
-using APIProduct.Repositories.UserTypeServicesRepo;
-using APIProduct.Repositories.BusinessServicesRepo;
-using APIProduct.Repositories.BuildingServicesRepo;
-using APIProduct.Repositories.FacilityServicesRepo;
-using APIProduct.Repositories.SectionServicesRepo;
-using APIProduct.Repositories.FloorServicesRepo;
-using APIProduct.Repositories.OfficeServicesRepo;
-using APIProduct.Repositories.DeviceServicesRepo;
-using APIProduct.Repositories.DeviceTypeServicesRepo;
-using APIProduct.Repositories.PocServicesRepo;
+using EMO.Repositories.JWTUtilsRepo;
+using EMO.Repositories.ApiKeyServiceRepo;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DBModels;
+using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.AuthServicesRepo;
+using EMO.Repositories.InnerServicesRepo;
+using EMO.Repositories.UserTypeServicesRepo;
+using EMO.Repositories.BusinessServicesRepo;
+using EMO.Repositories.BuildingServicesRepo;
+using EMO.Repositories.FacilityServicesRepo;
+using EMO.Repositories.SectionServicesRepo;
+using EMO.Repositories.FloorServicesRepo;
+using EMO.Repositories.OfficeServicesRepo;
+using EMO.Repositories.DeviceServicesRepo;
+using EMO.Repositories.DeviceTypeServicesRepo;
+using EMO.Repositories.PocServicesRepo;
 
-namespace P3AHR.Extensions
+namespace EMO.Extensions
 {
     public static class ServiceExtension
     {

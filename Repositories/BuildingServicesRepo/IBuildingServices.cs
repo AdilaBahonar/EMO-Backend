@@ -1,7 +1,7 @@
-﻿using APIProduct.Models.DTOs.BuildingDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.BuildingDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Repositories.BuildingServicesRepo
+namespace EMO.Repositories.BuildingServicesRepo
 {
     public interface IBuildingServices
     {

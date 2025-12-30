@@ -1,18 +1,18 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using P3AHR.Extensions;
-using P3AHR.Models.DBModels;
-using P3AHR.Models.DBModels.DBTables;
-using P3AHR.Models.DTOs.AuthDTOs;
-using P3AHR.Models.DTOs.UserDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.UserServicesRepo;
-using P3AHR.Repositories.InnerServicesRepo;
-using P3AHR.Repositories.JWTUtilsRepo;
+using EMO.Extensions;
+using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.AuthDTOs;
+using EMO.Models.DTOs.UserDTOs;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.InnerServicesRepo;
+using EMO.Repositories.JWTUtilsRepo;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace P3AHR.Repositories.AuthServicesRepo
+namespace EMO.Repositories.AuthServicesRepo
 {
     public class AuthServices: IAuthServices
     {

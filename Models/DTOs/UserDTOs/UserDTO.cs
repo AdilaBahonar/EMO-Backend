@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace P3AHR.Models.DTOs.UserDTOs
+namespace EMO.Models.DTOs.UserDTOs
 {
     public class AddUserDTO
     {

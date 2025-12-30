@@ -1,12 +1,12 @@
-﻿using APIProduct.Models.DTOs.SectionDTOs;
-using APIProduct.Repositories.SectionServicesRepo;
+﻿using EMO.Models.DTOs.SectionDTOs;
+using EMO.Repositories.SectionServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using P3AHR.Extensions;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.ResponseDTO;
 
-namespace APIProduct.Controllers
+namespace EMO.Controllers
 {
   
     [Route("api/[controller]")]

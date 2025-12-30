@@ -1,10 +1,10 @@
-﻿using APIProduct.Models.DBModels.DBTables;
-using APIProduct.Models.DTOs.FloorDTOs;
-using APIProduct.Models.DTOs.SectionDTOs;
+﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.FloorDTOs;
+using EMO.Models.DTOs.SectionDTOs;
 using AutoMapper;
-using P3AHR.Extensions;
+using EMO.Extensions;
 
-namespace APIProduct.Extensions.AutoMapper
+namespace EMO.Extensions.AutoMapper
 {
     public class SectionMapper : Profile
     {
