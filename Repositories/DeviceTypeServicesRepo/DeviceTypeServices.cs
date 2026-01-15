@@ -1,15 +1,13 @@
 ﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BuildingDTOs;
-using EMO.Models.DTOs.DeviceDTOs;
 using EMO.Models.DTOs.DeviceTypeDTOs;
-using EMO.Repositories.DeviceServicesRepo;
-using EMO.Repositories.DeviceTypeServicesRepo;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using APIProduct.Models.DTOs.DeviceTypeDTOs;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BuildingServicesRepo
+namespace EMO.Repositories.DeviceTypeServicesRepo
 {
     public class DeviceTypeServices : IDeviceTypeServices
     {
@@ -26,19 +24,19 @@ namespace EMO.Repositories.BuildingServicesRepo
         {
             try
             {
-                var existingDevicetype = await db.tbl_device_type
-                    .Where(b => b.device_type_name.ToLower() == requestDto.deviceTypeName.ToLower())
+                var existingDeviceType = await db.tbl_device_type
+                    .Where(x => x.device_type_name.ToLower() == requestDto.deviceTypeName.ToLower())
                     .FirstOrDefaultAsync();
 
-                if (existingDevicetype == null)
+                if (existingDeviceType == null)
                 {
-                    var newDevicetype = mapper.Map<tbl_device_type>(requestDto);
-                    await db.tbl_device_type.AddAsync(newDevicetype);
+                    var newDeviceType = mapper.Map<tbl_device_type>(requestDto);
+                    await db.tbl_device_type.AddAsync(newDeviceType);
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<DeviceTypeResponseDTO>()
                     {
-                        data = mapper.Map<DeviceTypeResponseDTO>(newDevicetype),
+                        data = mapper.Map<DeviceTypeResponseDTO>(newDeviceType),
                         remarks = "Success",
                         success = true
                     };
@@ -66,18 +64,18 @@ namespace EMO.Repositories.BuildingServicesRepo
         {
             try
             {
-                var existingDevicetype = await db.tbl_device_type
-                    .Where(b => b.device_type_id == Guid.Parse(requestDto.deviceTypeId))
+                var existingDeviceType = await db.tbl_device_type
+                    .Where(x => x.device_type_id == Guid.Parse(requestDto.deviceTypeId))
                     .FirstOrDefaultAsync();
 
-                if (existingDevicetype != null)
+                if (existingDeviceType != null)
                 {
-                    mapper.Map(requestDto, existingDevicetype);
+                    mapper.Map(requestDto, existingDeviceType);
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<DeviceTypeResponseDTO>()
                     {
-                        data = mapper.Map<DeviceTypeResponseDTO>(existingDevicetype),
+                        data = mapper.Map<DeviceTypeResponseDTO>(existingDeviceType),
                         remarks = "Success",
                         success = true
                     };
@@ -101,19 +99,19 @@ namespace EMO.Repositories.BuildingServicesRepo
             }
         }
 
-        public async Task<ResponseModel<DeviceTypeResponseDTO>> GetDeviceTypeById(string DeviceTypeId)
+        public async Task<ResponseModel<DeviceTypeResponseDTO>> GetDeviceTypeById(string deviceTypeId)
         {
             try
             {
-                var devicetype = await db.tbl_device_type
-                    .Where(b => b.device_type_id == Guid.Parse(DeviceTypeId))
+                var deviceType = await db.tbl_device_type
+                    .Where(x => x.device_type_id == Guid.Parse(deviceTypeId))
                     .FirstOrDefaultAsync();
 
-                if (devicetype != null)
+                if (deviceType != null)
                 {
                     return new ResponseModel<DeviceTypeResponseDTO>()
                     {
-                        data = mapper.Map<DeviceTypeResponseDTO>(devicetype),
+                        data = mapper.Map<DeviceTypeResponseDTO>(deviceType),
                         remarks = "Success",
                         success = true
                     };
@@ -141,13 +139,13 @@ namespace EMO.Repositories.BuildingServicesRepo
         {
             try
             {
-                var devicetypes = await db.tbl_device_type.ToListAsync();
+                var deviceTypes = await db.tbl_device_type.ToListAsync();
 
-                if (devicetypes.Any())
+                if (deviceTypes.Any())
                 {
                     return new ResponseModel<List<DeviceTypeResponseDTO>>()
                     {
-                        data = mapper.Map<List<DeviceTypeResponseDTO>>(devicetypes),
+                        data = mapper.Map<List<DeviceTypeResponseDTO>>(deviceTypes),
                         remarks = "Success",
                         success = true
                     };
@@ -171,15 +169,15 @@ namespace EMO.Repositories.BuildingServicesRepo
             }
         }
 
-        public async Task<ResponseModel> DeleteDeviceTypeById(string DeviceTypeId)
+        public async Task<ResponseModel> DeleteDeviceTypeById(string deviceTypeId)
         {
             try
             {
-                var devicetype = await db.tbl_device.FindAsync(Guid.Parse(DeviceTypeId));
+                var deviceType = await db.tbl_device_type.FindAsync(Guid.Parse(deviceTypeId));
 
-                if (devicetype != null)
+                if (deviceType != null)
                 {
-                    db.tbl_device.Remove(devicetype);
+                    db.tbl_device_type.Remove(deviceType);
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -207,5 +205,4 @@ namespace EMO.Repositories.BuildingServicesRepo
             }
         }
     }
-
 }

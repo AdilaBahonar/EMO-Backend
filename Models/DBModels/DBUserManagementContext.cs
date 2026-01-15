@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels.DBTables;
 using System.Linq;
 using System.Net;
+using APIProduct.Models.DBModels.DBTables;
 
 namespace EMO.Models.DBModels
 {
@@ -104,5 +105,15 @@ namespace EMO.Models.DBModels
         public DbSet<tbl_section> tbl_section { get; set; }
         public DbSet<tbl_office> tbl_office { get; set; }
         public DbSet<tbl_poc> tbl_poc { get; set; }
+        public DbSet<tbl_contact_person> tbl_contact_person { get; set; }
+        public DbSet<tbl_singal_phase_data> tbl_singal_phase_data { get; set; }
+        public DbSet<tbl_sub_type> tbl_sub_type { get; set; }
+        public DbSet<tbl_tenant> tbl_tenant { get; set; }
+        public DbSet<tbl_utility> tbl_utility {  get; set; }
+        public DbSet<tbl_sensor> tbl_sensor { get; set; }
+
+
+
+
     }
 }

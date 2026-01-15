@@ -6,9 +6,8 @@ namespace EMO.Models.DTOs.UserDTOs
     {
         [Required]
         public string userName { get; set; } = string.Empty;
-        public string userCurrentStatus { get; set; } = string.Empty;
-        public string userPersonalEmail { get; set; } = string.Empty;
-        public string userOfficialEmail { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string otp { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType {  get; set; } = string.Empty;
 
@@ -18,10 +17,9 @@ namespace EMO.Models.DTOs.UserDTOs
         [Required]
         public string userId { get; set; } = string.Empty;
         public string userName { get; set; } = string.Empty;
-        public string userPersonalEmail { get; set; } = string.Empty;
-        public string userOfficialEmail { get; set; } = string.Empty;
-        public string userPassword { get; set; } = string.Empty;
         public string userToken { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string otp { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
     } 
@@ -30,10 +28,8 @@ namespace EMO.Models.DTOs.UserDTOs
         [Required]
         public string userId { get; set; } = string.Empty;
         public string userName { get; set; } = string.Empty;
-        public string userCurrentStatus { get; set; } = string.Empty;
-        public string userPersonalEmail { get; set; } = string.Empty;
-        public string userOfficialEmail { get; set; } = string.Empty;
-        public string userPassword { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string otp { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
     }
@@ -41,8 +37,8 @@ namespace EMO.Models.DTOs.UserDTOs
     {
         public string userId { get; set; } = string.Empty;
         public string userName { get; set; } = string.Empty;
-        public string userPersonalEmail { get; set; } = string.Empty;
-        public string userOfficialEmail { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string otp { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
     }
@@ -50,9 +46,8 @@ namespace EMO.Models.DTOs.UserDTOs
     {
         public string userId { get; set; } = string.Empty;
         public string userName { get; set; } = string.Empty;
-        public string userPassword { get; set; } = string.Empty;
-        public string userPersonalEmail { get; set; } = string.Empty;
-        public string userOfficialEmail { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string otp { get; set; } = string.Empty;
         public string userToken { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
@@ -63,8 +58,9 @@ namespace EMO.Models.DTOs.UserDTOs
     {
         public string userId { get; set; } = string.Empty;
         public string userName { get; set; } = string.Empty;
-        public string userEmail { get; set; } = string.Empty;
         public string userPhone { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string otp { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
         public string userTypeName {  get; set; } = string.Empty;
         public int userTypeLevel { get; set; }  

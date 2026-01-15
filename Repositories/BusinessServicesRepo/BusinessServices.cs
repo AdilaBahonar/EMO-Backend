@@ -4,6 +4,8 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using APIProduct.Repositories.BusinessServicesRepo;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.BusinessServicesRepo
 {
@@ -23,7 +25,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var existingBusiness = await db.tbl_business
-                    .Where(b => b.business_name.ToLower() == requestDto.businessName.ToLower())
+                    .Where(x => x.business_name.ToLower() == requestDto.businessName.ToLower())
                     .FirstOrDefaultAsync();
 
                 if (existingBusiness == null)
@@ -32,13 +34,11 @@ namespace EMO.Repositories.BusinessServicesRepo
                     await db.tbl_business.AddAsync(newBusiness);
                     await db.SaveChangesAsync();
 
-                    var response = mapper.Map<BusinessResponseDTO>(newBusiness);
-
                     return new ResponseModel<BusinessResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<BusinessResponseDTO>(newBusiness),
                         remarks = "Success",
-                        success = true,
+                        success = true
                     };
                 }
                 else
@@ -46,7 +46,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<BusinessResponseDTO>()
                     {
                         remarks = "Business Already Exists",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -55,7 +55,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                 return new ResponseModel<BusinessResponseDTO>()
                 {
                     remarks = $"There was a fatal error: {ex}",
-                    success = false,
+                    success = false
                 };
             }
         }
@@ -65,22 +65,20 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var existingBusiness = await db.tbl_business
-                    .Where(b => b.business_id == Guid.Parse(requestDto.businessId))
+                    .Where(x => x.business_id == Guid.Parse(requestDto.businessId))
                     .FirstOrDefaultAsync();
 
                 if (existingBusiness != null)
                 {
                     mapper.Map(requestDto, existingBusiness);
-
+                    existingBusiness.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
-
-                    var response = mapper.Map<BusinessResponseDTO>(existingBusiness);
 
                     return new ResponseModel<BusinessResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<BusinessResponseDTO>(existingBusiness),
                         remarks = "Success",
-                        success = true,
+                        success = true
                     };
                 }
                 else
@@ -88,7 +86,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<BusinessResponseDTO>()
                     {
                         remarks = "No Record Found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -97,7 +95,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                 return new ResponseModel<BusinessResponseDTO>()
                 {
                     remarks = $"There was a fatal error: {ex}",
-                    success = false,
+                    success = false
                 };
             }
         }
@@ -107,17 +105,15 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var business = await db.tbl_business
-                    .Include(b => b.user)
-                    .Where(b => b.business_id == Guid.Parse(businessId))
+                    .Include(x => x.user)
+                    .Where(x => x.business_id == Guid.Parse(businessId))
                     .FirstOrDefaultAsync();
 
                 if (business != null)
                 {
-                    var response = mapper.Map<BusinessResponseDTO>(business);
-
                     return new ResponseModel<BusinessResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<BusinessResponseDTO>(business),
                         remarks = "Success",
                         success = true
                     };
@@ -127,7 +123,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<BusinessResponseDTO>()
                     {
                         remarks = "Business not found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -135,8 +131,8 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<BusinessResponseDTO>()
                 {
-                    remarks = $"There was a fatal error {ex}",
-                    success = false,
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
                 };
             }
         }
@@ -145,15 +141,15 @@ namespace EMO.Repositories.BusinessServicesRepo
         {
             try
             {
-                var businesses = await db.tbl_business.Include(b => b.user).ToListAsync();
+                var businesses = await db.tbl_business
+                    .Include(x => x.user)
+                    .ToListAsync();
 
                 if (businesses.Any())
                 {
-                    var responseList = mapper.Map<List<BusinessResponseDTO>>(businesses);
-
                     return new ResponseModel<List<BusinessResponseDTO>>()
                     {
-                        data = responseList,
+                        data = mapper.Map<List<BusinessResponseDTO>>(businesses),
                         remarks = "Success",
                         success = true
                     };
@@ -163,7 +159,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<List<BusinessResponseDTO>>()
                     {
                         remarks = "No Business found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -171,8 +167,8 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<List<BusinessResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex}",
-                    success = false,
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
                 };
             }
         }
@@ -191,7 +187,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel()
                     {
                         remarks = "Business deleted successfully",
-                        success = true,
+                        success = true
                     };
                 }
                 else
@@ -199,7 +195,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel()
                     {
                         remarks = "Business not found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -207,11 +203,10 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error {ex}",
-                    success = false,
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
                 };
             }
         }
     }
-
 }

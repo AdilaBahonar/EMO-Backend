@@ -4,6 +4,8 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using APIProduct.Repositories.FloorServicesRepo;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.FloorServicesRepo
 {
@@ -23,7 +25,8 @@ namespace EMO.Repositories.FloorServicesRepo
             try
             {
                 var existingFloor = await db.tbl_floor
-                    .Where(f => f.floor_name.ToLower() == requestDto.floorName.ToLower())
+                    .Where(x => x.floor_name.ToLower() == requestDto.floorName.ToLower()
+                             && x.fk_building == Guid.Parse(requestDto.fkBuilding))
                     .FirstOrDefaultAsync();
 
                 if (existingFloor == null)
@@ -63,12 +66,13 @@ namespace EMO.Repositories.FloorServicesRepo
             try
             {
                 var existingFloor = await db.tbl_floor
-                    .Where(f => f.floor_id == Guid.Parse(requestDto.floorId))
+                    .Where(x => x.floor_id == Guid.Parse(requestDto.floorId))
                     .FirstOrDefaultAsync();
 
                 if (existingFloor != null)
                 {
                     mapper.Map(requestDto, existingFloor);
+                    existingFloor.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<FloorResponseDTO>()
@@ -102,7 +106,8 @@ namespace EMO.Repositories.FloorServicesRepo
             try
             {
                 var floor = await db.tbl_floor
-                    .Where(f => f.floor_id == Guid.Parse(floorId))
+                    .Include(x => x.building)
+                    .Where(x => x.floor_id == Guid.Parse(floorId))
                     .FirstOrDefaultAsync();
 
                 if (floor != null)
@@ -137,7 +142,9 @@ namespace EMO.Repositories.FloorServicesRepo
         {
             try
             {
-                var floors = await db.tbl_floor.ToListAsync();
+                var floors = await db.tbl_floor
+                    .Include(x => x.building)
+                    .ToListAsync();
 
                 if (floors.Any())
                 {
@@ -203,5 +210,4 @@ namespace EMO.Repositories.FloorServicesRepo
             }
         }
     }
-
 }

@@ -4,6 +4,8 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using APIProduct.Repositories.FacilityServicesRepo;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.FacilityServicesRepo
 {
@@ -23,21 +25,18 @@ namespace EMO.Repositories.FacilityServicesRepo
             try
             {
                 var existingFacility = await db.tbl_facility
-                    .Where(f => f.facility_name.ToLower() == requestDto.facilityName.ToLower())
+                    .Where(x => x.facility_name.ToLower() == requestDto.facilityName.ToLower())
                     .FirstOrDefaultAsync();
 
                 if (existingFacility == null)
                 {
                     var newFacility = mapper.Map<tbl_facility>(requestDto);
-
                     await db.tbl_facility.AddAsync(newFacility);
                     await db.SaveChangesAsync();
 
-                    var response = mapper.Map<FacilityResponseDTO>(newFacility);
-
                     return new ResponseModel<FacilityResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<FacilityResponseDTO>(newFacility),
                         remarks = "Success",
                         success = true
                     };
@@ -66,20 +65,18 @@ namespace EMO.Repositories.FacilityServicesRepo
             try
             {
                 var existingFacility = await db.tbl_facility
-                    .Where(f => f.facility_id == Guid.Parse(requestDto.facilityId))
+                    .Where(x => x.facility_id == Guid.Parse(requestDto.facilityId))
                     .FirstOrDefaultAsync();
 
                 if (existingFacility != null)
                 {
                     mapper.Map(requestDto, existingFacility);
-
+                    existingFacility.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
-
-                    var response = mapper.Map<FacilityResponseDTO>(existingFacility);
 
                     return new ResponseModel<FacilityResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<FacilityResponseDTO>(existingFacility),
                         remarks = "Success",
                         success = true
                     };
@@ -108,17 +105,15 @@ namespace EMO.Repositories.FacilityServicesRepo
             try
             {
                 var facility = await db.tbl_facility
-                    .Include(f => f.business)
-                    .Where(f => f.facility_id == Guid.Parse(facilityId))
+                    .Include(x => x.business)
+                    .Where(x => x.facility_id == Guid.Parse(facilityId))
                     .FirstOrDefaultAsync();
 
                 if (facility != null)
                 {
-                    var response = mapper.Map<FacilityResponseDTO>(facility);
-
                     return new ResponseModel<FacilityResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<FacilityResponseDTO>(facility),
                         remarks = "Success",
                         success = true
                     };
@@ -146,15 +141,15 @@ namespace EMO.Repositories.FacilityServicesRepo
         {
             try
             {
-                var facilities = await db.tbl_facility.Include(f => f.business).ToListAsync();
+                var facilities = await db.tbl_facility
+                    .Include(x => x.business)
+                    .ToListAsync();
 
                 if (facilities.Any())
                 {
-                    var responseList = mapper.Map<List<FacilityResponseDTO>>(facilities);
-
                     return new ResponseModel<List<FacilityResponseDTO>>()
                     {
-                        data = responseList,
+                        data = mapper.Map<List<FacilityResponseDTO>>(facilities),
                         remarks = "Success",
                         success = true
                     };
@@ -214,5 +209,4 @@ namespace EMO.Repositories.FacilityServicesRepo
             }
         }
     }
-
 }

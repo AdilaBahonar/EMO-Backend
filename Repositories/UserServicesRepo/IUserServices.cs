@@ -2,6 +2,7 @@
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.UserDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.UserServicesRepo
 {

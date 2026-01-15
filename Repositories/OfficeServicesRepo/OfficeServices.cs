@@ -4,6 +4,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.OfficeServicesRepo
 {
@@ -23,7 +24,8 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var existingOffice = await db.tbl_office
-                    .Where(o => o.office_name.ToLower() == requestDto.officeName.ToLower())
+                    .Where(x => x.office_name.ToLower() == requestDto.officeName.ToLower()
+                             && x.fk_section == Guid.Parse(requestDto.fkSection))
                     .FirstOrDefaultAsync();
 
                 if (existingOffice == null)
@@ -63,12 +65,13 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var existingOffice = await db.tbl_office
-                    .Where(o => o.office_id == Guid.Parse(requestDto.officeId))
+                    .Where(x => x.office_id == Guid.Parse(requestDto.officeId))
                     .FirstOrDefaultAsync();
 
                 if (existingOffice != null)
                 {
                     mapper.Map(requestDto, existingOffice);
+                    existingOffice.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<OfficeResponseDTO>()
@@ -102,7 +105,8 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var office = await db.tbl_office
-                    .Where(o => o.office_id == Guid.Parse(officeId))
+                    .Include(x => x.section)
+                    .Where(x => x.office_id == Guid.Parse(officeId))
                     .FirstOrDefaultAsync();
 
                 if (office != null)
@@ -137,7 +141,9 @@ namespace EMO.Repositories.OfficeServicesRepo
         {
             try
             {
-                var offices = await db.tbl_office.ToListAsync();
+                var offices = await db.tbl_office
+                    .Include(x => x.section)
+                    .ToListAsync();
 
                 if (offices.Any())
                 {
@@ -203,5 +209,4 @@ namespace EMO.Repositories.OfficeServicesRepo
             }
         }
     }
-
 }

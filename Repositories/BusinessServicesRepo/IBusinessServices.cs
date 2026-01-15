@@ -1,5 +1,6 @@
 ﻿using EMO.Models.DTOs.BusinessDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.BusinessServicesRepo
 {

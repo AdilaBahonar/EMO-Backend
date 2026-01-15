@@ -1,12 +1,13 @@
 ﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BusinessDTOs;
 using EMO.Models.DTOs.ControlTypeDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using APIProduct.Repositories.BusinessServicesRepo;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BusinessServicesRepo
+namespace EMO.Repositories.ControlTypeServicesRepo
 {
     public class ControlTypeServices : IControlTypeServices
     {
@@ -24,7 +25,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var existingControlType = await db.tbl_control_type
-                    .Where(b => b.control_type_name.ToLower() == requestDto.controlTypeName.ToLower())
+                    .Where(x => x.control_type_name.ToLower() == requestDto.controlTypeName.ToLower())
                     .FirstOrDefaultAsync();
 
                 if (existingControlType == null)
@@ -33,13 +34,11 @@ namespace EMO.Repositories.BusinessServicesRepo
                     await db.tbl_control_type.AddAsync(newControlType);
                     await db.SaveChangesAsync();
 
-                    var response = mapper.Map<ControlTypeResponseDTO>(newControlType);
-
                     return new ResponseModel<ControlTypeResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<ControlTypeResponseDTO>(newControlType),
                         remarks = "Success",
-                        success = true,
+                        success = true
                     };
                 }
                 else
@@ -47,7 +46,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<ControlTypeResponseDTO>()
                     {
                         remarks = "Control Type Already Exists",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -56,7 +55,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                 return new ResponseModel<ControlTypeResponseDTO>()
                 {
                     remarks = $"There was a fatal error: {ex}",
-                    success = false,
+                    success = false
                 };
             }
         }
@@ -66,22 +65,19 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var existingControlType = await db.tbl_control_type
-                    .Where(b => b.control_type_id == Guid.Parse(requestDto.controlTypeId))
+                    .Where(x => x.control_type_id == Guid.Parse(requestDto.controlTypeId))
                     .FirstOrDefaultAsync();
 
                 if (existingControlType != null)
                 {
                     mapper.Map(requestDto, existingControlType);
-
                     await db.SaveChangesAsync();
-
-                    var response = mapper.Map<ControlTypeResponseDTO>(existingControlType);
 
                     return new ResponseModel<ControlTypeResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<ControlTypeResponseDTO>(existingControlType),
                         remarks = "Success",
-                        success = true,
+                        success = true
                     };
                 }
                 else
@@ -89,7 +85,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<ControlTypeResponseDTO>()
                     {
                         remarks = "No Record Found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -98,26 +94,24 @@ namespace EMO.Repositories.BusinessServicesRepo
                 return new ResponseModel<ControlTypeResponseDTO>()
                 {
                     remarks = $"There was a fatal error: {ex}",
-                    success = false,
+                    success = false
                 };
             }
         }
 
-        public async Task<ResponseModel<ControlTypeResponseDTO>> GetControlTypeById(string controltypeId)
+        public async Task<ResponseModel<ControlTypeResponseDTO>> GetControlTypeById(string controlTypeId)
         {
             try
             {
-                var controltype = await db.tbl_control_type
-                    .Where(b => b.control_type_id == Guid.Parse(controltypeId))
+                var controlType = await db.tbl_control_type
+                    .Where(x => x.control_type_id == Guid.Parse(controlTypeId))
                     .FirstOrDefaultAsync();
 
-                if (controltype != null)
+                if (controlType != null)
                 {
-                    var response = mapper.Map<ControlTypeResponseDTO>(controltype);
-
                     return new ResponseModel<ControlTypeResponseDTO>()
                     {
-                        data = response,
+                        data = mapper.Map<ControlTypeResponseDTO>(controlType),
                         remarks = "Success",
                         success = true
                     };
@@ -127,7 +121,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<ControlTypeResponseDTO>()
                     {
                         remarks = "Control Type not found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -135,8 +129,8 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<ControlTypeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error {ex}",
-                    success = false,
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
                 };
             }
         }
@@ -145,15 +139,13 @@ namespace EMO.Repositories.BusinessServicesRepo
         {
             try
             {
-                var controltype = await db.tbl_control_type.ToListAsync();
+                var controlTypes = await db.tbl_control_type.ToListAsync();
 
-                if (controltype.Any())
+                if (controlTypes.Any())
                 {
-                    var responseList = mapper.Map<List<ControlTypeResponseDTO>>(controltype);
-
                     return new ResponseModel<List<ControlTypeResponseDTO>>()
                     {
-                        data = responseList,
+                        data = mapper.Map<List<ControlTypeResponseDTO>>(controlTypes),
                         remarks = "Success",
                         success = true
                     };
@@ -163,7 +155,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel<List<ControlTypeResponseDTO>>()
                     {
                         remarks = "No Control Type found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -171,27 +163,27 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<List<ControlTypeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex}",
-                    success = false,
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
                 };
             }
         }
 
-        public async Task<ResponseModel> DeleteControlTypeById(string controltypeId)
+        public async Task<ResponseModel> DeleteControlTypeById(string controlTypeId)
         {
             try
             {
-                var controltype = await db.tbl_control_type.FindAsync(Guid.Parse(controltypeId));
+                var controlType = await db.tbl_control_type.FindAsync(Guid.Parse(controlTypeId));
 
-                if (controltype != null)
+                if (controlType != null)
                 {
-                    db.tbl_control_type.Remove(controltype);
+                    db.tbl_control_type.Remove(controlType);
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
                     {
                         remarks = "Control Type deleted successfully",
-                        success = true,
+                        success = true
                     };
                 }
                 else
@@ -199,7 +191,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     return new ResponseModel()
                     {
                         remarks = "Control Type not found",
-                        success = false,
+                        success = false
                     };
                 }
             }
@@ -207,11 +199,10 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error {ex}",
-                    success = false,
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
                 };
             }
         }
     }
-
 }

@@ -1,13 +1,12 @@
 ﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.PocDTOs;
-using EMO.Repositories.PocServicesRepo;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.OfficeServicesRepo
+namespace EMO.Repositories.PocServicesRepo
 {
     public class PocServices : IPocServices
     {
@@ -25,7 +24,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var existingPoc = await db.tbl_poc
-                    .Where(o => o.poc_name.ToLower() == requestDto.pocName.ToLower())
+                    .Where(x => x.poc_email.ToLower() == requestDto.pocEmail.ToLower())
                     .FirstOrDefaultAsync();
 
                 if (existingPoc == null)
@@ -45,7 +44,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                 {
                     return new ResponseModel<PocResponseDTO>()
                     {
-                        remarks = "Poc Already Exists",
+                        remarks = "POC Already Exists",
                         success = false
                     };
                 }
@@ -65,7 +64,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var existingPoc = await db.tbl_poc
-                    .Where(o => o.poc_id == Guid.Parse(requestDto.pocId))
+                    .Where(x => x.poc_id == Guid.Parse(requestDto.pocId))
                     .FirstOrDefaultAsync();
 
                 if (existingPoc != null)
@@ -104,7 +103,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var poc = await db.tbl_poc
-                    .Where(o => o.poc_id == Guid.Parse(pocId))
+                    .Where(x => x.poc_id == Guid.Parse(pocId))
                     .FirstOrDefaultAsync();
 
                 if (poc != null)
@@ -120,7 +119,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                 {
                     return new ResponseModel<PocResponseDTO>()
                     {
-                        remarks = "Poc not found",
+                        remarks = "POC not found",
                         success = false
                     };
                 }
@@ -135,17 +134,17 @@ namespace EMO.Repositories.OfficeServicesRepo
             }
         }
 
-        public async Task<ResponseModel<List<PocResponseDTO>>> GetAllPoces()
+        public async Task<ResponseModel<List<PocResponseDTO>>> GetAllPocs()
         {
             try
             {
-                var poces = await db.tbl_office.ToListAsync();
+                var pocs = await db.tbl_poc.ToListAsync();
 
-                if (poces.Any())
+                if (pocs.Any())
                 {
                     return new ResponseModel<List<PocResponseDTO>>()
                     {
-                        data = mapper.Map<List<PocResponseDTO>>(poces),
+                        data = mapper.Map<List<PocResponseDTO>>(pocs),
                         remarks = "Success",
                         success = true
                     };
@@ -154,7 +153,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                 {
                     return new ResponseModel<List<PocResponseDTO>>()
                     {
-                        remarks = "No poc found",
+                        remarks = "No POC found",
                         success = false
                     };
                 }
@@ -182,7 +181,7 @@ namespace EMO.Repositories.OfficeServicesRepo
 
                     return new ResponseModel()
                     {
-                        remarks = "Poc deleted successfully",
+                        remarks = "POC deleted successfully",
                         success = true
                     };
                 }
@@ -190,7 +189,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                 {
                     return new ResponseModel()
                     {
-                        remarks = "Poc not found",
+                        remarks = "POC not found",
                         success = false
                     };
                 }
@@ -205,5 +204,4 @@ namespace EMO.Repositories.OfficeServicesRepo
             }
         }
     }
-
 }

@@ -1,13 +1,13 @@
 ﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BuildingDTOs;
 using EMO.Models.DTOs.DeviceDTOs;
-using EMO.Repositories.DeviceServicesRepo;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using APIProduct.Repositories.DeviceServicesRepo;
+using P3AHR.Models.DTOs.ResponseDTO;
 
-namespace EMO.Repositories.BuildingServicesRepo
+namespace EMO.Repositories.DeviceServicesRepo
 {
     public class DeviceServices : IDeviceServices
     {
@@ -25,7 +25,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             try
             {
                 var existingDevice = await db.tbl_device
-                    .Where(b => b.device_name.ToLower() == requestDto.deviceName.ToLower())
+                    .Where(x => x.device_name.ToLower() == requestDto.deviceName.ToLower())
                     .FirstOrDefaultAsync();
 
                 if (existingDevice == null)
@@ -65,7 +65,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             try
             {
                 var existingDevice = await db.tbl_device
-                    .Where(b => b.device_id == Guid.Parse(requestDto.deviceId))
+                    .Where(x => x.device_id == Guid.Parse(requestDto.deviceId))
                     .FirstOrDefaultAsync();
 
                 if (existingDevice != null)
@@ -99,12 +99,12 @@ namespace EMO.Repositories.BuildingServicesRepo
             }
         }
 
-        public async Task<ResponseModel<DeviceResponseDTO>> GetDeviceById(string DeviceId)
+        public async Task<ResponseModel<DeviceResponseDTO>> GetDeviceById(string deviceId)
         {
             try
             {
                 var device = await db.tbl_device
-                    .Where(b => b.device_id == Guid.Parse(DeviceId))
+                    .Where(x => x.device_id == Guid.Parse(deviceId))
                     .FirstOrDefaultAsync();
 
                 if (device != null)
@@ -205,5 +205,4 @@ namespace EMO.Repositories.BuildingServicesRepo
             }
         }
     }
-
 }

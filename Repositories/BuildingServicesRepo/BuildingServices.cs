@@ -69,6 +69,7 @@ namespace EMO.Repositories.BuildingServicesRepo
                 if (existingBuilding != null)
                 {
                     mapper.Map(requestDto, existingBuilding);
+                    existingBuilding.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<BuildingResponseDTO>()
@@ -102,6 +103,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             try
             {
                 var building = await db.tbl_building
+                    .Include(x => x.facility)
                     .Where(b => b.building_id == Guid.Parse(buildingId))
                     .FirstOrDefaultAsync();
 
@@ -137,7 +139,9 @@ namespace EMO.Repositories.BuildingServicesRepo
         {
             try
             {
-                var buildings = await db.tbl_building.ToListAsync();
+                var buildings = await db.tbl_building
+                    .Include(x => x.facility)
+                    .ToListAsync();
 
                 if (buildings.Any())
                 {
@@ -203,5 +207,4 @@ namespace EMO.Repositories.BuildingServicesRepo
             }
         }
     }
-
 }

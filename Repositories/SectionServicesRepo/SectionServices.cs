@@ -4,7 +4,8 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
-using System.ComponentModel.Design;
+using APIProduct.Repositories.SectionServicesRepo;
+using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.SectionServicesRepo
 {
@@ -24,7 +25,8 @@ namespace EMO.Repositories.SectionServicesRepo
             try
             {
                 var existingSection = await db.tbl_section
-                    .Where(s => s.section_name.ToLower() == requestDto.sectionName.ToLower())
+                    .Where(x => x.section_name.ToLower() == requestDto.sectionName.ToLower()
+                             && x.fk_floor == Guid.Parse(requestDto.fkFloor))
                     .FirstOrDefaultAsync();
 
                 if (existingSection == null)
@@ -64,12 +66,13 @@ namespace EMO.Repositories.SectionServicesRepo
             try
             {
                 var existingSection = await db.tbl_section
-                    .Where(s => s.section_id == Guid.Parse(requestDto.sectionId))
+                    .Where(x => x.section_id == Guid.Parse(requestDto.sectionId))
                     .FirstOrDefaultAsync();
 
                 if (existingSection != null)
                 {
                     mapper.Map(requestDto, existingSection);
+                    existingSection.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<SectionResponseDTO>()
@@ -103,7 +106,8 @@ namespace EMO.Repositories.SectionServicesRepo
             try
             {
                 var section = await db.tbl_section
-                    .Where(s => s.section_id == Guid.Parse(sectionId))
+                    .Include(x => x.floor)
+                    .Where(x => x.section_id == Guid.Parse(sectionId))
                     .FirstOrDefaultAsync();
 
                 if (section != null)
@@ -138,7 +142,9 @@ namespace EMO.Repositories.SectionServicesRepo
         {
             try
             {
-                var sections = await db.tbl_section.ToListAsync();
+                var sections = await db.tbl_section
+                    .Include(x => x.floor)
+                    .ToListAsync();
 
                 if (sections.Any())
                 {
@@ -204,5 +210,4 @@ namespace EMO.Repositories.SectionServicesRepo
             }
         }
     }
-
 }
