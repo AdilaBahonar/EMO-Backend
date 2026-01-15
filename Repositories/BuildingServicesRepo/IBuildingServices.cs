@@ -1,6 +1,5 @@
 ﻿using EMO.Models.DTOs.BuildingDTOs;
 using EMO.Models.DTOs.ResponseDTO;
-using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.BuildingServicesRepo
 {

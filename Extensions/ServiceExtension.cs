@@ -15,16 +15,13 @@ using EMO.Repositories.FloorServicesRepo;
 using EMO.Repositories.OfficeServicesRepo;
 using EMO.Repositories.DeviceServicesRepo;
 using EMO.Repositories.DeviceTypeServicesRepo;
-using EMO.Repositories.PocServicesRepo;
-using APIProduct.Repositories.OfficeServicesRepo;
-using APIProduct.Repositories.PocServicesRepo;
 using EMO.Repositories.ContactPersonServicesRepo;
 using EMO.Repositories.SingalPhaseDataServicesRepo;
 using EMO.Repositories.SingalPhaseDataRepo;
-using EMO.Repositories.SubTypeServicesRepo;
 using EMO.Repositories.TenantServicesRepo;
 using EMO.Repositories.UtilityServicesRepo;
 using EMO.Repositories.SensorServicesRepo;
+using EMO.Repositories.ControlTypeServicesRepo;
 
 namespace EMO.Extensions
 {
@@ -71,10 +68,8 @@ namespace EMO.Extensions
             services.AddTransient<IControlTypeServices, ControlTypeServices>();
             services.AddTransient<IDeviceServices, DeviceServices>();
             services.AddTransient<IDeviceTypeServices, DeviceTypeServices>();
-            services.AddTransient<IPocServices, PocServices>();
             services.AddTransient<IContactPersonServices, ContactPersonServices>();
             services.AddTransient<ISingalPhaseDataService, SingalPhaseDataService>();
-            services.AddTransient<ISubTypeServices, SubTypeServices>();
             services.AddTransient<ITenantServices, TenantServices>();
             services.AddTransient<IUtilityServices, UtilityServices>();
             services.AddTransient<ISensorServices, SensorServices>();

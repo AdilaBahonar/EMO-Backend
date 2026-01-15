@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.ResponseDTO;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {

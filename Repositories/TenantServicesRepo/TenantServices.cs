@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.TenantDTOs.EMO.Models.DTOs.TenantDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.TenantServicesRepo
 {

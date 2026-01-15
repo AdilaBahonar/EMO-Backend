@@ -11,6 +11,7 @@ namespace EMO.Models.DTOs.UserDTOs
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType {  get; set; } = string.Empty;
 
+
     }
     public  class UpdateInnerUserDTO
     {
@@ -22,6 +23,7 @@ namespace EMO.Models.DTOs.UserDTOs
         public string otp { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
+        public string userPassword { get; set; } = string.Empty;
     } 
     public  class UpdateUserDTO
     {
@@ -32,6 +34,7 @@ namespace EMO.Models.DTOs.UserDTOs
         public string otp { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;
+        public string userPassword { get; set; } = string.Empty;
     }
     public class userResponseDTO 
     {
@@ -48,6 +51,7 @@ namespace EMO.Models.DTOs.UserDTOs
         public string userName { get; set; } = string.Empty;
         public string name { get; set; } = string.Empty;
         public string otp { get; set; } = string.Empty;
+        public string userPassword { get; set; } = string.Empty;
         public string userToken { get; set; } = string.Empty;
         public string userPhoneNo { get; set; } = string.Empty;
         public string fkUserType { get; set; } = string.Empty;

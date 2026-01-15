@@ -4,8 +4,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
-using APIProduct.Repositories.BusinessServicesRepo;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Repositories.BusinessServicesRepo;
 
 namespace EMO.Repositories.ControlTypeServicesRepo
 {

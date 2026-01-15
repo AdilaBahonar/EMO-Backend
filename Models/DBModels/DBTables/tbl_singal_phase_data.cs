@@ -14,5 +14,8 @@
         public float frequency { get; set; } = 0;
         public float active_energy { get; set; } = 0;
         public float reactive_energy { get; set; } = 0;
+        public DateTime created_at { get; set; } = DateTime.Now;
+        public Guid fk_sensor { get; set; } = Guid.Empty;
+        public tbl_sensor sensor { get; set; } = default!;
     }
 }

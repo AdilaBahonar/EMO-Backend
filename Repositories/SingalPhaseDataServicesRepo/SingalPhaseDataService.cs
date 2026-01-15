@@ -4,7 +4,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Repositories.SingalPhaseDataServicesRepo;
-using P3AHR.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.SingalPhaseDataRepo
 {

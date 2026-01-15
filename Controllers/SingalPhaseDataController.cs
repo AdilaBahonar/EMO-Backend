@@ -5,8 +5,6 @@ using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Repositories.SingalPhaseDataServicesRepo;
-using P3AHR.Extensions.MiddleWare;
-using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {

@@ -4,8 +4,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
-using APIProduct.Models.DTOs.DeviceTypeDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.DeviceTypeServicesRepo
 {

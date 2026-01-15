@@ -20,6 +20,8 @@ namespace EMO.Extensions.AutoMapper
             CreateMap<tbl_business, BusinessResponseDTO>()
               .ForMember(d => d.businessId, opt => opt.MapFrom(src => src.business_id.ToString()))
               .ForMember(d => d.businessName, opt => opt.MapFrom(src => src.business_name))
+              .ForMember(d => d.created_at, opt => opt.MapFrom(src => src.business_id.ToString()))
+              .ForMember(d => d.businessName, opt => opt.MapFrom(src => src.business_name))
               .ForMember(d => d.userName, opt => opt.MapFrom(src => src.user.user_name))
               .ForMember(d => d.fkUser, opt => opt.MapFrom(src => src.fk_user.ToString()));
         }

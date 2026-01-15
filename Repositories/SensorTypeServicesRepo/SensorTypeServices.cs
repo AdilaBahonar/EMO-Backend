@@ -8,7 +8,7 @@ using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.SensorTypeServicesRepo
 {
-    public class SensorTypeServices : ISensorTypeServices
+    public class SensorTypeServices : ISensortypeServices
     {
         private readonly DBUserManagementContext db;
         private readonly IMapper mapper;

@@ -13,6 +13,7 @@ namespace EMO.Models.DBModels.DBTables
         public string name { get; set; } = string.Empty;
         public string user_phone_no { get; set; } = string.Empty;
         public string user_token { get; set; } = string.Empty;
+        public string user_password { get; set; } = string.Empty;
         public Guid? fk_user_type { get; set; } = Guid.Empty;
         public tbl_user_type user_type { get; set; } = default!;
         public IEnumerable<tbl_business> businesses { get; set; } = default!;

@@ -34,7 +34,7 @@ namespace EMO.Repositories.AuthServicesRepo
         {
             try
             {
-                var existingUser = await innerServices.GetUserByOfficialEmail(requestDto.userOfficalEmailAddress) ;
+                var existingUser = await innerServices.GetUserByOfficialEmail(requestDto.userName) ;
                 if (existingUser.success )
                 {
                     if (existingUser.data.userPassword == otherServices.encodePassword(requestDto.password))
@@ -132,7 +132,7 @@ namespace EMO.Repositories.AuthServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.Where(u => u.user_official_email.ToLower() == requestDto.userOfficalEmailAddress.ToLower()).FirstOrDefaultAsync();
+                var existingUser = await db.tbl_user.Where(u => u.user_name.ToLower() == requestDto.userName.ToLower()).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
                   //  Generate a password reset token and send a reset email
@@ -167,7 +167,7 @@ namespace EMO.Repositories.AuthServicesRepo
         {
             var authClaims = new List<Claim>
                         {
-                            new Claim(ClaimTypes.Email, user.userOfficialEmail),
+                            new Claim(ClaimTypes.Email, user.userName),
                             new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
                         };
             var token = jwtUtils.GetToken(authClaims, isRememberMe);

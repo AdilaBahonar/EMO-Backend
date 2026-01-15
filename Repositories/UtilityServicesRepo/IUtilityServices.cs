@@ -1,5 +1,5 @@
-﻿using EMO.Models.DTOs.UtilityDTOs.EMO.Models.DTOs.UtilityDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.UtilityDTOs.EMO.Models.DTOs.UtilityDTOs;
 
 namespace EMO.Repositories.UtilityServicesRepo
 {

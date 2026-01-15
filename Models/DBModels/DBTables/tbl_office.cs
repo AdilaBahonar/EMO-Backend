@@ -13,6 +13,7 @@ namespace EMO.Models.DBModels.DBTables
         public bool is_occupied { get; set; } = false;
         public Guid fk_section { get; set; } = Guid.Empty;
         public tbl_section section { get; set; } = default!;
-        public IEnumerable<tbl_device> devices { get; set; } = default!;
+        public IEnumerable<tbl_sensor> sensors { get; set; } = default!;
+        public IEnumerable<tbl_agreement> agreements { get; set; } = default!;
     }
 }

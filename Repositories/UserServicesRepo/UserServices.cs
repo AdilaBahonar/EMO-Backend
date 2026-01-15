@@ -4,8 +4,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
-using P3AHR.Models.DTOs.ResponseDTO;
-using P3AHR.Repositories.UserServicesRepo;
 
 namespace EMO.Repositories.UserServicesRepo
 {

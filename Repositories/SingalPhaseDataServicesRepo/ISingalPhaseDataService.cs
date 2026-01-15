@@ -1,5 +1,5 @@
-﻿using EMO.Models.DTOs.SingalPhaseDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.SingalPhaseDTOs;
 
 namespace EMO.Repositories.SingalPhaseDataServicesRepo
 {

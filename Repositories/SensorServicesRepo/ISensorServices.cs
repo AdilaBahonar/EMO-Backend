@@ -1,5 +1,5 @@
-﻿using EMO.Models.DTOs.SensorDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.SensorDTOs;
 
 namespace EMO.Repositories.SensorServicesRepo
 {

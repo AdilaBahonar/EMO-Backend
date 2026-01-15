@@ -14,7 +14,7 @@ namespace EMO.Models.DTOs.BuildingDTOs
         [Required]
         public string buildingId { get; set; } = string.Empty;
         public string buildingName { get; set; } = string.Empty;
-        public bool is_active { get; set; } = false;
+        public bool isActive { get; set; } = false;
         public string fkFacility { get; set; } = string.Empty;
     }
     public class BuildingResponseDTO
@@ -23,9 +23,9 @@ namespace EMO.Models.DTOs.BuildingDTOs
         public string buildingId { get; set; } = string.Empty;
         public string buildingName { get; set; } = string.Empty;
         public string facilityName { get; set; } = string.Empty;
-        public string created_at { get; set; } = string.Empty;
-        public string updated_at { get; set; } = string.Empty;
-        public bool is_active { get; set; } = false;
+        public string createdAt { get; set; } = string.Empty;
+        public string updatedAt { get; set; } = string.Empty;
+        public bool isActive { get; set; } = false;
         public string fkFacility { get; set; } = string.Empty;
     }
 }

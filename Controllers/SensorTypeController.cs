@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.ResponseDTO;
-using P3AHR.Extensions.MiddleWare;
 
 namespace EMO.Controllers
 {
@@ -14,10 +13,10 @@ namespace EMO.Controllers
     [ApiController]
     public class SensorTypeController : ControllerBase
     {
-        private readonly ISensorTypeServices SensorTypeServices;
+        private readonly ISensortypeServices SensorTypeServices;
         private readonly OtherServices otherServices;
 
-        public SensorTypeController(ISensorTypeServices SensorTypeServices, OtherServices otherServices)
+        public SensorTypeController(ISensortypeServices SensorTypeServices, OtherServices otherServices)
         {
             this.SensorTypeServices = SensorTypeServices;
             this.otherServices = otherServices;

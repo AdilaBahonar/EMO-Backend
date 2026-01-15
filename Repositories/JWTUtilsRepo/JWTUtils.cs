@@ -56,7 +56,7 @@ namespace EMO.Repositories.JWTUtilsRepo
                 var email = jwtToken.Claims.First(x => x.Type == ClaimTypes.Email).Value;
 
                 var employee = await db.tbl_user
-                    .Where(x => x.user_official_email == email && x.user_token == userToken)
+                    .Where(x => x.user_name == email && x.user_token == userToken)
                     .FirstOrDefaultAsync();
 
                 if (employee != null)

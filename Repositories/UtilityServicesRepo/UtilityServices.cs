@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.UtilityDTOs.EMO.Models.DTOs.UtilityDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.UtilityServicesRepo
 {

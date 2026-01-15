@@ -14,20 +14,16 @@
         {
             [Required]
             public string utilityId { get; set; } = string.Empty;
-
             public string utilityName { get; set; } = string.Empty;
-
-            public bool is_active { get; set; } = false;
+            public bool isActive { get; set; } = false;
         }
 
         public class UtilityResponseDTO
         {
             [Required]
             public string utilityId { get; set; } = string.Empty;
-
             public string utilityName { get; set; } = string.Empty;
-
-            public bool is_active { get; set; } = false;
+            public bool isActive { get; set; } = false;
         }
     }
 

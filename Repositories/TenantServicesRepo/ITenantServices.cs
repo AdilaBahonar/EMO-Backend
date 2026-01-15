@@ -1,5 +1,5 @@
-﻿using EMO.Models.DTOs.TenantDTOs.EMO.Models.DTOs.TenantDTOs;
-using P3AHR.Models.DTOs.ResponseDTO;
+﻿using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.TenantDTOs.EMO.Models.DTOs.TenantDTOs;
 
 namespace EMO.Repositories.TenantServicesRepo
 {

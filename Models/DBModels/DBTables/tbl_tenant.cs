@@ -10,6 +10,8 @@
         public DateTime created_at { get; set; } = DateTime.Now;
         public DateTime? updated_at { get; set; } = null;
         public bool is_active { get; set; } = false;
+        public IEnumerable<tbl_contact_person> contact_persons { get; set; } = default!;
+        public IEnumerable<tbl_agreement> agreements { get; set; } = default!;
 
     }
 }
