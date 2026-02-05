@@ -8,6 +8,7 @@ namespace EMO.Models.DTOs.SectionDTOs
         public string sectionName { get; set; } = string.Empty;
         [Required]
         public string fkFloor { get; set; } = string.Empty;
+        public bool isActive { get; set; } = false;
     }
     public class UpdateSectionDTO
     {

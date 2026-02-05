@@ -8,6 +8,7 @@ namespace EMO.Models.DTOs.BuildingDTOs
         public string buildingName { get; set; } = string.Empty;
         [Required]
         public string fkFacility { get; set; } = string.Empty;
+        public bool isActive { get; set; } = false;
     }
     public class UpdateBuildingDTO
     {

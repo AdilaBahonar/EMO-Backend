@@ -112,5 +112,41 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [HttpPut("UpdateHierarchy")]
+        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> UpdateHierarchy(List<UserTypeHierarchyDTO> model)
+        {
+            if (ModelState.IsValid)
+            {
+                var Response = UserTypeService.UpdateUserTypeHierarchy(model);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserTypeResponseDTO>()
+                {
+                    remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+        [HttpGet("GetByUserId")]
+        public async Task<ActionResult<ResponseModel<UserTypeResponseDTO>>> GetByUserId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = UserTypeService.GetUserTypeByUserId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserTypeResponseDTO>()
+                {
+                    remarks = "UserType not found by ID",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
     }
 }

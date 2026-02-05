@@ -1,10 +1,12 @@
-﻿using EMO.Models.DTOs.FloorDTOs;
+﻿using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.FacilityDTOs;
+using EMO.Models.DTOs.FloorDTOs;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.FacilityServicesRepo;
 using EMO.Repositories.FloorServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {
@@ -22,7 +24,7 @@ namespace EMO.Controllers
             this.otherServices = otherServices;
         }
 
-        [HttpPost("AddFloor")]
+        [HttpPost]
 
         public async Task<ActionResult<ResponseModel<FloorResponseDTO>>> Post(AddFloorDTO model)
         {
@@ -60,7 +62,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
-
+        [HttpGet("GetByBuildingId")]
+        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetByBuildingId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = FloorServices.GetFloorByBuildingId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = "Invalid id.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
         [HttpGet("GetById")]
         public async Task<ActionResult<ResponseModel<FloorResponseDTO>>> GetById(string id)
         {

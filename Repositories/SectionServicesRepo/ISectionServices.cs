@@ -10,5 +10,6 @@ namespace EMO.Repositories.SectionServicesRepo
         Task<ResponseModel<SectionResponseDTO>> GetSectionById(string sectionId);
         Task<ResponseModel<List<SectionResponseDTO>>> GetAllSections();
         Task<ResponseModel> DeleteSectionById(string sectionId);
+        public Task<ResponseModel<List<SectionResponseDTO>>> GetSectionsByFloorId(string floorId);
     }
 }

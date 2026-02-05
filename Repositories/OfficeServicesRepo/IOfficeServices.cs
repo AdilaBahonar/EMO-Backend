@@ -10,5 +10,7 @@ namespace EMO.Repositories.OfficeServicesRepo
         Task<ResponseModel<OfficeResponseDTO>> GetOfficeById(string officeId);
         Task<ResponseModel<List<OfficeResponseDTO>>> GetAllOffices();
         Task<ResponseModel> DeleteOfficeById(string officeId);
+        public Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeBySectionId(string sectionId);
+        public Task<ResponseModel<List<OfficeResponseDTO>>> GetAvailableOfficesBySectionId(string sectionId);
     }
 }

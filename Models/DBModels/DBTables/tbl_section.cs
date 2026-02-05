@@ -8,7 +8,7 @@ namespace EMO.Models.DBModels.DBTables
         public Guid section_id { get; set; } = Guid.NewGuid();
         public string section_name { get; set; } = string.Empty;
         public DateTime created_at { get; set; } = DateTime.Now;
-        public DateTime? updated_at { get; set; } = null;
+        public DateTime updated_at { get; set; } = DateTime.Now;
         public bool is_active { get; set; } = false;
         public Guid fk_floor { get; set; } = Guid.Empty;
         public tbl_floor floor { get; set; } = default!;

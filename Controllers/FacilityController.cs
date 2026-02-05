@@ -79,6 +79,24 @@ namespace EMO.Controllers
             }
         }
 
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<FacilityResponseDTO>>>> GetByBusinessId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = FacilityServices.GetFacilityByBusinessId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FacilityResponseDTO>>()
+                {
+                    remarks = "Facility not found by ID",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
         [HttpGet]
         public async Task<ActionResult<ResponseModel<List<FacilityResponseDTO>>>> Get()
         {

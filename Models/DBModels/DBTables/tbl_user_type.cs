@@ -11,5 +11,6 @@ namespace EMO.Models.DBModels.DBTables
         public bool is_active { get; set; } = true;
         public int user_type_level { get; set; } 
         public IEnumerable<tbl_user> users { get; set; } = default!;
+        public IEnumerable<tbl_sub_user_type> subuser_types { get; set; } = default!;
     }
 }

@@ -10,5 +10,6 @@ namespace EMO.Repositories.FacilityServicesRepo
         Task<ResponseModel<FacilityResponseDTO>> GetFacilityById(string facilityId);
         Task<ResponseModel<List<FacilityResponseDTO>>> GetAllFacilities();
         Task<ResponseModel> DeleteFacilityById(string facilityId);
+        public Task<ResponseModel<List<FacilityResponseDTO>>> GetFacilityByBusinessId(string businessId);
     }
 }

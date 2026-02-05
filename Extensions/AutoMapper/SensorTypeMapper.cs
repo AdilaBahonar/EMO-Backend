@@ -14,20 +14,20 @@ namespace EMO.Extensions.AutoMapper
         {
             CreateMap<AddSensorTypeDTO, tbl_sensor_type>()
                 .ForMember(d => d.sensor_type_name, opt => opt.MapFrom(src => src.sensorTypeName))
-                .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.is_active))
-                .ForMember(d => d.is_type, opt => opt.MapFrom(src => src.is_type));
+                .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.isActive))
+                .ForMember(d => d.is_type, opt => opt.MapFrom(src => src.isType));
 
             CreateMap<UpdateSensorTypeDTO, tbl_sensor_type>()
                 .ForMember(d => d.sensor_type_name, opt => opt.MapFrom((src, dest) =>
                     otherServices.Check(src.sensorTypeName) ? src.sensorTypeName : dest.sensor_type_name))
-                .ForMember(d => d.is_active, opt => opt.MapFrom((src, dest) => src.is_active))
-                .ForMember(d => d.is_type, opt => opt.MapFrom((src, dest) => src.is_type));
+                .ForMember(d => d.is_active, opt => opt.MapFrom((src, dest) => src.isActive))
+                .ForMember(d => d.is_type, opt => opt.MapFrom((src, dest) => src.isType));
 
             CreateMap<tbl_sensor_type, SensorTypeResponseDTO>()
                 .ForMember(d => d.sensorTypeId, opt => opt.MapFrom(src => src.sensor_type_id.ToString()))
                 .ForMember(d => d.sensorTypeName, opt => opt.MapFrom(src => src.sensor_type_name))
-                .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.is_active))
-                .ForMember(d => d.is_type, opt => opt.MapFrom(src => src.is_type));
+                .ForMember(d => d.isActive, opt => opt.MapFrom(src => src.is_active))
+                .ForMember(d => d.isType, opt => opt.MapFrom(src => src.is_type));
         }
     }
 }

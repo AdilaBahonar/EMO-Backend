@@ -134,7 +134,42 @@ namespace EMO.Repositories.FacilityServicesRepo
                 };
             }
         }
+        public async Task<ResponseModel<List<FacilityResponseDTO>>> GetFacilityByBusinessId(string businessId)
+        {
+            try
+            {
+                var facility = await db.tbl_facility
+                    .Include(x => x.business)
+                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .ToListAsync();
 
+                if (facility.Any())
+                {
+                    return new ResponseModel<List<FacilityResponseDTO>>()
+                    {
+                        data = mapper.Map<List<FacilityResponseDTO>>(facility),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<FacilityResponseDTO>>()
+                    {
+                        remarks = "Facility not found",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<FacilityResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel<List<FacilityResponseDTO>>> GetAllFacilities()
         {
             try

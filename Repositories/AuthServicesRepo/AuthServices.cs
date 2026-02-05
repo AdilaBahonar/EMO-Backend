@@ -1,14 +1,15 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using EMO.Extensions;
+using EMO.Helpers;
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.AuthDTOs;
-using EMO.Models.DTOs.UserDTOs;
 using EMO.Models.DTOs.ResponseDTO;
-using EMO.Repositories.UserServicesRepo;
+using EMO.Models.DTOs.UserDTOs;
 using EMO.Repositories.InnerServicesRepo;
 using EMO.Repositories.JWTUtilsRepo;
+using EMO.Repositories.UserServicesRepo;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -163,23 +164,57 @@ namespace EMO.Repositories.AuthServicesRepo
                 };
             }
         }
+        //private async Task<ResponseModel<UserLoginResponseDTO>> Login(UserInnerResponseDTO user, bool isRememberMe)
+        //{
+        //    var authClaims = new List<Claim>
+        //                {
+        //                    new Claim(ClaimTypes.Email, user.userName),
+        //                    new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
+        //                };
+        //    var token = jwtUtils.GetToken(authClaims, isRememberMe);
+        //    user.userToken = new JwtSecurityTokenHandler().WriteToken(token);
+        //    user.userPassword = "";
+        //    await innerServices.UpdateUser(mapper.Map<UpdateInnerUserDTO>(user));
+        //    return new ResponseModel<UserLoginResponseDTO>()
+        //    {
+        //        data = mapper.Map<UserLoginResponseDTO>(user),
+        //        success = true,
+        //        remarks = $"Success"
+        //    };
+        //}
+
         private async Task<ResponseModel<UserLoginResponseDTO>> Login(UserInnerResponseDTO user, bool isRememberMe)
         {
+            // 1️⃣ Claims
             var authClaims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Email, user.userName),
-                            new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
-                        };
-            var token = jwtUtils.GetToken(authClaims, isRememberMe);
-            user.userToken = new JwtSecurityTokenHandler().WriteToken(token);
-            user.userPassword = "";
-            await innerServices.UpdateUser(mapper.Map<UpdateInnerUserDTO>(user));
-            return new ResponseModel<UserLoginResponseDTO>()
+            {
+                new Claim(ClaimTypes.Email, user.userName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var jwtToken = jwtUtils.GetToken(authClaims, isRememberMe);
+            var rawToken = new JwtSecurityTokenHandler().WriteToken(jwtToken);
+
+            user.userToken = TokenHashHelper.HashToken(rawToken);
+
+            user.lastActivityAt = DateTime.Now;
+            user.userPassword = string.Empty;
+
+            // 6️⃣ UPDATE USER
+            await innerServices.UpdateUser(
+                mapper.Map<UpdateInnerUserDTO>(user)
+            );
+
+            // 7️⃣ RETURN RAW TOKEN TO FRONTEND
+            user.userToken = rawToken;
+
+            return new ResponseModel<UserLoginResponseDTO>
             {
                 data = mapper.Map<UserLoginResponseDTO>(user),
                 success = true,
-                remarks = $"Success"
+                remarks = "Success"
             };
         }
+
     }
 }

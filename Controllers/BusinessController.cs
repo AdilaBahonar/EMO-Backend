@@ -41,6 +41,25 @@ namespace EMO.Controllers
             }
         }
 
+        [HttpPost("AddBusinessAndBusinessAdmin")]
+        public async Task<ActionResult<ResponseModel<BusinessResponseDTO>>> AddBusinessAndBusinessAdmin(AddBusinessAndAdminDTO model)
+        {
+            if (ModelState.IsValid)
+            {
+                var Response = BusinessServices.AddBusinessAndBusinessAdmin(model);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<BusinessResponseDTO>()
+                {
+                    remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
         [HttpPut]
         public async Task<ActionResult<ResponseModel<BusinessResponseDTO>>> Put(UpdateBusinessDTO model)
         {
@@ -66,6 +85,24 @@ namespace EMO.Controllers
             if (otherServices.Check(id))
             {
                 var Response = BusinessServices.GetBusinessById(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<BusinessResponseDTO>()
+                {
+                    remarks = "Business not found by ID",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+        [HttpGet("GetBusinessByUserId")]
+        public async Task<ActionResult<ResponseModel<BusinessResponseDTO>>> GetBusinessByUserId(string userId)
+        {
+            if (otherServices.Check(userId))
+            {
+                var Response = BusinessServices.GetBusinessByUserId(userId);
                 return Ok(await Response);
             }
             else

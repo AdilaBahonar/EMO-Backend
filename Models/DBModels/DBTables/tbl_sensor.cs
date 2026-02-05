@@ -1,7 +1,10 @@
-﻿namespace EMO.Models.DBModels.DBTables
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EMO.Models.DBModels.DBTables
 {
     public class tbl_sensor
     {
+        [Key]
         public Guid sensor_id { get; set; } = Guid.NewGuid();
         public string sensor_name { get; set; } = string.Empty;
         public Guid fk_sensor_type { get; set; } = Guid.Empty;

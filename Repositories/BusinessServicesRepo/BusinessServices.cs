@@ -103,7 +103,6 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var business = await db.tbl_business
-                    .Include(x => x.user)
                     .Where(x => x.business_id == Guid.Parse(businessId))
                     .FirstOrDefaultAsync();
 
@@ -135,12 +134,60 @@ namespace EMO.Repositories.BusinessServicesRepo
             }
         }
 
+        public async Task<ResponseModel<BusinessResponseDTO>> GetBusinessByUserId(string userId)
+        {
+            try
+            {
+
+                var user = await db.tbl_user.Where(x => x.user_id == Guid.Parse(userId) && x.sub_user_type.user_type.user_type_name.ToLower() == "business admin").FirstOrDefaultAsync();
+                if(user!= null)
+                { 
+                    var business = await db.tbl_business
+                    .Where(x => x.business_id == user.fk_business)
+                    .FirstOrDefaultAsync();
+
+                    if (business != null)
+                    {
+                        return new ResponseModel<BusinessResponseDTO>()
+                        {
+                            data = mapper.Map<BusinessResponseDTO>(business),
+                            remarks = "Success",
+                            success = true
+                        };
+                    }
+                    else
+                    {
+                        return new ResponseModel<BusinessResponseDTO>()
+                        {
+                            remarks = "Business not found",
+                            success = false
+                        };
+                    }
+                }
+                else
+                {
+                    return new ResponseModel<BusinessResponseDTO>()
+                    {
+                        remarks = "Inavlid Request.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<BusinessResponseDTO>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
         public async Task<ResponseModel<List<BusinessResponseDTO>>> GetAllBusinesses()
         {
             try
             {
                 var businesses = await db.tbl_business
-                    .Include(x => x.user)
                     .ToListAsync();
 
                 if (businesses.Any())
@@ -200,6 +247,72 @@ namespace EMO.Repositories.BusinessServicesRepo
             catch (Exception ex)
             {
                 return new ResponseModel()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<BusinessResponseDTO>> AddBusinessAndBusinessAdmin(AddBusinessAndAdminDTO requestDto)
+        {
+            try
+            {
+                var existingBusiness = await db.tbl_business
+                    .Where(x => x.business_name.ToLower() == requestDto.businessName.ToLower())
+                    .FirstOrDefaultAsync();
+                var user = await db.tbl_user.Where(u => u.user_name.ToLower() == requestDto.userName.ToLower()).FirstOrDefaultAsync();
+
+                if (existingBusiness == null)
+                {
+                    if(user!= null)
+                    {
+                        return new ResponseModel<BusinessResponseDTO>()
+                        {
+                            remarks = "User with this username already exist. Try other username.",
+                            success = false
+                        };
+                    }
+                    
+                    var newBusiness = mapper.Map<tbl_business>(requestDto);
+                    await db.tbl_business.AddAsync(newBusiness);
+                    
+                    var newUser = mapper.Map<tbl_user>(requestDto);
+                    newUser.fk_business = newBusiness.business_id;
+                    await db.tbl_user.AddAsync(newUser);
+                    await db.SaveChangesAsync();
+
+                    if (!string.IsNullOrEmpty(requestDto.imageBase64))
+                    {
+                        var userImage = new tbl_user_image
+                        {
+                            fk_user = newUser.user_id,
+                            imageBase64 = requestDto.imageBase64
+                        };
+
+                        await db.tbl_user_image.AddAsync(userImage);
+                        await db.SaveChangesAsync();
+                    }
+
+                    return new ResponseModel<BusinessResponseDTO>()
+                    {
+                        data = mapper.Map<BusinessResponseDTO>(newBusiness),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<BusinessResponseDTO>()
+                    {
+                        remarks = "Business Already Exists",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<BusinessResponseDTO>()
                 {
                     remarks = $"There was a fatal error: {ex}",
                     success = false

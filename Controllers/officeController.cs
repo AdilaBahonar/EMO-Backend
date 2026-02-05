@@ -1,10 +1,12 @@
-﻿using EMO.Models.DTOs.OfficeDTOs;
+﻿using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.FloorDTOs;
+using EMO.Models.DTOs.OfficeDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 using EMO.Repositories.OfficeServicesRepo;
+using EMO.Repositories.SectionServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {
@@ -35,6 +37,43 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<OfficeResponseDTO>()
                 {
                     remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetBySectionId")]
+        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetBySectionId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = OfficeServices.GetOfficeBySectionId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = "Invalid id.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+        [HttpGet("GetAvailableOfficesBySectionId")]
+        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetAvailableOfficesBySectionId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = OfficeServices.GetAvailableOfficesBySectionId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = "Invalid id.",
                     success = false
                 };
                 return BadRequest(Response);

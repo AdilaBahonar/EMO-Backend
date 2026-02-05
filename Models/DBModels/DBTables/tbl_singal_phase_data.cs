@@ -1,7 +1,10 @@
-﻿namespace EMO.Models.DBModels.DBTables
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EMO.Models.DBModels.DBTables
 {
     public class tbl_singal_phase_data
     {
+        [Key]
         public Guid singal_phase_data_id { get; set; } =Guid.NewGuid();
         public Int32 packet_id { get; set; } = 0;
         public Int32 epoch_sec { get; set; } = 0;

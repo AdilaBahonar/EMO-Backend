@@ -1,9 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.SectionDTOs;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.FloorDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.SectionDTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.SectionServicesRepo
 {
@@ -201,6 +202,43 @@ namespace EMO.Repositories.SectionServicesRepo
             catch (Exception ex)
             {
                 return new ResponseModel()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<SectionResponseDTO>>> GetSectionsByFloorId(string floorId)
+        {
+            try
+            {
+                var Building = await db.tbl_section
+                    .Include(x => x.floor)
+                    .Where(x => x.fk_floor == Guid.Parse(floorId))
+                    .ToListAsync();
+
+                if (Building.Any())
+                {
+                    return new ResponseModel<List<SectionResponseDTO>>()
+                    {
+                        data = mapper.Map<List<SectionResponseDTO>>(Building),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<SectionResponseDTO>>()
+                    {
+                        remarks = "No record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<SectionResponseDTO>>()
                 {
                     remarks = $"There was a fatal error: {ex}",
                     success = false

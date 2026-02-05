@@ -1,10 +1,12 @@
-﻿using EMO.Models.DTOs.SectionDTOs;
+﻿using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.FloorDTOs;
+using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.SectionDTOs;
+using EMO.Repositories.FloorServicesRepo;
 using EMO.Repositories.SectionServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {
@@ -35,6 +37,25 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<SectionResponseDTO>()
                 {
                     remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetByFloorId")]
+        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetByFloorId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = SectionServices.GetSectionsByFloorId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = "Invalid id.",
                     success = false
                 };
                 return BadRequest(Response);

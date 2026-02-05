@@ -1,9 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.BuildingDTOs;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.BuildingDTOs;
+using EMO.Models.DTOs.FacilityDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.BuildingServicesRepo
 {
@@ -200,6 +201,43 @@ namespace EMO.Repositories.BuildingServicesRepo
             catch (Exception ex)
             {
                 return new ResponseModel()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<BuildingResponseDTO>>> GetBuidlingByFacilityId(string facilityId)
+        {
+            try
+            {
+                var Building = await db.tbl_building
+                    .Include(x => x.facility)
+                    .Where(x => x.fk_facility == Guid.Parse(facilityId))
+                    .ToListAsync();
+
+                if (Building.Any())
+                {
+                    return new ResponseModel<List<BuildingResponseDTO>>()
+                    {
+                        data = mapper.Map<List<BuildingResponseDTO>>(Building),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<BuildingResponseDTO>>()
+                    {
+                        remarks = "Building not found",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<BuildingResponseDTO>>()
                 {
                     remarks = $"There was a fatal error: {ex}",
                     success = false

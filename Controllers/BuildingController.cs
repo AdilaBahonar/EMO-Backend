@@ -1,10 +1,12 @@
-﻿using EMO.Models.DTOs.BuildingDTOs;
+﻿using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.BuildingDTOs;
+using EMO.Models.DTOs.FacilityDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 using EMO.Repositories.BuildingServicesRepo;
+using EMO.Repositories.FacilityServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {
@@ -93,6 +95,25 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<BuildingResponseDTO>()
                 {
                     remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetByFacilityId")]
+        public async Task<ActionResult<ResponseModel<List<BuildingResponseDTO>>>> GetBuidlingByFacilityId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = BuildingServices.GetBuidlingByFacilityId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<BuildingResponseDTO>>()
+                {
+                    remarks = "Building not found by ID",
                     success = false
                 };
                 return BadRequest(Response);

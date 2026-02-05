@@ -9,7 +9,7 @@ namespace EMO.Models.DBModels.DBTables
         public string floor_name { get; set; } = string.Empty;
         public int floor_no { get; set; } = 0;
         public DateTime created_at { get; set; } = DateTime.Now;
-        public DateTime? updated_at { get; set; } = null;
+        public DateTime updated_at { get; set; } = DateTime.Now;
         public bool is_active { get; set; } = false;
         public Guid fk_building { get; set; } = Guid.Empty;
         public tbl_building building { get; set; } = default!;

@@ -8,6 +8,7 @@
         {
             [Required]
             public string utilityName { get; set; } = string.Empty;
+            public bool isActive { get; set; } = false;
         }
 
         public class UpdateUtilityDTO

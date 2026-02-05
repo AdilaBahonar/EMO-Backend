@@ -15,11 +15,11 @@ namespace EMO.Repositories.InnerServicesRepo
             this.db = db;
             this.mapper = mapper;
         }
-        public async Task<ResponseModel<UserInnerResponseDTO>> GetUserByOfficialEmail(string userName)
+        public async Task<ResponseModel<UserInnerResponseDTO>> GetUserByOfficialEmail(string username)
         {
             try
             {
-                var existingUser = await db.tbl_user.Include(u => u.user_type).Where(u => u.user_name == userName).FirstOrDefaultAsync();
+                var existingUser = await db.tbl_user.Include(u => u.sub_user_type).ThenInclude(x=>x.user_type).Where(u => u.user_name == username).Include(u => u.user_image).Include(u => u.gender).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
                     return new ResponseModel<UserInnerResponseDTO>()
@@ -51,7 +51,7 @@ namespace EMO.Repositories.InnerServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.Include(u => u.user_type).Where(u => u.user_phone_no == phoneNo).FirstOrDefaultAsync();
+                var existingUser = await db.tbl_user.Include(u => u.sub_user_type).Where(u => u.user_phone_no == phoneNo).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
                     return new ResponseModel<UserInnerResponseDTO>()

@@ -10,5 +10,6 @@ namespace EMO.Repositories.FloorServicesRepo
         Task<ResponseModel<FloorResponseDTO>> GetFloorById(string floorId);
         Task<ResponseModel<List<FloorResponseDTO>>> GetAllFloors();
         Task<ResponseModel> DeleteFloorById(string floorId);
+        public Task<ResponseModel<List<FloorResponseDTO>>> GetFloorByBuildingId(string buildingId);
     }
 }

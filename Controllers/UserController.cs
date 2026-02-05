@@ -25,7 +25,7 @@ namespace EMO.Controllers
             this.otherServices = otherServices;
         }
         [HttpPost]
-        [AllowAnonymous]
+        //[AllowAnonymous]
         public async Task<ActionResult<ResponseModel<UserResponseDTO>>> Post(AddUserDTO model)
         {
             if (ModelState.IsValid)
@@ -98,24 +98,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
-        [HttpGet("GetByUserTypeId")]
-        public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> GetByUserTypeId(string userTypeId)
-        {
-            if (otherServices.Check(userTypeId))
-            {
-                var Response = userService.GetByUserTypeId(userTypeId);
-                return Ok(await Response);
-            }
-            else
-            {
-                var Response = new ResponseModel<UserResponseDTO>()
-                {
-                    remarks = "User Not found by this User Type",
-                    success = false
-                };
-                return BadRequest(Response);
-            }
-        }
+        //[HttpGet("GetByUserTypeId")]
+        //public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> GetByUserTypeId(string userTypeId)
+        //{
+        //    if (otherServices.Check(userTypeId))
+        //    {
+        //        var Response = userService.GetByUserTypeId(userTypeId);
+        //        return Ok(await Response);
+        //    }
+        //    else
+        //    {
+        //        var Response = new ResponseModel<UserResponseDTO>()
+        //        {
+        //            remarks = "User Not found by this User Type",
+        //            success = false
+        //        };
+        //        return BadRequest(Response);
+        //    }
+        //}
         [HttpDelete]
         public async Task<ActionResult<ResponseModel>> Delete(string id)
         {
@@ -134,6 +134,42 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [HttpGet("GetByUserTypeId")]
+        public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> GetByUserTypeId(string userTypeId)
+        {
+            if (otherServices.Check(userTypeId))
+            {
+                var Response = userService.GetByUserTypeId(userTypeId);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserResponseDTO>()
+                {
+                    remarks = "User Not found by this User Type",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+        [HttpGet("GetUsers")]
+        public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> GetUnderUsersByUserId(string userId)
+        {
+            if (otherServices.Check(userId))
+            {
+                var Response = userService.GetUnderUsersByUserId(userId);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserResponseDTO>()
+                {
+                    remarks = "User Not found by this User Type",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
         [HttpGet("GetByOfficialEmail")]
         public async Task<ActionResult<ResponseModel<UserInnerResponseDTO>>> GetByOfficialEmail(string officialEmail)
         {
@@ -147,6 +183,24 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<UserInnerResponseDTO>()
                 {
                     remarks = "User not found by Id",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+        [HttpGet("GetBusinessAdmins")]
+        public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> GetBusinessAdmins(string userId)
+        {
+            if (otherServices.Check(userId))
+            {
+                var Response = userService.GetBusinessAdmins(userId);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserResponseDTO>()
+                {
+                    remarks = "User Not found by this User Type",
                     success = false
                 };
                 return BadRequest(Response);

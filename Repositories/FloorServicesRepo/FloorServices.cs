@@ -1,9 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.FloorDTOs;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.BuildingDTOs;
+using EMO.Models.DTOs.FloorDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.FloorServicesRepo
 {
@@ -172,6 +173,43 @@ namespace EMO.Repositories.FloorServicesRepo
             }
         }
 
+
+        public async Task<ResponseModel<List<FloorResponseDTO>>> GetFloorByBuildingId(string buildingId)
+        {
+            try
+            {
+                var Building = await db.tbl_floor
+                    .Include(x => x.building)
+                    .Where(x => x.fk_building == Guid.Parse(buildingId))
+                    .ToListAsync();
+
+                if (Building.Any())
+                {
+                    return new ResponseModel<List<FloorResponseDTO>>()
+                    {
+                        data = mapper.Map<List<FloorResponseDTO>>(Building),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<FloorResponseDTO>>()
+                    {
+                        remarks = "Floor not found",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel> DeleteFloorById(string floorId)
         {
             try

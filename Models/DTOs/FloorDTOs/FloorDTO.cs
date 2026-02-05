@@ -9,6 +9,7 @@ namespace EMO.Models.DTOs.FloorDTOs
         [Required]
         public string fkBuilding { get; set; } = string.Empty;
         public int floorNo { get; set; } = 0;
+        public bool isActive { get; set; } = false;
     }
     public class UpdateFloorDTO
     {

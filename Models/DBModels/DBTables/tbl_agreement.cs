@@ -11,7 +11,7 @@ namespace EMO.Models.DBModels.DBTables
         public DateTime agreement_start_date { get; set; } = DateTime.Now;
         public DateTime agreement_end_date { get; set; } = DateTime.Now.AddYears(1);
         public DateTime created_at { get; set; } = DateTime.Now;
-        public DateTime? updated_at { get; set; } = null;
+        public DateTime updated_at { get; set; } = DateTime.Now;
         public bool is_active { get; set; } = false;
         public Guid fk_tenant { get; set; } = Guid.Empty;
         public tbl_tenant tenant { get; set; } = default!;

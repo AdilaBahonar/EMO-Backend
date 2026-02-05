@@ -1,9 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.OfficeDTOs;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.SectionDTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.OfficeServicesRepo
 {
@@ -201,6 +202,80 @@ namespace EMO.Repositories.OfficeServicesRepo
             catch (Exception ex)
             {
                 return new ResponseModel()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeBySectionId(string sectionId)
+        {
+            try
+            {
+                var Offices = await db.tbl_office
+                    .Include(x => x.section)
+                    .Where(x => x.fk_section == Guid.Parse(sectionId))
+                    .ToListAsync();
+
+                if (Offices.Any())
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        data = mapper.Map<List<OfficeResponseDTO>>(Offices),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "No record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<OfficeResponseDTO>>> GetAvailableOfficesBySectionId(string sectionId)
+        {
+            try
+            {
+                var Offices = await db.tbl_office
+                    .Include(x => x.section)
+                    .Where(x => x.fk_section == Guid.Parse(sectionId) && x.is_occupied == false)
+                    .ToListAsync();
+
+                if (Offices.Any())
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        data = mapper.Map<List<OfficeResponseDTO>>(Offices),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "No record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<OfficeResponseDTO>>()
                 {
                     remarks = $"There was a fatal error: {ex}",
                     success = false

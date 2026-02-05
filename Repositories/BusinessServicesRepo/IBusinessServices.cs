@@ -10,5 +10,7 @@ namespace EMO.Repositories.BusinessServicesRepo
         Task<ResponseModel<BusinessResponseDTO>> GetBusinessById(string businessId);
         Task<ResponseModel<List<BusinessResponseDTO>>> GetAllBusinesses();
         Task<ResponseModel> DeleteBusinessById(string businessId);
+        public Task<ResponseModel<BusinessResponseDTO>> GetBusinessByUserId(string userId);
+        public Task<ResponseModel<BusinessResponseDTO>> AddBusinessAndBusinessAdmin(AddBusinessAndAdminDTO requestDto);
     }
 }

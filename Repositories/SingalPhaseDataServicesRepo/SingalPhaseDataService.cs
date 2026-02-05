@@ -51,7 +51,7 @@ namespace EMO.Repositories.SingalPhaseDataRepo
             try
             {
                 var existingData = await db.tbl_singal_phase_data
-                    .Where(x => x.singal_phase_data_id == requestDto.singalPhaseDataId)
+                    .Where(x => x.singal_phase_data_id == Guid.Parse(requestDto.singalPhaseDataId))
                     .FirstOrDefaultAsync();
 
                 if (existingData == null)

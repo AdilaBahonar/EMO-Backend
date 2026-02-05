@@ -26,4 +26,12 @@ namespace EMO.Models.DTOs.UserTypeDTOs
         public bool isActive { get; set; } 
 
     }
+    public class UserTypeHierarchyDTO
+    {
+        [Required]
+        public string userTypeId { get; set; } = string.Empty;
+        [Required]
+        public int userTypeLevel { get; set; }
+
+    }
 }

@@ -8,6 +8,7 @@ using EMO.Models.DTOs.ResponseDTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using EMO.Helpers;
 
 namespace EMO.Repositories.JWTUtilsRepo
 {
@@ -22,6 +23,8 @@ namespace EMO.Repositories.JWTUtilsRepo
             this.db = db;
             _mapper = mapper;
         }
+
+
         public JwtSecurityToken GetToken(List<Claim> authClaims, bool isRememberMeActive)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
@@ -41,8 +44,11 @@ namespace EMO.Repositories.JWTUtilsRepo
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+                var key = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(_configuration["JWT:Key"])
+                );
 
+                // 1️⃣ Validate JWT signature
                 tokenHandler.ValidateToken(userToken, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -55,30 +61,120 @@ namespace EMO.Repositories.JWTUtilsRepo
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var email = jwtToken.Claims.First(x => x.Type == ClaimTypes.Email).Value;
 
-                var employee = await db.tbl_user
-                    .Where(x => x.user_name == email && x.user_token == userToken)
+                // 2️⃣ HASH incoming token
+                var incomingTokenHash = TokenHashHelper.HashToken(userToken);
+
+                // 3️⃣ Fetch user using HASHED token
+                var user = await db.tbl_user
+                    .Where(x =>
+                        x.user_name == email &&
+                        x.user_token == incomingTokenHash
+                    )
                     .FirstOrDefaultAsync();
 
-                if (employee != null)
+                if (user == null)
                 {
                     return new ResponseModel<UserResponseDTO>
                     {
-                        data = _mapper.Map<UserResponseDTO>(employee),
-                        success = true
+                        success = false,
+                        remarks = "UserNotFound"
                     };
                 }
 
-                return new ResponseModel<UserResponseDTO> { success = false, remarks = "UserNotFound" };
+                // 4️⃣ INACTIVITY CHECK (1 hour)
+                if (user.last_activity_at < DateTime.Now.AddHours(-1))
+                {
+                    return new ResponseModel<UserResponseDTO>
+                    {
+                        success = false,
+                        remarks = "SessionExpired"
+                    };
+                }
+
+                // 5️⃣ SLIDING SESSION UPDATE
+                user.last_activity_at = DateTime.Now;
+                await db.SaveChangesAsync();
+
+                return new ResponseModel<UserResponseDTO>
+                {
+                    data = _mapper.Map<UserResponseDTO>(user),
+                    success = true
+                };
             }
             catch (SecurityTokenExpiredException)
             {
-                return new ResponseModel<UserResponseDTO> { success = false, remarks = "TokenExpired" };
+                return new ResponseModel<UserResponseDTO>
+                {
+                    success = false,
+                    remarks = "TokenExpired"
+                };
             }
-            catch (Exception)
+            catch
             {
-                return new ResponseModel<UserResponseDTO> { success = false, remarks = "TokenInvalid" };
+                return new ResponseModel<UserResponseDTO>
+                {
+                    success = false,
+                    remarks = "TokenInvalid"
+                };
             }
         }
+        /*  public JwtSecurityToken GetToken(List<Claim> authClaims, bool isRememberMeActive)
+          {
+              var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+
+              var token = new JwtSecurityToken(
+                  issuer: _configuration["JWT:ValidIssuer"],
+                  expires: isRememberMeActive ? DateTime.UtcNow.AddHours(29) : DateTime.UtcNow.AddHours(8),
+                  claims: authClaims,
+                  signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                  );
+
+              return token;
+          }
+
+          public async Task<ResponseModel<UserResponseDTO>> ValidateToken(string userToken)
+          {
+              try
+              {
+                  var tokenHandler = new JwtSecurityTokenHandler();
+                  var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+
+                  tokenHandler.ValidateToken(userToken, new TokenValidationParameters
+                  {
+                      ValidateIssuerSigningKey = true,
+                      IssuerSigningKey = key,
+                      ValidateIssuer = false,
+                      ValidateAudience = false,
+                      ClockSkew = TimeSpan.Zero
+                  }, out SecurityToken validatedToken);
+
+                  var jwtToken = (JwtSecurityToken)validatedToken;
+                  var email = jwtToken.Claims.First(x => x.Type == ClaimTypes.Email).Value;
+
+                  var employee = await db.tbl_user
+                      .Where(x => x.user_name == email && x.user_token == userToken)
+                      .FirstOrDefaultAsync();
+
+                  if (employee != null)
+                  {
+                      return new ResponseModel<UserResponseDTO>
+                      {
+                          data = _mapper.Map<UserResponseDTO>(employee),
+                          success = true
+                      };
+                  }
+
+                  return new ResponseModel<UserResponseDTO> { success = false, remarks = "UserNotFound" };
+              }
+              catch (SecurityTokenExpiredException)
+              {
+                  return new ResponseModel<UserResponseDTO> { success = false, remarks = "TokenExpired" };
+              }
+              catch (Exception)
+              {
+                  return new ResponseModel<UserResponseDTO> { success = false, remarks = "TokenInvalid" };
+              }
+          }*/
         /* public async Task<ResponseModel<UserResponseDTO>> ValidateToken(string userToken)
          {
              var tokenHandler = new JwtSecurityTokenHandler();
