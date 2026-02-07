@@ -16,11 +16,6 @@ namespace EMO.Models.DTOs.AgreementDTOs
             [Required]
             public string agreementEndDate { get; set; } = string.Empty;
 
-            [Required]
-            public string fkTenant { get; set; } = string.Empty;
-
-            [Required]
-            public string fkOffice { get; set; } = string.Empty;
         }
 
         public class UpdateAgreementDTO

@@ -1,9 +1,10 @@
-﻿using EMO.Models.DBModels.DBTables;
-using EMO.Models.DTOs.DeviceDTOs;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using EMO.Models.DBModels;
+using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.DeviceDTOs;
+using EMO.Models.DTOs.FacilityDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.DeviceServicesRepo
 {
@@ -97,6 +98,52 @@ namespace EMO.Repositories.DeviceServicesRepo
             }
         }
 
+
+        public async Task<ResponseModel<List<DeviceResponseDTO>>> GetDeviceByBusinessId(string deviceId)
+        {
+            try
+            {
+
+                if (string.IsNullOrEmpty(deviceId))
+                {
+                    return new ResponseModel<List<DeviceResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+                var facility = await db.tbl_device
+                    .Include(x => x.business)
+                    .Where(x => x.fk_business == Guid.Parse(deviceId))
+                    .ToListAsync();
+
+                if (facility.Any())
+                {
+                    return new ResponseModel<List<DeviceResponseDTO>>()
+                    {
+                        data = mapper.Map<List<DeviceResponseDTO>>(facility),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<DeviceResponseDTO>>()
+                    {
+                        remarks = "no record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<DeviceResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel<DeviceResponseDTO>> GetDeviceById(string deviceId)
         {
             try

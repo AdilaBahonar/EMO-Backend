@@ -10,5 +10,6 @@ namespace EMO.Repositories.SensorServicesRepo
         Task<ResponseModel<SensorResponseDTO>> GetSensorById(string sensorId);
         Task<ResponseModel<List<SensorResponseDTO>>> GetAllSensors();
         Task<ResponseModel> DeleteSensorById(string sensorId);
+        public Task<ResponseModel<List<SensorResponseDTO>>> GetSensorsByBusinessId(string businessId);
     }
 }

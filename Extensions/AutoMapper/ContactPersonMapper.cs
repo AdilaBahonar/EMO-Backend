@@ -28,7 +28,7 @@ namespace EMO.Extensions.AutoMapper
                 .ForMember(d => d.contactPersonName, opt => opt.MapFrom(src => src.contact_person_name))
                 .ForMember(d => d.contactPersonPhone, opt => opt.MapFrom(src => src.contact_person_phone))
                 .ForMember(d => d.contactPersonEmail, opt => opt.MapFrom(src => src.contact_person_email))
-                .ForMember(d => d.tenantName, opt => opt.MapFrom(src => src.tenant.tenant_name))                
+                .ForMember(d => d.tenantName, opt => opt.MapFrom(src => src.tenant.user_name))                
                 .ForMember(d => d.fkTenant, opt => opt.MapFrom(src => src.fk_tenant.ToString()));
         }
     }

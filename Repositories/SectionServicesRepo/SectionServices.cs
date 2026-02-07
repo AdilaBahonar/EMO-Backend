@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
+using EMO.Models.DTOs.FacilityDTOs;
 using EMO.Models.DTOs.FloorDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.SectionDTOs;
@@ -18,7 +19,51 @@ namespace EMO.Repositories.SectionServicesRepo
             this.db = db;
             this.mapper = mapper;
         }
+        public async Task<ResponseModel<List<SectionResponseDTO>>> GetSectionByBusinessId(string businessId)
+        {
+            try
+            {
 
+                if (string.IsNullOrEmpty(businessId))
+                {
+                    return new ResponseModel<List<SectionResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+                var Section = await db.tbl_section
+                    .Include(x => x.business).Include(x=>x.floor)
+                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .ToListAsync();
+
+                if (Section.Any())
+                {
+                    return new ResponseModel<List<SectionResponseDTO>>()
+                    {
+                        data = mapper.Map<List<SectionResponseDTO>>(Section),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<SectionResponseDTO>>()
+                    {
+                        remarks = "No record Found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<SectionResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel<SectionResponseDTO>> AddSection(AddSectionDTO requestDto)
         {
             try

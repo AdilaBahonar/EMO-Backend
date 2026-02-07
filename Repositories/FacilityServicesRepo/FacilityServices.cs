@@ -57,7 +57,6 @@ namespace EMO.Repositories.FacilityServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<FacilityResponseDTO>> UpdateFacility(UpdateFacilityDTO requestDto)
         {
             try
@@ -97,7 +96,6 @@ namespace EMO.Repositories.FacilityServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<FacilityResponseDTO>> GetFacilityById(string facilityId)
         {
             try
@@ -138,6 +136,15 @@ namespace EMO.Repositories.FacilityServicesRepo
         {
             try
             {
+
+                if (string.IsNullOrEmpty(businessId))
+                {
+                    return new ResponseModel<List<FacilityResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
                 var facility = await db.tbl_facility
                     .Include(x => x.business)
                     .Where(x => x.fk_business == Guid.Parse(businessId))

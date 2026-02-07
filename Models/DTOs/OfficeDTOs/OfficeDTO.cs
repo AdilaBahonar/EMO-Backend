@@ -8,6 +8,8 @@ namespace EMO.Models.DTOs.OfficeDTOs
         public string officeName { get; set; } = string.Empty;
         [Required]
         public string fkSection { get; set; } = string.Empty;
+        [Required]
+        public string fkBusiness { get; set; } = string.Empty;
         public bool isActive { get; set; } = false;
         public bool isOcuppied { get; set; } = false;
     }
@@ -15,6 +17,7 @@ namespace EMO.Models.DTOs.OfficeDTOs
     {
         [Required]
         public string officeId { get; set; } = string.Empty;
+        public string fkBusiness { get; set; } = string.Empty;
         public string officeName { get; set; } = string.Empty;
         public string fkSection { get; set; } = string.Empty;
         public bool isActive { get; set; } = false;
@@ -26,6 +29,8 @@ namespace EMO.Models.DTOs.OfficeDTOs
         public string officeId { get; set; } = string.Empty;
         public string officeName { get; set; } = string.Empty;
         public string fkSection { get; set; } = string.Empty;
+        public string fkBusiness { get; set; } = string.Empty;
+        public string businessName { get; set; } = string.Empty;
         public string sectionName { get; set; } = string.Empty;
         public string createdAt { get; set; } = string.Empty;
         public string updatedAt { get; set; } = string.Empty;

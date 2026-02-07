@@ -13,7 +13,6 @@ namespace EMO.Models.DTOs.ContactPersonDTOs
         [Required]
         public string contactPersonEmail { get; set; } = string.Empty;
 
-        [Required]
         public string fkTenant { get; set; } = string.Empty;
     }
 

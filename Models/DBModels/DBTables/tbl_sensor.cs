@@ -7,8 +7,8 @@ namespace EMO.Models.DBModels.DBTables
         [Key]
         public Guid sensor_id { get; set; } = Guid.NewGuid();
         public string sensor_name { get; set; } = string.Empty;
-        public Guid fk_sensor_type { get; set; } = Guid.Empty;
-        public tbl_sensor_type sensor_type { get; set; } = default! ;
+        //public Guid fk_sensor_type { get; set; } = Guid.Empty;
+        //public tbl_sensor_type sensor_type { get; set; } = default! ;
         public Guid fk_office { get; set; } = Guid.Empty;
         public tbl_office office { get; set; } = default!;
         public Guid fk_device { get; set; } = Guid.Empty;

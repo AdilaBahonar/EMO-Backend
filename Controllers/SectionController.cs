@@ -1,9 +1,11 @@
 ﻿using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.FloorDTOs;
+using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.SectionDTOs;
 using EMO.Repositories.FloorServicesRepo;
+using EMO.Repositories.OfficeServicesRepo;
 using EMO.Repositories.SectionServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +46,7 @@ namespace EMO.Controllers
         }
 
         [HttpGet("GetByFloorId")]
-        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetByFloorId(string id)
+        public async Task<ActionResult<ResponseModel<List<SectionResponseDTO>>>> GetByFloorId(string id)
         {
             if (otherServices.Check(id))
             {
@@ -53,9 +55,28 @@ namespace EMO.Controllers
             }
             else
             {
-                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                var Response = new ResponseModel<List<SectionResponseDTO>>()
                 {
                     remarks = "Invalid id.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<SectionResponseDTO>>>> GetByBusinessId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = SectionServices.GetSectionByBusinessId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<SectionResponseDTO>>()
+                {
+                    remarks = "Invalid request",
                     success = false
                 };
                 return BadRequest(Response);

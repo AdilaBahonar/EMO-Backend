@@ -19,6 +19,51 @@ namespace EMO.Repositories.FloorServicesRepo
             this.mapper = mapper;
         }
 
+        public async Task<ResponseModel<List<FloorResponseDTO>>> GetFloorByBusinessId(string businessId)
+        {
+            try
+            {
+
+                if (string.IsNullOrEmpty(businessId))
+                {
+                    return new ResponseModel<List<FloorResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+                var floor = await db.tbl_floor
+                    .Include(x => x.business).Include(x=>x.building)
+                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .ToListAsync();
+
+                if (floor.Any())
+                {
+                    return new ResponseModel<List<FloorResponseDTO>>()
+                    {
+                        data = mapper.Map<List<FloorResponseDTO>>(floor),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<FloorResponseDTO>>()
+                    {
+                        remarks = "No record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel<FloorResponseDTO>> AddFloor(AddFloorDTO requestDto)
         {
             try

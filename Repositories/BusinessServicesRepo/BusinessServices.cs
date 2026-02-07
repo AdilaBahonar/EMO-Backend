@@ -4,6 +4,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.UserDTOs;
 
 namespace EMO.Repositories.BusinessServicesRepo
 {
@@ -316,6 +317,44 @@ namespace EMO.Repositories.BusinessServicesRepo
                 {
                     remarks = $"There was a fatal error: {ex}",
                     success = false
+                };
+            }
+        }
+
+
+        public async Task<ResponseModel<List<UserResponseDTO>>> GetBusinessAdmins(string fkBusiness)
+        {
+            try
+            {
+
+                var BuisnessAdmins = await db.tbl_user.Where(x => x.sub_user_type.user_type.user_type_name.ToLower() == "business admin" && x.sub_user_type.sub_user_type_name.ToLower() == "root").ToListAsync();
+
+                /*                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Where(x => x.fk_sub_user_type == Guid.Parse(userTypeId)).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
+                */
+                if (BuisnessAdmins.Any())
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        data = mapper.Map<List<UserResponseDTO>>(BuisnessAdmins),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "No User found By This User Type",
+                        success = false,
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<UserResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error {ex.ToString()}",
+                    success = false,
                 };
             }
         }

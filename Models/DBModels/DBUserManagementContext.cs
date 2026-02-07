@@ -31,18 +31,16 @@ namespace EMO.Models.DBModels
             };
 
             modelBuilder.Entity<tbl_user_type>().HasData(BusinessAdmin);
-            var userTypes = new List<tbl_user_type>
+            var TenantuserType = new tbl_user_type
             {
-                new tbl_user_type
-                {
+
                     user_type_id = Guid.NewGuid(),
                     user_type_name = "Tenant",
                     is_active = true,
                     user_type_level = 2
-                }
             };
 
-            modelBuilder.Entity<tbl_user_type>().HasData(userTypes);
+            modelBuilder.Entity<tbl_user_type>().HasData(TenantuserType);
             var subUserTypes = new List<tbl_sub_user_type>
             {
                 new tbl_sub_user_type
@@ -86,6 +84,19 @@ namespace EMO.Models.DBModels
             };
             modelBuilder.Entity<tbl_sub_user_type>().HasData(businessSubUserTypes);
 
+
+            var tenantSubUserTypes = new List<tbl_sub_user_type>
+            {
+                new tbl_sub_user_type
+                {
+                    sub_user_type_id = Guid.NewGuid(),
+                    sub_user_type_name = "Root",
+                    is_active = true,
+                    sub_user_type_level = 0,
+                    fk_user_type = TenantuserType.user_type_id
+                }
+            };
+            modelBuilder.Entity<tbl_sub_user_type>().HasData(tenantSubUserTypes);
 
             #endregion
 
@@ -204,6 +215,11 @@ namespace EMO.Models.DBModels
             modelBuilder.Entity<tbl_building>()
                 .Property<DateTime>("updated_at")
                 .HasColumnType("DATETIME(6)");
+            modelBuilder.Entity<tbl_building>()
+           .HasOne(p => p.business)
+           .WithMany(b => b.buildings)
+           .HasForeignKey(p => p.fk_business)
+           .OnDelete(DeleteBehavior.Restrict);
             #endregion
 
             #region Floor
@@ -212,7 +228,11 @@ namespace EMO.Models.DBModels
                .WithMany(b => b.floors)
                .HasForeignKey(p => p.fk_building)
                .OnDelete(DeleteBehavior.Restrict);
-
+            modelBuilder.Entity<tbl_floor>()
+           .HasOne(p => p.business)
+           .WithMany(b => b.floors)
+           .HasForeignKey(p => p.fk_business)
+           .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<tbl_floor>()
              .Property<DateTime>("created_at")
              .HasColumnType("DATETIME(6)");
@@ -230,6 +250,12 @@ namespace EMO.Models.DBModels
              .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<tbl_section>()
+         .HasOne(p => p.business)
+         .WithMany(b => b.sections)
+         .HasForeignKey(p => p.fk_business)
+         .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_section>()
              .Property<DateTime>("created_at")
              .HasColumnType("DATETIME(6)");
 
@@ -244,6 +270,12 @@ namespace EMO.Models.DBModels
                .WithMany(b => b.offices)
                .HasForeignKey(p => p.fk_section)
                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_office>()
+        .HasOne(p => p.business)
+        .WithMany(b => b.offices)
+        .HasForeignKey(p => p.fk_business)
+        .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<tbl_office>()
              .Property<DateTime>("created_at")
@@ -313,11 +345,17 @@ namespace EMO.Models.DBModels
             #endregion
 
             #region Sensor
+            //modelBuilder.Entity<tbl_sensor>()
+            //   .HasOne(p => p.sensor_type)
+            //   .WithMany(b => b.sensors)
+            //   .HasForeignKey(p => p.fk_sensor_type)
+            //   .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<tbl_sensor>()
-               .HasOne(p => p.sensor_type)
-               .WithMany(b => b.sensors)
-               .HasForeignKey(p => p.fk_sensor_type)
-               .OnDelete(DeleteBehavior.Restrict);
+             .HasOne(p => p.office)
+             .WithMany(b => b.sensors)
+             .HasForeignKey(p => p.fk_office)
+             .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<tbl_sensor>()
              .HasOne(p => p.utility)
@@ -330,12 +368,26 @@ namespace EMO.Models.DBModels
              .WithMany(b => b.sensors)
              .HasForeignKey(p => p.fk_device)
              .OnDelete(DeleteBehavior.Restrict);
+            #endregion
 
-            modelBuilder.Entity<tbl_sensor>()
-             .HasOne(p => p.office)
-             .WithMany(b => b.sensors)
-             .HasForeignKey(p => p.fk_office)
+            #region Device
+            //modelBuilder.Entity<tbl_sensor>()
+            //   .HasOne(p => p.sensor_type)
+            //   .WithMany(b => b.sensors)
+            //   .HasForeignKey(p => p.fk_sensor_type)
+            //   .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_device>()
+             .HasOne(p => p.business)
+             .WithMany(b => b.devices)
+             .HasForeignKey(p => p.fk_business)
              .OnDelete(DeleteBehavior.Restrict);
+
+            //modelBuilder.Entity<tbl_device>()
+            // .HasOne(p => p.office)
+            // .WithMany(b => b.devices)
+            // .HasForeignKey(p => p.fk_office)
+            // .OnDelete(DeleteBehavior.Restrict);
             #endregion
 
             #region Tenant

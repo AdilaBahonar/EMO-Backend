@@ -14,11 +14,14 @@ namespace EMO.Extensions.AutoMapper
             CreateMap<AddBuildingDTO, tbl_building>()
              .ForMember(d => d.building_name, opt => opt.MapFrom(src => src.buildingName))
              .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.isActive))
-             .ForMember(d => d.fk_facility, opt => opt.MapFrom(src => Guid.Parse(src.fkFacility)));
+             .ForMember(d => d.fk_facility, opt => opt.MapFrom(src => Guid.Parse(src.fkFacility)))
+              .ForMember(d => d.fk_business, opt => opt.MapFrom(src => Guid.Parse(src.fkBusiness)));
+
             CreateMap<UpdateBuildingDTO, tbl_building>()
               .ForMember(d => d.building_name, opt => opt.MapFrom((src, dest) => otherServices.Check(src.buildingName) ? src.buildingName : dest.building_name))
                .ForMember(d => d.updated_at, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.isActive))
+                .ForMember(d => d.fk_business, opt => opt.MapFrom((src, dest) => otherServices.Check(src.fkBusiness) ? Guid.Parse(src.fkBusiness) : dest.fk_business))
               .ForMember(d => d.fk_facility, opt => opt.MapFrom((src, dest) => otherServices.Check(src.fkFacility) ? Guid.Parse(src.fkFacility) : dest.fk_facility));
             CreateMap<tbl_building, BuildingResponseDTO>()
               .ForMember(d => d.buildingId, opt => opt.MapFrom(src => src.building_id.ToString()))
@@ -26,6 +29,8 @@ namespace EMO.Extensions.AutoMapper
               .ForMember(d => d.facilityName, opt => opt.MapFrom(src => src.facility.facility_name))
               .ForMember(d => d.createdAt, opt => opt.MapFrom(src => src.created_at))
               .ForMember(d => d.isActive, opt => opt.MapFrom(src => src.is_active))
+              .ForMember(d => d.businessName, opt => opt.MapFrom(src => src.business.business_name))
+.ForMember(d => d.fkBusiness, opt => opt.MapFrom(src => src.fk_business.ToString()))
               .ForMember(d => d.updatedAt, opt => opt.MapFrom(src => src.updated_at))
               .ForMember(d => d.fkFacility, opt => opt.MapFrom(src => src.fk_facility.ToString()));
         }

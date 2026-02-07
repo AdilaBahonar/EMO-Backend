@@ -1,8 +1,10 @@
 ﻿using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.BuildingDTOs;
 using EMO.Models.DTOs.FacilityDTOs;
 using EMO.Models.DTOs.FloorDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.BuildingServicesRepo;
 using EMO.Repositories.FacilityServicesRepo;
 using EMO.Repositories.FloorServicesRepo;
 using Microsoft.AspNetCore.Http;
@@ -38,6 +40,25 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<FloorResponseDTO>()
                 {
                     remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetByBusinessId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = FloorServices.GetFloorByBusinessId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                {
+                    remarks = "Invalid request",
                     success = false
                 };
                 return BadRequest(Response);

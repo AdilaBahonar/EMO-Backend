@@ -2,7 +2,6 @@
 using EMO.Models.DTOs.TenantDTOs;
 using AutoMapper;
 using EMO.Extensions;
-using EMO.Models.DTOs.TenantDTOs.EMO.Models.DTOs.TenantDTOs;
 
 namespace EMO.Extensions.AutoMapper
 {

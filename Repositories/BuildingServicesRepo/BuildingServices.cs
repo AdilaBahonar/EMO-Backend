@@ -19,6 +19,51 @@ namespace EMO.Repositories.BuildingServicesRepo
             this.mapper = mapper;
         }
 
+        public async Task<ResponseModel<List<BuildingResponseDTO>>> GetBuildingByBusinessId(string businessId)
+        {
+            try
+            {
+
+                if (string.IsNullOrEmpty(businessId))
+                {
+                    return new ResponseModel<List<BuildingResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+                var facility = await db.tbl_building
+                    .Include(x => x.business).Include(x=>x.facility)
+                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .ToListAsync();
+
+                if (facility.Any())
+                {
+                    return new ResponseModel<List<BuildingResponseDTO>>()
+                    {
+                        data = mapper.Map<List<BuildingResponseDTO>>(facility),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<BuildingResponseDTO>>()
+                    {
+                        remarks = "no record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<BuildingResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel<BuildingResponseDTO>> AddBuilding(AddBuildingDTO requestDto)
         {
             try

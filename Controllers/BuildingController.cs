@@ -43,6 +43,25 @@ namespace EMO.Controllers
             }
         }
 
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<BuildingResponseDTO>>>> GetByBusinessId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = BuildingServices.GetBuildingByBusinessId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<BuildingResponseDTO>>()
+                {
+                    remarks = "Invalid request",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
         [HttpPut]
         public async Task<ActionResult<ResponseModel<BuildingResponseDTO>>> Put(UpdateBuildingDTO model)
         {

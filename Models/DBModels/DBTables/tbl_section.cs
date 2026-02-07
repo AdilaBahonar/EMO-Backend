@@ -11,6 +11,8 @@ namespace EMO.Models.DBModels.DBTables
         public DateTime updated_at { get; set; } = DateTime.Now;
         public bool is_active { get; set; } = false;
         public Guid fk_floor { get; set; } = Guid.Empty;
+        public Guid fk_business { get; set; } = Guid.Empty;
+        public tbl_business business { get; set; } = default!;
         public tbl_floor floor { get; set; } = default!;
         public IEnumerable<tbl_office> offices { get; set; } = default!;
     }

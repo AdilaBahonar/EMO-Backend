@@ -3,6 +3,7 @@ using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.FloorDTOs;
 using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.FloorServicesRepo;
 using EMO.Repositories.OfficeServicesRepo;
 using EMO.Repositories.SectionServicesRepo;
 using Microsoft.AspNetCore.Http;
@@ -44,11 +45,29 @@ namespace EMO.Controllers
         }
 
         [HttpGet("GetBySectionId")]
-        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetBySectionId(string id)
+        public async Task<ActionResult<ResponseModel<List<OfficeResponseDTO>>>> GetBySectionId(string id)
         {
             if (otherServices.Check(id))
             {
                 var Response = OfficeServices.GetOfficeBySectionId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = "Invalid id.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+        [HttpGet("GetAvailableOfficesBySectionId")]
+        public async Task<ActionResult<ResponseModel<List<OfficeResponseDTO>>>> GetAvailableOfficesBySectionId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = OfficeServices.GetAvailableOfficesBySectionId(id);
                 return Ok(await Response);
             }
             else
@@ -61,19 +80,20 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
-        [HttpGet("GetAvailableOfficesBySectionId")]
-        public async Task<ActionResult<ResponseModel<List<FloorResponseDTO>>>> GetAvailableOfficesBySectionId(string id)
+
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<OfficeResponseDTO>>>> GetByBusinessId(string id)
         {
             if (otherServices.Check(id))
             {
-                var Response = OfficeServices.GetAvailableOfficesBySectionId(id);
+                var Response = OfficeServices.GetOfficeByBusinessId(id);
                 return Ok(await Response);
             }
             else
             {
-                var Response = new ResponseModel<List<FloorResponseDTO>>()
+                var Response = new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = "Invalid id.",
+                    remarks = "Invalid request",
                     success = false
                 };
                 return BadRequest(Response);

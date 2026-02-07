@@ -11,6 +11,7 @@ namespace EMO.Repositories.BuildingServicesRepo
         Task<ResponseModel<List<BuildingResponseDTO>>> GetAllBuildings();
         Task<ResponseModel> DeleteBuildingById(string buildingId);
         public Task<ResponseModel<List<BuildingResponseDTO>>> GetBuidlingByFacilityId(string facilityId);
+        public Task<ResponseModel<List<BuildingResponseDTO>>> GetBuildingByBusinessId(string businessId);
     }
 
 }

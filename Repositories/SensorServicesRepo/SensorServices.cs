@@ -101,7 +101,7 @@ namespace EMO.Repositories.SensorServicesRepo
         {
             try
             {
-                var sensor = await db.tbl_sensor
+                var sensor = await db.tbl_sensor.Include(x=>x.office).Include(x => x.device).Include(x => x.utility)
                     .Where(x => x.sensor_id == Guid.Parse(sensorId))
                     .FirstOrDefaultAsync();
 
@@ -137,7 +137,7 @@ namespace EMO.Repositories.SensorServicesRepo
         {
             try
             {
-                var sensors = await db.tbl_sensor.ToListAsync();
+                var sensors = await db.tbl_sensor.Include(x => x.office).Include(x => x.device).Include(x => x.utility).ToListAsync();
 
                 if (sensors.Any())
                 {
@@ -153,6 +153,40 @@ namespace EMO.Repositories.SensorServicesRepo
                     return new ResponseModel<List<SensorResponseDTO>>()
                     {
                         remarks = "No Sensor found",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<SensorResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<SensorResponseDTO>>> GetSensorsByBusinessId(string businessId)
+        {
+            try
+            {
+                var sensors = await db.tbl_sensor.Include(x => x.office).Include(x => x.device).Include(x => x.utility).Where(x=>x.device.fk_business == Guid.Parse(businessId)).ToListAsync();
+
+                if (sensors.Any())
+                {
+                    return new ResponseModel<List<SensorResponseDTO>>()
+                    {
+                        data = mapper.Map<List<SensorResponseDTO>>(sensors),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<SensorResponseDTO>>()
+                    {
+                        remarks = "No record found.",
                         success = false
                     };
                 }

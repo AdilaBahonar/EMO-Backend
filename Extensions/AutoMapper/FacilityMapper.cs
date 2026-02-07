@@ -27,10 +27,10 @@ namespace EMO.Extensions.AutoMapper
               .ForMember(d => d.facilityName, opt => opt.MapFrom(src => src.facility_name))
               .ForMember(d => d.facilityaddress, opt => opt.MapFrom(src => src.facility_address))
               .ForMember(d => d.businessName, opt => opt.MapFrom(src => src.business.business_name))
+              .ForMember(d => d.fkBusiness, opt => opt.MapFrom(src => src.fk_business.ToString()))
               .ForMember(d => d.updatedAt, opt => opt.MapFrom(src => src.updated_at))
               .ForMember(d => d.isActive, opt => opt.MapFrom(src => src.is_active))
-              .ForMember(d => d.createdAt, opt => opt.MapFrom(src => src.created_at))
-              .ForMember(d => d.fkBusiness, opt => opt.MapFrom(src => src.fk_business.ToString()));
+              .ForMember(d => d.createdAt, opt => opt.MapFrom(src => src.created_at));
         }
     }
 }

@@ -13,6 +13,8 @@ namespace EMO.Models.DBModels.DBTables
         public bool is_active { get; set; } = false;
         public Guid fk_building { get; set; } = Guid.Empty;
         public tbl_building building { get; set; } = default!;
+        public Guid fk_business { get; set; } = Guid.Empty;
+        public tbl_business business { get; set; } = default!;
         public IEnumerable<tbl_section> sections { get; set; } = default!;
     }
 }

@@ -19,6 +19,52 @@ namespace EMO.Repositories.OfficeServicesRepo
             this.mapper = mapper;
         }
 
+
+        public async Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByBusinessId(string businessId)
+        {
+            try
+            {
+
+                if (string.IsNullOrEmpty(businessId))
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+                var Office = await db.tbl_office
+                    .Include(x => x.business).Include(x=>x.section)
+                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .ToListAsync();
+
+                if (Office.Any())
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        data = mapper.Map<List<OfficeResponseDTO>>(Office),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "No record Found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel<OfficeResponseDTO>> AddOffice(AddOfficeDTO requestDto)
         {
             try
@@ -59,7 +105,6 @@ namespace EMO.Repositories.OfficeServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<OfficeResponseDTO>> UpdateOffice(UpdateOfficeDTO requestDto)
         {
             try
@@ -99,7 +144,6 @@ namespace EMO.Repositories.OfficeServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<OfficeResponseDTO>> GetOfficeById(string officeId)
         {
             try
@@ -253,6 +297,43 @@ namespace EMO.Repositories.OfficeServicesRepo
                 var Offices = await db.tbl_office
                     .Include(x => x.section)
                     .Where(x => x.fk_section == Guid.Parse(sectionId) && x.is_occupied == false)
+                    .ToListAsync();
+
+                if (Offices.Any())
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        data = mapper.Map<List<OfficeResponseDTO>>(Offices),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "No record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<OfficeResponseDTO>>> GetAvailableOfficesByBusinessId(string businessId)
+        {
+            try
+            {
+                var Offices = await db.tbl_office
+                    .Include(x => x.section)
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && x.is_occupied == false)
                     .ToListAsync();
 
                 if (Offices.Any())

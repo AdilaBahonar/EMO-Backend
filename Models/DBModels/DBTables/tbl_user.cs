@@ -47,5 +47,7 @@ namespace EMO.Models.DBModels.DBTables
         public tbl_sub_user_type sub_user_type { get; set; } = default!;
         public tbl_user_image user_image { get; set; } = default!;
         public IEnumerable<tbl_user> users { get; set; } = default!;
+        public IEnumerable<tbl_contact_person> contact_persons { get; set; } = default!;
+        public IEnumerable<tbl_agreement> agreements { get; set; } = default!;
     }
 }

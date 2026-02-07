@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.ResponseDTO;
-using EMO.Models.DTOs.TenantDTOs.EMO.Models.DTOs.TenantDTOs;
 
 namespace EMO.Controllers
 {
@@ -41,6 +40,26 @@ namespace EMO.Controllers
             }
         }
 
+
+        [HttpPost("AssignTenant")]
+        public async Task<ActionResult<ResponseModel>> AssignTenant(AssignTenantDTO model)
+        {
+            if (ModelState.IsValid)
+            {
+                var Response = TenantServices.AssignTenant(model);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel()
+                {
+                    remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
         [HttpPut]
         public async Task<ActionResult<ResponseModel<TenantResponseDTO>>> Put(UpdateTenantDTO model)
         {
@@ -66,6 +85,26 @@ namespace EMO.Controllers
             if (otherServices.Check(id))
             {
                 var Response = TenantServices.GetTenantById(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<TenantResponseDTO>()
+                {
+                    remarks = "Tenant not found by ID",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+
+        [HttpGet("GetByBusinenssId")]
+        public async Task<ActionResult<ResponseModel<tenantResponseDTO>>> GetByBusinenssId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = TenantServices.GetTenantByBusinessId(id);
                 return Ok(await Response);
             }
             else

@@ -1,12 +1,14 @@
-﻿using EMO.Models.DTOs.BuildingDTOs;
+﻿using EMO.Extensions;
+using EMO.Extensions.MiddleWare;
+using EMO.Models.DTOs.BuildingDTOs;
 using EMO.Models.DTOs.DeviceDTOs;
+using EMO.Models.DTOs.FacilityDTOs;
+using EMO.Models.DTOs.ResponseDTO;
 using EMO.Repositories.BuildingServicesRepo;
 using EMO.Repositories.DeviceServicesRepo;
+using EMO.Repositories.FacilityServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using EMO.Extensions;
-using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Controllers
 {
@@ -37,6 +39,26 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<DeviceResponseDTO>()
                 {
                     remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<DeviceResponseDTO>>>> GetByBusinessId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = DeviceServices.GetDeviceByBusinessId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<FacilityResponseDTO>>()
+                {
+                    remarks = "Invalid Request.",
                     success = false
                 };
                 return BadRequest(Response);
