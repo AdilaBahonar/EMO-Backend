@@ -14,7 +14,6 @@ using EMO.Repositories.SectionServicesRepo;
 using EMO.Repositories.FloorServicesRepo;
 using EMO.Repositories.OfficeServicesRepo;
 using EMO.Repositories.DeviceServicesRepo;
-using EMO.Repositories.DeviceTypeServicesRepo;
 using EMO.Repositories.ContactPersonServicesRepo;
 using EMO.Repositories.SingalPhaseDataServicesRepo;
 using EMO.Repositories.SingalPhaseDataRepo;
@@ -69,7 +68,7 @@ namespace EMO.Extensions
             services.AddTransient<IOfficeServices, OfficeServices>();
             //services.AddTransient<IControlTypeServices, ControlTypeServices>();
             services.AddTransient<IDeviceServices, DeviceServices>();
-            services.AddTransient<IDeviceTypeServices, DeviceTypeServices>();
+            //services.AddTransient<IDeviceTypeServices, DeviceTypeServices>();
             services.AddTransient<IContactPersonServices, ContactPersonServices>();
             services.AddTransient<ISingalPhaseDataService, SingalPhaseDataService>();
             services.AddTransient<ITenantServices, TenantServices>();

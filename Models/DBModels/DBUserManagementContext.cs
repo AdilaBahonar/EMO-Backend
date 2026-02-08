@@ -581,7 +581,7 @@ namespace EMO.Models.DBModels
         public DbSet<tbl_user> tbl_user { get; set; }
         public DbSet<tbl_user_type> tbl_user_type { get; set; }
         public DbSet<tbl_device> tbl_device { get; set; }
-        public DbSet<tbl_device_type> tbl_device_type { get; set; }
+        //public DbSet<tbl_device_type> tbl_device_type { get; set; }
         //public DbSet<tbl_control_type> tbl_control_type { get; set; }
         public DbSet<tbl_business> tbl_business { get; set; }
         public DbSet<tbl_facility> tbl_facility { get; set; }
