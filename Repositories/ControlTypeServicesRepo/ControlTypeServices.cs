@@ -1,4 +1,4 @@
-﻿using EMO.Models.DBModels.DBTables;
+﻿/*using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.ControlTypeDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -205,3 +205,4 @@ namespace EMO.Repositories.ControlTypeServicesRepo
         }
     }
 }
+*/

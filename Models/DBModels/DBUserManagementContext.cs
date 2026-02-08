@@ -582,7 +582,7 @@ namespace EMO.Models.DBModels
         public DbSet<tbl_user_type> tbl_user_type { get; set; }
         public DbSet<tbl_device> tbl_device { get; set; }
         public DbSet<tbl_device_type> tbl_device_type { get; set; }
-        public DbSet<tbl_control_type> tbl_control_type { get; set; }
+        //public DbSet<tbl_control_type> tbl_control_type { get; set; }
         public DbSet<tbl_business> tbl_business { get; set; }
         public DbSet<tbl_facility> tbl_facility { get; set; }
         public DbSet<tbl_agreement> tbl_agreement { get; set; }
@@ -592,10 +592,10 @@ namespace EMO.Models.DBModels
         public DbSet<tbl_office> tbl_office { get; set; }
         public DbSet<tbl_contact_person> tbl_contact_person { get; set; }
         public DbSet<tbl_singal_phase_data> tbl_singal_phase_data { get; set; }
-        public DbSet<tbl_tenant> tbl_tenant { get; set; }
+        //public DbSet<tbl_tenant> tbl_tenant { get; set; }
         public DbSet<tbl_utility> tbl_utility {  get; set; }
         public DbSet<tbl_sensor> tbl_sensor { get; set; }
-        public DbSet<tbl_sensor_type> tbl_sensor_type { get; set; }
+        //public DbSet<tbl_sensor_type> tbl_sensor_type { get; set; }
         public DbSet<tbl_gender> tbl_gender { get; set; }
         public DbSet<tbl_sub_user_type> tbl_sub_user_type { get; set; }
         public DbSet<tbl_user_image> tbl_user_image { get; set; }
