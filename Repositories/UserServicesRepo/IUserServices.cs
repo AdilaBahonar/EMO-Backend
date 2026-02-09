@@ -15,5 +15,6 @@ namespace EMO.Repositories.UserServicesRepo
         public Task<ResponseModel<List<UserResponseDTO>>> GetByUserTypeId(string userTypeId);
         public Task<ResponseModel<List<UserResponseDTO>>> GetUnderUsersByUserId(string userId);
         public Task<ResponseModel<List<UserResponseDTO>>> GetBusinessAdmins(string userId);
+        public Task<ResponseModel<List<UserResponseDTO>>> GetBusinessAdminsByBusinessId(string businessId);
     }
 }

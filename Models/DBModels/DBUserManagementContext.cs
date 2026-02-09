@@ -390,15 +390,15 @@ namespace EMO.Models.DBModels
             // .OnDelete(DeleteBehavior.Restrict);
             #endregion
 
-            #region Tenant
-            modelBuilder.Entity<tbl_tenant>()
-             .Property<DateTime>("created_at")
-             .HasColumnType("DATETIME(6)");
+            //#region Tenant
+            //modelBuilder.Entity<tbl_tenant>()
+            // .Property<DateTime>("created_at")
+            // .HasColumnType("DATETIME(6)");
 
-            modelBuilder.Entity<tbl_tenant>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
-            #endregion
+            //modelBuilder.Entity<tbl_tenant>()
+            //    .Property<DateTime>("updated_at")
+            //    .HasColumnType("DATETIME(6)");
+            //#endregion
 
             #region SubUser Type
             modelBuilder.Entity<tbl_sub_user_type>()

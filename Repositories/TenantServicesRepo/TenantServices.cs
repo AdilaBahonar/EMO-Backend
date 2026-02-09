@@ -26,9 +26,36 @@ namespace EMO.Repositories.TenantServicesRepo
 
             try
             {
-                /* ===============================
-                 * 1️⃣ VALIDATE OFFICES
-                 * =============================== */
+
+
+                // Validate dates
+                if (!DateTime.TryParse(requestDto.agreement.agreementStartDate, out DateTime startDate))
+                {
+                    return new ResponseModel
+                    {
+                        success = false,
+                        remarks = "Invalid agreement start date."
+                    };
+                }
+
+                if (!DateTime.TryParse(requestDto.agreement.agreementEndDate, out DateTime endDate))
+                {
+                    return new ResponseModel
+                    {
+                        success = false,
+                        remarks = "Invalid agreement end date."
+                    };
+                }
+
+                // Business rule: start date must be <= end date
+                if (startDate > endDate)
+                {
+                    return new ResponseModel
+                    {
+                        success = false,
+                        remarks = "Agreement start date cannot be greater than agreement end date."
+                    };
+                }
 
                 var officeIds = requestDto.fkOffices
                     .Select(Guid.Parse)
@@ -58,21 +85,18 @@ namespace EMO.Repositories.TenantServicesRepo
                     };
                 }
 
-                /* ===============================
-                 * 2️⃣ RESOLVE TENANT (NEW OR EXISTING)
-                 * =============================== */
+   
 
                 Guid tenantId;
 
                 if (!string.IsNullOrWhiteSpace(requestDto.fkTenant))
                 {
-                    // ✅ USE EXISTING TENANT
+                 
                     tenantId = Guid.Parse(requestDto.fkTenant);
                 }
                 else
                 {
-                    // ✅ CREATE NEW TENANT
-
+               
                     var tenantFk = await db.tbl_sub_user_type
                         .Where(x => x.user_type.user_type_name.ToLower() == "tenant")
                         .Select(x => x.sub_user_type_id)
@@ -88,10 +112,6 @@ namespace EMO.Repositories.TenantServicesRepo
                     tenantId = newTenant.user_id;
                 }
 
-                /* ===============================
-                 * 3️⃣ CREATE AGREEMENTS
-                 * =============================== */
-
                 foreach (var officeId in officeIds)
                 {
                     var agreement = mapper.Map<tbl_agreement>(requestDto.agreement);
@@ -102,9 +122,6 @@ namespace EMO.Repositories.TenantServicesRepo
                     await db.tbl_agreement.AddAsync(agreement);
                 }
 
-                /* ===============================
-                 * 4️⃣ CREATE CONTACT PERSONS
-                 * =============================== */
 
                 if (requestDto.contactPerson != null && requestDto.contactPerson.Any())
                 {
@@ -116,10 +133,6 @@ namespace EMO.Repositories.TenantServicesRepo
                         await db.tbl_contact_person.AddAsync(contact);
                     }
                 }
-
-                /* ===============================
-                 * 5️⃣ MARK OFFICES OCCUPIED
-                 * =============================== */
 
                 foreach (var office in offices)
                 {

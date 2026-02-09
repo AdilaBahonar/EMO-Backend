@@ -267,6 +267,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 var userGuid = Guid.Parse(userId);
 
+                
                 var currentUserInfo = await db.tbl_user.Where(u => u.user_id == userGuid).Select(u => new{
                         SubUserTypeId = u.fk_sub_user_type,  SubUserTypeLevel = u.sub_user_type.sub_user_type_level,UserTypelevel = u.sub_user_type.user_type.user_type_level , fkBusiness = u.fk_business,
                     UserTypeId= u.sub_user_type.fk_user_type,
@@ -401,6 +402,44 @@ namespace EMO.Repositories.UserServicesRepo
             catch (Exception ex)
             {
                 return new ResponseModel()
+                {
+                    remarks = $"There was a fatal error {ex.ToString()}",
+                    success = false,
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<UserResponseDTO>>> GetBusinessAdminsByBusinessId(string businessId)
+        {
+            try
+            {
+
+                
+                var BuisnessAdmins = await db.tbl_user.Include(x=>x.sub_user_type).Where(x => x.fk_business == Guid.Parse(businessId)).ToListAsync();
+
+                /*                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Where(x => x.fk_sub_user_type == Guid.Parse(userTypeId)).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
+                */
+                if (BuisnessAdmins.Any())
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        data = mapper.Map<List<UserResponseDTO>>(BuisnessAdmins),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "No User found By This User Type",
+                        success = false,
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<UserResponseDTO>>()
                 {
                     remarks = $"There was a fatal error {ex.ToString()}",
                     success = false,

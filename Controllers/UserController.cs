@@ -206,5 +206,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+
+        [HttpGet("GetBusinessAdminsByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> GetBusinessAdminsByBusinessId(string businessId)
+        {
+            if (otherServices.Check(businessId))
+            {
+                var Response = userService.GetBusinessAdminsByBusinessId(businessId);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserResponseDTO>()
+                {
+                    remarks = "User Not found by this User Type",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
     }
 }
