@@ -219,7 +219,7 @@ namespace EMO.Controllers
             {
                 var Response = new ResponseModel<UserResponseDTO>()
                 {
-                    remarks = "User Not found by this User Type",
+                    remarks = "invalid request.",
                     success = false
                 };
                 return BadRequest(Response);
