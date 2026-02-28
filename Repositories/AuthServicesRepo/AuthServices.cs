@@ -74,7 +74,7 @@ namespace EMO.Repositories.AuthServicesRepo
                 // Log the exception
                 return new ResponseModel<UserLoginResponseDTO>
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -124,7 +124,7 @@ namespace EMO.Repositories.AuthServicesRepo
         //        // Log the exception
         //        return  new UserResponseDTO
         //        {
-        //            remarks = $"There was a fatal error {ex.ToString()}",
+        //            remarks = $"There was a fatal error  ",
         //          resultCode=1000
         //        };
         //    }
@@ -159,7 +159,7 @@ namespace EMO.Repositories.AuthServicesRepo
             {
                 return new ResponseModel
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }

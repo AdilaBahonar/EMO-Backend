@@ -47,7 +47,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
             {
                 return new ResponseModel<UserTypeResponseDTO>()
                 {
-                    remarks = $"There was a  fatal error: {ex.ToString()}",
+                    remarks = $"There was a  fatal error:  ",
                     success = false,
                 };
             }
@@ -56,33 +56,43 @@ namespace EMO.Repositories.UserTypeServicesRepo
         {
             try
             {
-                var existingUserType = await db.tbl_user_type.Where(u => u.user_type_id == Guid.Parse(requestDto.userTypeId)).FirstOrDefaultAsync();
-                if (existingUserType != null)
-                {
-                    mapper.Map(requestDto, existingUserType);
-                    await db.SaveChangesAsync();
-                    return new ResponseModel<UserTypeResponseDTO>()
-                    {
-                        data = mapper.Map<UserTypeResponseDTO>(existingUserType),
-                        remarks = "Success",
-                        success = true,
-                    };
-                }
-                else
+                var userTypeId = Guid.Parse(requestDto.userTypeId);
+
+                var existingUserType = await db.tbl_user_type .FirstOrDefaultAsync(u => u.user_type_id == userTypeId);
+
+                if (existingUserType == null)
                 {
                     return new ResponseModel<UserTypeResponseDTO>()
                     {
                         remarks = "No Record Found",
-                        success = true,
+                        success = false,
                     };
                 }
 
+                var existingSubUserTypes = await db.tbl_sub_user_type
+                    .Where(x => x.fk_user_type == userTypeId)
+                    .ToListAsync();
+
+                if (existingSubUserTypes.Any() && existingUserType.is_active != requestDto.isActive)
+                {
+                    existingSubUserTypes.ForEach(x => x.is_active = requestDto.isActive);
+                }
+
+                mapper.Map(requestDto, existingUserType);
+                await db.SaveChangesAsync();
+
+                return new ResponseModel<UserTypeResponseDTO>()
+                {
+                    data = mapper.Map<UserTypeResponseDTO>(existingUserType),
+                    remarks = "Success",
+                    success = true,
+                };
             }
             catch (Exception ex)
             {
                 return new ResponseModel<UserTypeResponseDTO>()
                 {
-                    remarks = $"There was a  fatal error: {ex.ToString()}",
+                    remarks = $"There was a fatal error: {ex.Message}",
                     success = false,
                 };
             }
@@ -114,7 +124,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
             {
                 return new ResponseModel<UserTypeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -137,7 +147,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()
                     {
-                        remarks = "No UserType found",
+                        remarks = "No Record found",
                         success = false,
                     };
                 }
@@ -146,7 +156,40 @@ namespace EMO.Repositories.UserTypeServicesRepo
             {
                 return new ResponseModel<List<UserTypeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
+                    success = false,
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<UserTypeResponseDTO>>> GetActiveUserTypes()
+        {
+            try
+            {
+                var allUserType = await db.tbl_user_type.Where(x=>x.is_active).ToListAsync();
+                if (allUserType.Any())
+                {
+                    return new ResponseModel<List<UserTypeResponseDTO>>()
+                    {
+                        data = mapper.Map<List<UserTypeResponseDTO>>(allUserType),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<UserTypeResponseDTO>>()
+                    {
+                        remarks = "No Record found",
+                        success = false,
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<UserTypeResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error",
                     success = false,
                 };
             }
@@ -179,7 +222,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -197,16 +240,16 @@ namespace EMO.Repositories.UserTypeServicesRepo
                         success = false,
                     };
                 }
-                var userTypeId = await db.tbl_sub_user_type.Where(x => x.sub_user_type_id == subUserTypeId).Select(x => x.fk_user_type).FirstOrDefaultAsync();
+                var userTypeId = await db.tbl_sub_user_type.Where(x => x.sub_user_type_id == subUserTypeId && x.is_active).Select(x => x.fk_user_type).FirstOrDefaultAsync();
                 if (userTypeId == Guid.Empty)
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()
                     {
-                        remarks = "No Sub User Type Found",
+                        remarks = "No Record Found",
                         success = false,
                     };
                 }
-                var allUserType = await db.tbl_user_type.Where(x => x.user_type_id == userTypeId).OrderBy(x => x.user_type_level).ToListAsync();
+                var allUserType = await db.tbl_user_type.Where(x => x.user_type_id == userTypeId && x.is_active).OrderBy(x => x.user_type_level).ToListAsync();
                 if (allUserType.Any())
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()
@@ -220,7 +263,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()
                     {
-                        remarks = "No UserType found",
+                        remarks = "No User type found",
                         success = false,
                     };
                 }
@@ -229,7 +272,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
             {
                 return new ResponseModel<List<UserTypeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }

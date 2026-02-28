@@ -118,6 +118,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [HttpGet("GetActiveSubUserTypesByUserId")]
+        public async Task<ActionResult<ResponseModel<List<SubUserTypeResponseDTO>>>> GetActiveSubUserTypesByUserId(string userId)
+        {
+            var SubUserTypes = await SubUserTypeService.GetActiveSubUserTypesByUserId(userId);
+            if (SubUserTypes != null)
+            {
+                return Ok(SubUserTypes);
+            }
+            else
+            {
+                var Response = new ResponseModel<SubUserTypeResponseDTO>()
+                {
+                    remarks = "No Record found",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
 
         [HttpGet("GetSubUserTypesOfBusiness")]
         public async Task<ActionResult<ResponseModel<List<SubUserTypeResponseDTO>>>> GetSubUserTypesOfBusiness(string userId)

@@ -13,6 +13,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
         Task<ResponseModel<List<SubUserTypeResponseDTO>>> GetSubUserTypesByUserId(string userId);
         public Task<ResponseModel<List<SubUserTypeResponseDTO>>> GetSubUserTypesOfBusiness(string userId);
         Task<ResponseModel> UpdateSubUserTypeHierarchy(List<SubUserTypeHierarchyDTO> requestDto);
+        public Task<ResponseModel<List<SubUserTypeResponseDTO>>> GetActiveSubUserTypesByUserId(string userId);
 
     }
 }

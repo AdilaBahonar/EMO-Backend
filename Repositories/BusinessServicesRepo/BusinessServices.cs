@@ -353,7 +353,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<List<UserResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }

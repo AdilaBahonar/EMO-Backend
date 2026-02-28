@@ -94,6 +94,25 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [HttpGet("GetActiveUserTypes")]
+        public async Task<ActionResult<ResponseModel<List<UserTypeResponseDTO>>>> GetActiveUserTypes()
+        {
+            var UserTypes = await UserTypeService.GetActiveUserTypes();
+            if (UserTypes != null)
+            {
+                var Response = UserTypes;
+                return Ok(Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<UserTypeResponseDTO>()
+                {
+                    remarks = "Model Not Verified",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
         [HttpDelete]
         public async Task<ActionResult<ResponseModel>> Delete(string id)
         {
@@ -142,11 +161,12 @@ namespace EMO.Controllers
             {
                 var Response = new ResponseModel<UserTypeResponseDTO>()
                 {
-                    remarks = "UserType not found by ID",
+                    remarks = "No Record found against this user id",
                     success = false
                 };
                 return BadRequest(Response);
             }
         }
+
     }
 }

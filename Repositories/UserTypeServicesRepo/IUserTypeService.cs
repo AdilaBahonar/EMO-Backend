@@ -12,5 +12,6 @@ namespace EMO.Repositories.UserTypeServicesRepo
         public Task<ResponseModel> DeleteUserTypeById(string UserTypeId);
         public Task<ResponseModel<List<UserTypeResponseDTO>>> GetUserTypeByUserId(string UserId);
         public Task<ResponseModel> UpdateUserTypeHierarchy(List<UserTypeHierarchyDTO> requestDto);
+        public Task<ResponseModel<List<UserTypeResponseDTO>>> GetActiveUserTypes();
     }
 }

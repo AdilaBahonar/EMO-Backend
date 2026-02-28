@@ -61,7 +61,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<UserResponseDTO>()
                 {
-                    remarks = $"There was a  fatal error: {ex.ToString()}",
+                    remarks = $"There was a  fatal error:  ",
                     success = false,
                 };
             }
@@ -114,7 +114,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<UserResponseDTO>()
                 {
-                    remarks = $"There was a  fatal error: {ex.ToString()}",
+                    remarks = $"There was a  fatal error:  ",
                     success = false,
                 };
             }
@@ -146,7 +146,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<UserResponseDTO>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -179,7 +179,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<List<UserResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -211,7 +211,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<List<UserResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -256,7 +256,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<List<UserResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -403,7 +403,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -441,7 +441,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
                 return new ResponseModel<List<UserResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }

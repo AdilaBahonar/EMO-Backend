@@ -130,6 +130,21 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
                         success = false
                     };
 
+                if (requestDto.isActive)
+                {
+                    var parentUserType = await db.tbl_user_type
+                        .FirstOrDefaultAsync(x => x.user_type_id == existing.fk_user_type);
+
+                    if (parentUserType == null || !parentUserType.is_active)
+                    {
+                        return new ResponseModel<SubUserTypeResponseDTO>
+                        {
+                            remarks = "Cannot activate Sub User Type because its User Type is inactive.",
+                            success = false
+                        };
+                    }
+                }
+
                 mapper.Map(requestDto, existing);
                 await db.SaveChangesAsync();
 
@@ -160,7 +175,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
                 if (existing == null)
                     return new ResponseModel<SubUserTypeResponseDTO>
                     {
-                        remarks = "Sub User Type not found",
+                        remarks = "Record not found",
                         success = false
                     };
 
@@ -261,9 +276,6 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
                 }
                 var userType = await db.tbl_sub_user_type.Where(u => u.sub_user_type_id == user).Select(u => u.fk_user_type).FirstOrDefaultAsync();
 
-
-
-
                 // 2️⃣ Fetch sub-user-types for the user's userType
                 var subUserTypes = await db.tbl_sub_user_type
                     .Where(s => s.fk_user_type == userType)
@@ -295,7 +307,6 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<List<SubUserTypeResponseDTO>>> GetSubUserTypesOfBusiness (string userId)
         {
             try
@@ -393,7 +404,72 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
                 };
             }
         }
+        public async Task<ResponseModel<List<SubUserTypeResponseDTO>>> GetActiveSubUserTypesByUserId(string userId)
+        {
+            try
+            {
+                var parsedUserId = Guid.Parse(userId);
 
+                // 1️⃣ Get user's sub user type
+                var userSubUserTypeId = await db.tbl_user
+                    .Where(u => u.user_id == parsedUserId)
+                    .Select(u => u.fk_sub_user_type)
+                    .FirstOrDefaultAsync();
+
+                if (userSubUserTypeId == Guid.Empty)
+                {
+                    return new ResponseModel<List<SubUserTypeResponseDTO>>
+                    {
+                        remarks = "Invalid userId",
+                        success = false
+                    };
+                }
+
+                // 2️⃣ Get user's sub user type details (including level & userType)
+                var currentSubUserType = await db.tbl_sub_user_type
+                    .Where(s => s.sub_user_type_id == userSubUserTypeId)
+                    .Select(s => new
+                    {
+                        s.fk_user_type,
+                        s.sub_user_type_level
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (currentSubUserType == null)
+                {
+                    return new ResponseModel<List<SubUserTypeResponseDTO>>
+                    {
+                        remarks = "User sub user type not found",
+                        success = false
+                    };
+                }
+
+                // 3️⃣ Fetch ONLY lower authority roles (greater level number)
+                var subUserTypes = await db.tbl_sub_user_type
+                    .Where(s =>
+                        s.fk_user_type == currentSubUserType.fk_user_type &&
+                        s.is_active &&
+                        s.sub_user_type_level > currentSubUserType.sub_user_type_level
+                    )
+                    .Include(s => s.user_type)
+                    .ToListAsync();
+
+                return new ResponseModel<List<SubUserTypeResponseDTO>>
+                {
+                    data = mapper.Map<List<SubUserTypeResponseDTO>>(subUserTypes),
+                    remarks = subUserTypes.Any() ? "Success" : "No Sub User Type found",
+                    success = true
+                };
+            }
+            catch (Exception)
+            {
+                return new ResponseModel<List<SubUserTypeResponseDTO>>
+                {
+                    remarks = "There was a fatal error",
+                    success = false
+                };
+            }
+        }
     }
 
 

@@ -212,7 +212,6 @@ namespace EMO.Repositories.FacilityServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel> DeleteFacilityById(string facilityId)
         {
             try

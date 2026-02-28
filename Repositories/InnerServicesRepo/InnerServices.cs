@@ -42,7 +42,7 @@ namespace EMO.Repositories.InnerServicesRepo
             {
                 return new ResponseModel<UserInnerResponseDTO>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -74,7 +74,7 @@ namespace EMO.Repositories.InnerServicesRepo
             {
                 return new ResponseModel<UserInnerResponseDTO>()
                 {
-                    remarks = $"There was a fatal error {ex.ToString()}",
+                    remarks = $"There was a fatal error  ",
                     success = false,
                 };
             }
@@ -109,7 +109,7 @@ namespace EMO.Repositories.InnerServicesRepo
             {
                 return new ResponseModel<UserResponseDTO>()
                 {
-                    remarks = $"There was a  fatal error: {ex.ToString()}",
+                    remarks = $"There was a  fatal error:  ",
                     success = false,
                 };
             }

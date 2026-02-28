@@ -111,7 +111,7 @@ namespace EMO.Controllers
             {
                 var Response = new ResponseModel<SingalPhaseDataResponseDTO>()
                 {
-                    remarks = "Singal Phase Data not found",
+                    remarks = "Invalid Id.",
                     success = false
                 };
                 return BadRequest(Response);
