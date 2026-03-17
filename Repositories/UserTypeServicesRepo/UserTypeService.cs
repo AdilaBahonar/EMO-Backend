@@ -161,7 +161,6 @@ namespace EMO.Repositories.UserTypeServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<List<UserTypeResponseDTO>>> GetActiveUserTypes()
         {
             try

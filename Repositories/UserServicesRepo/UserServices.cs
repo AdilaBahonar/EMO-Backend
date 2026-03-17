@@ -408,7 +408,6 @@ namespace EMO.Repositories.UserServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<List<UserResponseDTO>>> GetBusinessAdminsByBusinessId(string businessId)
         {
             try

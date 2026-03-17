@@ -53,7 +53,7 @@ namespace EMO.Repositories.AuthServicesRepo
 
                         return new ResponseModel<UserLoginResponseDTO>
                         {
-                            remarks = "Password is wrong",
+                            remarks = "Incorrect Password",
                             success = false,
                         };
 

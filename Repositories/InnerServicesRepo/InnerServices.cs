@@ -19,7 +19,7 @@ namespace EMO.Repositories.InnerServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.Include(u => u.sub_user_type).ThenInclude(x=>x.user_type).Where(u => u.user_name == username).Include(u => u.user_image).Include(u => u.gender).FirstOrDefaultAsync();
+                var existingUser = await db.tbl_user.Include(u => u.sub_user_type).ThenInclude(x=>x.user_type).Where(u => u.user_name == username && u.is_active && u.sub_user_type.is_active ).Include(u => u.user_image).Include(u => u.gender).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
                     return new ResponseModel<UserInnerResponseDTO>()
