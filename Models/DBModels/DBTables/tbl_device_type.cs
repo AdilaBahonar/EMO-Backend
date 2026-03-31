@@ -8,5 +8,6 @@ namespace EMO.Models.DBModels.DBTables
         public Guid device_type_id { get; set; } = Guid.NewGuid();
         public string device_type_name { get; set; } = string.Empty;
         public IEnumerable<tbl_device> devices { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
     }
 }

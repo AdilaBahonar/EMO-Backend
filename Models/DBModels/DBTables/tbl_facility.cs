@@ -11,6 +11,7 @@ namespace EMO.Models.DBModels.DBTables
         public string facility_address { get; set; } = string.Empty;
         public DateTime created_at { get; set; } = DateTime.Now;
         public DateTime updated_at { get; set; } = DateTime.Now;
+        public bool is_deleted { get; set; } = false;
         public bool is_active { get; set; } = false;
         public Guid fk_business { get; set; } = Guid.Empty;
         public tbl_business business { get; set; } = default!;

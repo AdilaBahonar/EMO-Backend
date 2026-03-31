@@ -7,6 +7,7 @@ namespace EMO.Models.DBModels.DBTables
         [Key]
         public Guid section_id { get; set; } = Guid.NewGuid();
         public string section_name { get; set; } = string.Empty;
+        public bool is_deleted { get; set; } = false;
         public DateTime created_at { get; set; } = DateTime.Now;
         public DateTime updated_at { get; set; } = DateTime.Now;
         public bool is_active { get; set; } = false;

@@ -414,7 +414,7 @@ namespace EMO.Repositories.UserServicesRepo
             {
 
                 
-                var BuisnessAdmins = await db.tbl_user.Include(x=>x.sub_user_type).Where(x => x.fk_business == Guid.Parse(businessId)).ToListAsync();
+                var BuisnessAdmins = await db.tbl_user.Include(x=>x.sub_user_type).Include(x=>x.gender).Where(x => x.fk_business == Guid.Parse(businessId)).ToListAsync();
 
                 /*                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Where(x => x.fk_sub_user_type == Guid.Parse(userTypeId)).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
                 */

@@ -1,7 +1,9 @@
 ﻿using EMO.Extensions;
 using EMO.Models.DTOs.AgreementDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.SensorDTOs;
 using EMO.Repositories.AgreementServicesRepo;
+using EMO.Repositories.SensorServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -96,7 +98,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
-
+        [HttpGet("GetByBusinessId")]
+        public async Task<ActionResult<ResponseModel<List<AgreementResponseDTO>>>> GetByBusinessId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = AgreementServices.GetAgreementByBusinessId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<AgreementResponseDTO>>()
+                {
+                    remarks = "No record found.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
         [HttpDelete]
         public async Task<ActionResult<ResponseModel>> Delete(string id)
         {

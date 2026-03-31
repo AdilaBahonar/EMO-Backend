@@ -6,6 +6,7 @@ namespace EMO.Models.DBModels.DBTables
     {
         [Key]
         public Guid building_id { get; set; } = Guid.NewGuid();
+        public bool is_deleted { get; set; } = false;
         public string building_name { get; set; } = string.Empty;
         public DateTime created_at { get; set; } = DateTime.Now;
         public DateTime updated_at { get; set; } = DateTime.Now;

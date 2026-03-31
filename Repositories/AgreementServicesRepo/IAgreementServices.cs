@@ -10,6 +10,7 @@ namespace EMO.Repositories.AgreementServicesRepo
         Task<ResponseModel<AgreementResponseDTO>> GetAgreementById(string agreementId);
         Task<ResponseModel<List<AgreementResponseDTO>>> GetAllAgreements();
         Task<ResponseModel> DeleteAgreementById(string agreementId);
+        public Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId);
     }
 
 }

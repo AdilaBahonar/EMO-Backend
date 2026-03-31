@@ -9,6 +9,7 @@ namespace EMO.Models.DBModels.DBTables
         public string sub_user_type_name { get; set; } = string.Empty;
         public bool is_active { get; set; } = true;
         public int sub_user_type_level { get; set; }
+        public bool is_deleted { get; set; } = false;
         public Guid fk_user_type { get; set; } = Guid.Empty;
         public tbl_user_type user_type { get; set; } = default!;
         public IEnumerable<tbl_user> users { get; set; } = default!;

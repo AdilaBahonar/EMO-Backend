@@ -15,11 +15,13 @@ namespace EMO.Models.DBModels.DBTables
         public DateTime updated_at {  get; set; } = DateTime.Now;
         public bool is_active { get; set; } = false;
         public IEnumerable<tbl_user> users { get; set; } = default!;
+        public IEnumerable<tbl_agreement> agreements { get; set; } = default!;
         public IEnumerable<tbl_facility> facilities { get; set; } = default!;
         public IEnumerable<tbl_building> buildings { get; set; } = default!;
         public IEnumerable<tbl_floor> floors { get; set; } = default!;
         public IEnumerable<tbl_section> sections { get; set; } = default!;
         public IEnumerable<tbl_office> offices { get; set; } = default!;
         public IEnumerable<tbl_device> devices { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
     }
 }

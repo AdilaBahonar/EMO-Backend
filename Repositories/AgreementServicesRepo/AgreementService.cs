@@ -135,6 +135,73 @@ namespace EMO.Repositories.AgreementServicesRepo
             }
         }
 
+        public async Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId)
+        {
+            try
+            {
+                var businessGuid = Guid.Parse(businessId);
+
+                // STEP 1: Get agreements of this business
+                var agreements = await db.tbl_agreement
+                    .Where(x => x.fk_business == businessGuid)
+                    .ToListAsync();
+
+                // STEP 2: Check and update expired agreements
+                var now = DateTime.Now;
+
+                bool isAnyUpdated = false;
+
+                foreach (var agreement in agreements)
+                {
+                    if (agreement.agreement_end_date < now && agreement.is_active)
+                    {
+                        agreement.is_active = false;
+                        agreement.updated_at = now;
+                        isAnyUpdated = true;
+                    }
+                }
+
+                // STEP 3: Save changes if any update happened
+                if (isAnyUpdated)
+                {
+                    await db.SaveChangesAsync();
+                }
+
+                // STEP 4: Fetch again with includes (or reuse if you want optimization)
+                var result = await db.tbl_agreement
+                    .Include(x => x.tenant)
+                    .Include(x => x.office)
+                    .Where(x => x.fk_business == businessGuid)
+                    .ToListAsync();
+
+                if (result.Any())
+                {
+                    return new ResponseModel<List<AgreementResponseDTO>>()
+                    {
+                        data = mapper.Map<List<AgreementResponseDTO>>(result),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<AgreementResponseDTO>>()
+                    {
+                        remarks = "No record found",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                return new ResponseModel<List<AgreementResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error",
+                    success = false
+                };
+            }
+        }
+
         public async Task<ResponseModel<List<AgreementResponseDTO>>> GetAllAgreements()
         {
             try

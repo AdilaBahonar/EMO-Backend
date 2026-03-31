@@ -7,6 +7,7 @@ namespace EMO.Models.DBModels.DBTables
         [Key]
         public Guid tenant_id { get; set; } = Guid.NewGuid();
         public string tenant_name { get; set; } = string.Empty;
+        public bool is_deleted { get; set; } = false;
         public string tenant_ntn { get; set;} = string.Empty;
         public string tenant_address { get; set;} = string.Empty;
         public string tenant_coin { get; set;} = string.Empty;

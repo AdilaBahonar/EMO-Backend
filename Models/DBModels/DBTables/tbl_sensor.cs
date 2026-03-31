@@ -13,6 +13,7 @@ namespace EMO.Models.DBModels.DBTables
         public tbl_office office { get; set; } = default!;
         public Guid fk_device { get; set; } = Guid.Empty;
         public tbl_device device { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
         public Guid fk_utility { get; set; } = Guid.Empty;
         public tbl_utility utility { get; set; } = default!;
         public string mode_bus_address { get; set; } = string.Empty;

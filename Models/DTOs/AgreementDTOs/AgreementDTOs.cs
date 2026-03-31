@@ -9,6 +9,7 @@ namespace EMO.Models.DTOs.AgreementDTOs
             public string agreementName { get; set; } = string.Empty;
 
             public string agreementDescription { get; set; } = string.Empty;
+            public bool isActive { get; set; } = false;
 
             [Required]
             public string agreementStartDate { get; set; } = string.Empty;
@@ -42,7 +43,7 @@ namespace EMO.Models.DTOs.AgreementDTOs
 
         public string createdAt { get; set; } = string.Empty;
         public string updatedAt { get; set; } = string.Empty;
-        public bool isActive { get; set; }
+        public bool isActive { get; set; } = false;
 
         // Foreign Keys
         public string fkTenant { get; set; } = string.Empty;

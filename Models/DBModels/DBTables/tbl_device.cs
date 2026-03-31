@@ -15,5 +15,6 @@ namespace EMO.Models.DBModels.DBTables
 
         public tbl_business business { get; set; } = default!;
         public IEnumerable<tbl_sensor> sensors { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
     }
 }

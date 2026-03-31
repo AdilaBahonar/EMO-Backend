@@ -12,6 +12,7 @@ namespace EMO.Extensions.AutoMapper
             // Add
             CreateMap<AddAgreementDTO, tbl_agreement>()
                 .ForMember(d => d.agreement_name, opt => opt.MapFrom(src => src.agreementName))
+                 .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.isActive))
                 .ForMember(d => d.agreement_description, opt => opt.MapFrom(src => src.agreementDescription))
                 .ForMember(d => d.agreement_start_date, opt => opt.MapFrom(src => src.agreementStartDate))
                 .ForMember(d => d.agreement_end_date, opt => opt.MapFrom(src => src.agreementEndDate));

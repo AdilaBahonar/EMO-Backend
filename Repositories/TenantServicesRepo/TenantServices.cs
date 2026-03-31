@@ -85,8 +85,8 @@ namespace EMO.Repositories.TenantServicesRepo
                     };
                 }
 
-   
 
+                var fkBusiness = Guid.Parse(requestDto.tenant.fkBusiness);
                 Guid tenantId;
 
                 if (!string.IsNullOrWhiteSpace(requestDto.fkTenant))
@@ -118,6 +118,7 @@ namespace EMO.Repositories.TenantServicesRepo
 
                     agreement.fk_tenant = tenantId;
                     agreement.fk_office = officeId;
+                    agreement.fk_business = fkBusiness;
 
                     await db.tbl_agreement.AddAsync(agreement);
                 }

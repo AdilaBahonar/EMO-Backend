@@ -9,6 +9,7 @@ namespace EMO.Models.DBModels.DBTables
         public string office_name { get; set; } = string.Empty;
         public DateTime created_at { get; set; } = DateTime.Now;
         public DateTime updated_at { get; set; } = DateTime.Now;
+        public bool is_deleted { get; set; } = false;
         public bool is_active { get; set; } = false;
         public bool is_occupied { get; set; } = false;
         public Guid fk_section { get; set; } = Guid.Empty;

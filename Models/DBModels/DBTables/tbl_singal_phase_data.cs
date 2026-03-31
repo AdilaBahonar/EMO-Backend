@@ -20,5 +20,6 @@ namespace EMO.Models.DBModels.DBTables
         public DateTime created_at { get; set; } = DateTime.Now;
         public Guid fk_sensor { get; set; } = Guid.Empty;
         public tbl_sensor sensor { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
     }
 }

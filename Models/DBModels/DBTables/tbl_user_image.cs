@@ -14,6 +14,7 @@ namespace EMO.Models.DBModels.DBTables
 
         [Required]
         public string imageBase64 { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
         public tbl_user? user { get; set; } = null;
     }
 

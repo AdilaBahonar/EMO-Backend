@@ -32,6 +32,7 @@ namespace EMO.Models.DBModels.DBTables
         public string user_name { get; set; } = null!;
         public string otp { get; set; } = string.Empty;
         public string user_email { get; set; } = string.Empty;
+        public bool is_deleted { get; set; } = false;
         public string user_phone_no { get; set; } = string.Empty;
         public string user_token { get; set; } = string.Empty;
         public Guid? fk_business { get; set; } = null;

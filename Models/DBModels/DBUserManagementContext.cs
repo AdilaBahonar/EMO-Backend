@@ -312,6 +312,12 @@ namespace EMO.Models.DBModels
                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<tbl_agreement>()
+             .HasOne(p => p.business)
+             .WithMany(b => b.agreements)
+             .HasForeignKey(p => p.fk_business)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_agreement>()
              .Property<DateTime>("created_at")
              .HasColumnType("DATETIME(6)");
 

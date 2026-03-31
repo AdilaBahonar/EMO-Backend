@@ -11,5 +11,6 @@ namespace EMO.Models.DBModels.DBTables
         public string contact_person_phone { get; set; } = string.Empty;
         public Guid fk_tenant {  get; set; } =Guid.Empty;
         public tbl_user tenant { get; set; } = default!;
+        public bool is_deleted { get; set; } = false;
     }
 }
