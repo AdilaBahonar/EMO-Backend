@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.UserDTOs;
 
 namespace EMO.Controllers
 {
@@ -112,6 +113,25 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<TenantResponseDTO>()
                 {
                     remarks = "Tenant not found by ID",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetTenantByAgreementId")]
+        public async Task<ActionResult<List<ResponseModel<UserResponseDTO>>>> GetTenantByAgreementId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = TenantServices.GetTenantByAgreementId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<UserResponseDTO>>()
+                {
+                    remarks = "No Record found.",
                     success = false
                 };
                 return BadRequest(Response);

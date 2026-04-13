@@ -64,7 +64,7 @@ namespace EMO.Repositories.AuthServicesRepo
                     // Authentication failed
                     return new ResponseModel<UserLoginResponseDTO>
                     {
-                        remarks = "User not found",
+                        remarks = existingUser.remarks,
                         success = false,
                     };
                 }

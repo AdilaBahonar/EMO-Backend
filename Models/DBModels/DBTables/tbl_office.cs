@@ -17,7 +17,7 @@ namespace EMO.Models.DBModels.DBTables
         public tbl_business business { get; set; } = default!;
         public tbl_section section { get; set; } = default!;
         //public IEnumerable<tbl_sensor> sensors { get; set; } = default!;
-        public IEnumerable<tbl_agreement> agreements { get; set; } = default!;
         public IEnumerable<tbl_sensor> sensors { get; set; } = default!;
+        public IEnumerable<tbl_office_agreement> office_agreement { get; set; } = default!;
     }
 }

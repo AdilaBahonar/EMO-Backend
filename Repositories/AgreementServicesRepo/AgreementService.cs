@@ -4,6 +4,7 @@ using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.AgreementDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using Microsoft.EntityFrameworkCore;
+using ZXing;
 
 namespace EMO.Repositories.AgreementServicesRepo
 {
@@ -103,7 +104,6 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 var agreement = await db.tbl_agreement
                     .Include(x => x.tenant)
-                    .Include(x => x.office)
                     .Where(x => x.agreement_id == Guid.Parse(agreementId))
                     .FirstOrDefaultAsync();
 
@@ -135,55 +135,92 @@ namespace EMO.Repositories.AgreementServicesRepo
             }
         }
 
+        //public async Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId)
+        //{
+        //    try
+        //    {
+        //        var businessGuid = Guid.Parse(businessId);
+
+        //        // STEP 1: Get agreements of this business
+        //        var agreements = await db.tbl_agreement
+        //            .Where(x => x.fk_business == businessGuid)
+        //            .ToListAsync();
+
+        //        // STEP 2: Check and update expired agreements
+        //        var now = DateTime.Now;
+
+        //        bool isAnyUpdated = false;
+
+        //        foreach (var agreement in agreements)
+        //        {
+        //            if (agreement.agreement_end_date < now && agreement.is_active)
+        //            {
+        //                agreement.is_active = false;
+        //                agreement.updated_at = now;
+
+        //                var offices = await db.tbl_office_agreement.Where(x => x.fk_agreement == agreement.agreement_id).Include(x => x.office).Select(x => x.office).ToListAsync();
+        //                foreach (var item in offices)
+        //                {
+        //                    item.is_occupied = false;
+        //                }
+        //                isAnyUpdated = true;
+        //            }
+        //        }
+
+        //        // STEP 3: Save changes if any update happened
+        //        if (isAnyUpdated)
+        //        {
+        //            await db.SaveChangesAsync();
+        //        }
+
+        //        // STEP 4: Fetch again with includes (or reuse if you want optimization)
+        //        var result = await db.tbl_agreement
+        //            .Include(x => x.tenant)
+        //            .Where(x => x.fk_business == businessGuid)
+        //            .ToListAsync();
+
+        //        if (result.Any())
+        //        {
+        //            return new ResponseModel<List<AgreementResponseDTO>>()
+        //            {
+        //                data = mapper.Map<List<AgreementResponseDTO>>(result),
+        //                remarks = "Success",
+        //                success = true
+        //            };
+        //        }
+        //        else
+        //        {
+        //            return new ResponseModel<List<AgreementResponseDTO>>()
+        //            {
+        //                remarks = "No record found",
+        //                success = false
+        //            };
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return new ResponseModel<List<AgreementResponseDTO>>()
+        //        {
+        //            remarks = $"There was a fatal error",
+        //            success = false
+        //        };
+        //    }
+        //}
+
+
         public async Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId)
         {
             try
             {
                 var businessGuid = Guid.Parse(businessId);
-
-                // STEP 1: Get agreements of this business
-                var agreements = await db.tbl_agreement
-                    .Where(x => x.fk_business == businessGuid)
-                    .ToListAsync();
-
-                // STEP 2: Check and update expired agreements
                 var now = DateTime.Now;
 
-                bool isAnyUpdated = false;
-
-                foreach (var agreement in agreements)
-                {
-                    if (agreement.agreement_end_date < now && agreement.is_active)
-                    {
-                        agreement.is_active = false;
-                        agreement.updated_at = now;
-                        isAnyUpdated = true;
-                    }
-                }
-
-                // STEP 3: Save changes if any update happened
-                if (isAnyUpdated)
-                {
-                    await db.SaveChangesAsync();
-                }
-
-                // STEP 4: Fetch again with includes (or reuse if you want optimization)
-                var result = await db.tbl_agreement
-                    .Include(x => x.tenant)
-                    .Include(x => x.office)
+                var agreements = await db.tbl_agreement
                     .Where(x => x.fk_business == businessGuid)
+                    .Include(x => x.tenant)
                     .ToListAsync();
 
-                if (result.Any())
-                {
-                    return new ResponseModel<List<AgreementResponseDTO>>()
-                    {
-                        data = mapper.Map<List<AgreementResponseDTO>>(result),
-                        remarks = "Success",
-                        success = true
-                    };
-                }
-                else
+                if (agreements.Any())
                 {
                     return new ResponseModel<List<AgreementResponseDTO>>()
                     {
@@ -191,24 +228,59 @@ namespace EMO.Repositories.AgreementServicesRepo
                         success = false
                     };
                 }
-            }
-            catch (Exception)
-            {
-                return new ResponseModel<List<AgreementResponseDTO>>()
+                var expiredAgreements = agreements
+                    .Where(a => a.agreement_end_date < now && a.is_active)
+                    .ToList();
+
+                if (expiredAgreements.Any())
                 {
-                    remarks = $"There was a fatal error",
-                    success = false
+                    var expiredIds = expiredAgreements.Select(x => x.agreement_id).ToList();
+
+                    foreach (var agreement in expiredAgreements)
+                    {
+                        agreement.is_active = false;
+                        agreement.updated_at = now;
+                    }
+
+                    var offices = await db.tbl_office_agreement
+                        .Where(x => expiredIds.Contains(x.fk_agreement))
+                        .Include(x => x.office)
+                        .Select(x => x.office)
+                        .Distinct()
+                        .ToListAsync();
+
+                    foreach (var office in offices)
+                    {
+                        office.is_occupied = false;
+                    }
+
+                    await db.SaveChangesAsync();
+                }
+
+                var dto = mapper.Map<List<AgreementResponseDTO>>(agreements);
+
+                return new ResponseModel<List<AgreementResponseDTO>>
+                {
+                    data = dto,
+                    success = true,
+                    remarks = "Success"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<AgreementResponseDTO>>
+                {
+                    success = false,
+                    remarks = ex.Message
                 };
             }
         }
-
         public async Task<ResponseModel<List<AgreementResponseDTO>>> GetAllAgreements()
         {
             try
             {
                 var agreements = await db.tbl_agreement
                     .Include(x => x.tenant)
-                    .Include(x => x.office)
                     .ToListAsync();
 
                 if (agreements.Any())

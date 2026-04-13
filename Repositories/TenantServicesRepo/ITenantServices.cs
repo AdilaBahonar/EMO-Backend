@@ -1,5 +1,6 @@
 ﻿using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.TenantDTOs;
+using EMO.Models.DTOs.UserDTOs;
 
 namespace EMO.Repositories.TenantServicesRepo
 {
@@ -12,5 +13,6 @@ namespace EMO.Repositories.TenantServicesRepo
         //Task<ResponseModel> DeleteTenantById(string tenantId);
         public Task<ResponseModel> AssignTenant(AssignTenantDTO requestDto);
         public Task<ResponseModel<List<tenantResponseDTO>>> GetTenantByBusinessId(string BusinessId);
+        public Task<ResponseModel<List<UserResponseDTO>>> GetTenantByAgreementId(string AgreementId);
     }
 }

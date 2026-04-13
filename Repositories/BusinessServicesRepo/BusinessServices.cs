@@ -63,6 +63,15 @@ namespace EMO.Repositories.BusinessServicesRepo
         {
             try
             {
+                var user = await db.tbl_user.Where(x => x.user_id == Guid.Parse(requestDto.fkUser) && x.is_active && !x.is_deleted && x.sub_user_type.user_type.user_type_level == 0).FirstOrDefaultAsync();
+                if(user == null)
+                {
+                    return new ResponseModel<BusinessResponseDTO>()
+                    {
+                        remarks = "Something went wrong.Try again later.",
+                        success = false
+                    };
+                }
                 var existingBusiness = await db.tbl_business
                     .Where(x => x.business_id == Guid.Parse(requestDto.businessId))
                     .FirstOrDefaultAsync();
@@ -277,8 +286,15 @@ namespace EMO.Repositories.BusinessServicesRepo
                     
                     var newBusiness = mapper.Map<tbl_business>(requestDto);
                     await db.tbl_business.AddAsync(newBusiness);
-                    
+
+                    var businessAdminFk = await db.tbl_sub_user_type
+                        .Where(x => x.user_type.user_type_name.ToLower() == "business admin" && x.sub_user_type_level == 0)
+                        .Select(x => x.sub_user_type_id)
+                        .FirstOrDefaultAsync();
+                    requestDto.fkSubUserType = businessAdminFk.ToString();
                     var newUser = mapper.Map<tbl_user>(requestDto);
+
+
                     newUser.fk_business = newBusiness.business_id;
                     await db.tbl_user.AddAsync(newUser);
                     await db.SaveChangesAsync();

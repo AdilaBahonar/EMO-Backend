@@ -299,11 +299,6 @@ namespace EMO.Models.DBModels
             #endregion
 
             #region Agreement
-            modelBuilder.Entity<tbl_agreement>()
-               .HasOne(p => p.office)
-               .WithMany(b => b.agreements)
-               .HasForeignKey(p => p.fk_office)
-               .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<tbl_agreement>()
                .HasOne(p => p.tenant)
@@ -394,6 +389,20 @@ namespace EMO.Models.DBModels
             // .WithMany(b => b.devices)
             // .HasForeignKey(p => p.fk_office)
             // .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region Office Agreement
+            modelBuilder.Entity<tbl_office_agreement>()
+           .HasOne(p => p.office)
+           .WithMany(b => b.office_agreement)
+           .HasForeignKey(p => p.fk_office)
+           .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_office_agreement>()
+          .HasOne(p => p.agreement)
+          .WithMany(b => b.office_agreement)
+          .HasForeignKey(p => p.fk_agreement)
+          .OnDelete(DeleteBehavior.Restrict);
             #endregion
 
             //#region Tenant
@@ -605,6 +614,7 @@ namespace EMO.Models.DBModels
         public DbSet<tbl_gender> tbl_gender { get; set; }
         public DbSet<tbl_sub_user_type> tbl_sub_user_type { get; set; }
         public DbSet<tbl_user_image> tbl_user_image { get; set; }
+        public DbSet<tbl_office_agreement> tbl_office_agreement { get; set; }
 
     }
 }

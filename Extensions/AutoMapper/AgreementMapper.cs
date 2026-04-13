@@ -23,7 +23,6 @@ namespace EMO.Extensions.AutoMapper
                 .ForMember(d => d.agreement_start_date, opt => opt.MapFrom((src, dest) => otherServices.Check(src.agreementStartDate) ? DateTime.Parse(src.agreementStartDate) : dest.agreement_start_date))
                 .ForMember(d => d.agreement_end_date, opt => opt.MapFrom((src, dest) => otherServices.Check(src.agreementEndDate) ? DateTime.Parse(src.agreementEndDate) : dest.agreement_end_date))
                 .ForMember(d => d.fk_tenant, opt => opt.MapFrom((src, dest) =>otherServices.Check(src.fkTenant) ? Guid.Parse(src.fkTenant) : dest.fk_tenant))
-                .ForMember(d => d.fk_office, opt => opt.MapFrom((src, dest) =>otherServices.Check(src.fkOffice) ? Guid.Parse(src.fkOffice) : dest.fk_office))
                 .ForMember(d => d.is_active, opt => opt.MapFrom(src => src.isActive))
                 .ForMember(d => d.updated_at, opt => opt.MapFrom(_ => DateTime.Now));
             CreateMap<tbl_agreement, AgreementResponseDTO>()
@@ -36,9 +35,7 @@ namespace EMO.Extensions.AutoMapper
                  .ForMember(d => d.updatedAt, opt => opt.MapFrom(src => src.updated_at.ToString()))
                  .ForMember(d => d.isActive, opt => opt.MapFrom(src => src.is_active))
                  .ForMember(d => d.fkTenant, opt => opt.MapFrom(src => src.fk_tenant.ToString()))
-                 .ForMember(d => d.tenantName, opt => opt.MapFrom(src => src.tenant.user_name))
-                 .ForMember(d => d.fkOffice, opt => opt.MapFrom(src => src.fk_office.ToString()))
-                 .ForMember(d => d.officeName, opt => opt.MapFrom(src => src.office.office_name));
+                 .ForMember(d => d.tenantName, opt => opt.MapFrom(src => src.tenant.user_name));
 
         }
     }

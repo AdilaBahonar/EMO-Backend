@@ -30,7 +30,6 @@ namespace EMO.Models.DTOs.AgreementDTOs
             public string agreementEndDate { get; set; } = string.Empty;
             public bool isActive { get; set; } = false;
             public string fkTenant { get; set; } = string.Empty;
-            public string fkOffice { get; set; } = string.Empty;
         }
 
     public class AgreementResponseDTO
@@ -49,8 +48,6 @@ namespace EMO.Models.DTOs.AgreementDTOs
         public string fkTenant { get; set; } = string.Empty;
         public string tenantName { get; set; } = string.Empty;
 
-        public string fkOffice { get; set; } = string.Empty;
-        public string officeName { get; set; } = string.Empty;
     }
 
 

@@ -4,7 +4,9 @@ using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.BusinessDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.TenantDTOs;
+using EMO.Models.DTOs.UserDTOs;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace EMO.Repositories.TenantServicesRepo
 {
@@ -26,9 +28,6 @@ namespace EMO.Repositories.TenantServicesRepo
 
             try
             {
-
-
-                // Validate dates
                 if (!DateTime.TryParse(requestDto.agreement.agreementStartDate, out DateTime startDate))
                 {
                     return new ResponseModel
@@ -111,18 +110,23 @@ namespace EMO.Repositories.TenantServicesRepo
 
                     tenantId = newTenant.user_id;
                 }
+                var agreement = mapper.Map<tbl_agreement>(requestDto.agreement);
 
+                agreement.fk_tenant = tenantId;
+                agreement.fk_business = fkBusiness;
+
+                await db.tbl_agreement.AddAsync(agreement);
+                var officeList = new List<tbl_office_agreement>();
                 foreach (var officeId in officeIds)
                 {
-                    var agreement = mapper.Map<tbl_agreement>(requestDto.agreement);
-
-                    agreement.fk_tenant = tenantId;
-                    agreement.fk_office = officeId;
-                    agreement.fk_business = fkBusiness;
-
-                    await db.tbl_agreement.AddAsync(agreement);
+                    var officeAgreement = new tbl_office_agreement
+                    {
+                        fk_agreement = agreement.agreement_id,
+                        fk_office = officeId
+                    };
+                    officeList.Add(officeAgreement);
                 }
-
+                await db.tbl_office_agreement.AddRangeAsync(officeList);
 
                 if (requestDto.contactPerson != null && requestDto.contactPerson.Any())
                 {
@@ -317,7 +321,124 @@ namespace EMO.Repositories.TenantServicesRepo
             }
         }
 
+        //public async Task<ResponseModel<tenantResponseDTO>> GetTenantByAgreementId(string AgreementId)
+        //{
+        //    try
+        //    {
+        //        if (!Guid.TryParse(AgreementId, out Guid agreementGuid))
+        //        {
+        //            return new ResponseModel<tenantResponseDTO>()
+        //            {
+        //                remarks = "Invalid Agreement Id",
+        //                success = false
+        //            };
+        //        }
 
+        //        var tenants = await db.tbl_agreement
+        //            .Where(a => a.agreement_id == agreementGuid && !a.is_deleted)
+        //            .Select(a => a.tenant) // navigation property (tenant)
+        //            .Where(u => u != null &&
+        //                        !u.is_deleted &&
+        //                        u.is_active &&
+        //                        u.sub_user_type.user_type.user_type_name.ToLower() == "tenant")
+        //            .Select(u => new tenantResponseDTO
+        //            {
+        //                tenantId = u.user_id.ToString(),
+        //                tenantName = u.name,
+        //                tenantUserName = u.user_name,
+        //                tenantEmail = u.user_email
+        //            })
+        //            .FirstOrDefaultAsync();
+
+        //        if (tenants!= null)
+        //        {
+        //            return new ResponseModel<tenantResponseDTO>()
+        //            {
+        //                data = tenants,
+        //                remarks = "Success",
+        //                success = true
+        //            };
+        //        }
+
+        //        return new ResponseModel<tenantResponseDTO>()
+        //        {
+        //            remarks = "No tenant found for this agreement.",
+        //            success = false
+        //        };
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return new ResponseModel<tenantResponseDTO>()
+        //        {
+        //            remarks = "There was a fatal error",
+        //            success = false
+        //        };
+        //    }
+        //}
+
+        public async Task<ResponseModel<List<UserResponseDTO>>> GetTenantByAgreementId(string AgreementId)
+        {
+            try
+            {
+                if (!Guid.TryParse(AgreementId, out Guid agreementGuid))
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "Invalid Agreement Id",
+                        success = false
+                    };
+                }
+
+                var tenantId = await db.tbl_agreement
+                    .Where(x => x.agreement_id == agreementGuid)
+                    .Select(x => x.fk_tenant)
+                    .FirstOrDefaultAsync();
+
+                if (tenantId == Guid.Empty)
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "No tenant found for this agreement",
+                        success = false
+                    };
+                }
+
+                var tenant = await db.tbl_user
+                    .Include(x => x.sub_user_type)
+                    .Include(x => x.gender).Include(x=>x.user_image)
+                    .FirstOrDefaultAsync(x => x.user_id == tenantId);
+
+                if (tenant == null)
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "User not found",
+                        success = false
+                    };
+                }
+
+                // ✅ Wrap single item into list
+                var result = new List<UserResponseDTO>
+        {
+            mapper.Map<UserResponseDTO>(tenant)
+        };
+
+                return new ResponseModel<List<UserResponseDTO>>()
+                {
+                    data = result,
+                    remarks = "Success",
+                    success = true
+                };
+            }
+            catch (Exception)
+            {
+                return new ResponseModel<List<UserResponseDTO>>()
+                {
+                    remarks = "There was a fatal error",
+                    success = false,
+                };
+            }
+        }
         //public async Task<ResponseModel<List<TenantResponseDTO>>> GetAllTenants()
         //{
         //    try
