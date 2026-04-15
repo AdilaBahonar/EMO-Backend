@@ -2,6 +2,7 @@
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.AgreementDTOs;
+using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using Microsoft.EntityFrameworkCore;
 using ZXing;
@@ -220,7 +221,7 @@ namespace EMO.Repositories.AgreementServicesRepo
                     .Include(x => x.tenant)
                     .ToListAsync();
 
-                if (agreements.Any())
+                if (!agreements.Any())
                 {
                     return new ResponseModel<List<AgreementResponseDTO>>()
                     {
@@ -306,6 +307,51 @@ namespace EMO.Repositories.AgreementServicesRepo
                 return new ResponseModel<List<AgreementResponseDTO>>()
                 {
                     remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
+
+        public async Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByAgreementId(string agreementId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(agreementId))
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+
+                if (!Guid.TryParse(agreementId, out Guid parsedAgreementId))
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "Invalid Guid format.",
+                        success = false
+                    };
+                }
+
+                var offices = await db.tbl_office_agreement
+                    .Where(x => x.fk_agreement == parsedAgreementId)
+                    .Select(x => x.office)
+                    .Include(o => o.section)
+                    .ToListAsync();
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    data = mapper.Map<List<OfficeResponseDTO>>(offices),
+                    remarks = offices.Any() ? "Success" : "No record found.",
+                    success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error: {ex.Message}",
                     success = false
                 };
             }

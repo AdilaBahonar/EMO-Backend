@@ -1,4 +1,5 @@
 ﻿using EMO.Models.DTOs.AgreementDTOs;
+using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 
 namespace EMO.Repositories.AgreementServicesRepo
@@ -11,6 +12,7 @@ namespace EMO.Repositories.AgreementServicesRepo
         Task<ResponseModel<List<AgreementResponseDTO>>> GetAllAgreements();
         Task<ResponseModel> DeleteAgreementById(string agreementId);
         public Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId);
+        public Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByAgreementId(string agreementId);
     }
 
 }

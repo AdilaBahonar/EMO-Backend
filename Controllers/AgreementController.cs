@@ -1,5 +1,6 @@
 ﻿using EMO.Extensions;
 using EMO.Models.DTOs.AgreementDTOs;
+using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.SensorDTOs;
 using EMO.Repositories.AgreementServicesRepo;
@@ -109,6 +110,25 @@ namespace EMO.Controllers
             else
             {
                 var Response = new ResponseModel<List<AgreementResponseDTO>>()
+                {
+                    remarks = "No record found.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpGet("GetOfficesByAgreementId")]
+        public async Task<ActionResult<ResponseModel<List<OfficeResponseDTO>>>> GetOfficesByAgreementId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = AgreementServices.GetOfficeByAgreementId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<OfficeResponseDTO>>()
                 {
                     remarks = "No record found.",
                     success = false
