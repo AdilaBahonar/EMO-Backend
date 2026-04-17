@@ -9,7 +9,7 @@ namespace EMO.Models.DBModels.DBTables
         public Guid fk_agreement { get; set; } = Guid.Empty;
         public tbl_agreement agreement { get; set; } = default!;
         public Guid fk_office { get; set; } = Guid.Empty;
-
+        public bool is_deleted { get; set; } = false;
         public tbl_office office { get; set; } = default!;
     }
 }

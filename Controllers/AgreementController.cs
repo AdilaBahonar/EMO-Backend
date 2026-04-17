@@ -7,6 +7,7 @@ using EMO.Repositories.AgreementServicesRepo;
 using EMO.Repositories.SensorServicesRepo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EMO.Controllers
 {
@@ -149,6 +150,25 @@ namespace EMO.Controllers
                 var Response = new ResponseModel<AgreementResponseDTO>()
                 {
                     remarks = "Agreement not found",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [HttpPost("RemoveOfficeFromAgreement")]
+        public async Task<ActionResult<ResponseModel>> RemoveOfficeFromAgreement(RemoveOfficeFromAgreementRequestDTO requestDTO)
+        {
+            if (ModelState.IsValid)
+            {
+                var Response = AgreementServices.RemoveOfficeFromAgreement(requestDTO);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel()
+                {
+                    remarks = "No record found.",
                     success = false
                 };
                 return BadRequest(Response);

@@ -18,8 +18,14 @@ namespace EMO.Models.DTOs.AgreementDTOs
             public string agreementEndDate { get; set; } = string.Empty;
 
         }
-
-        public class UpdateAgreementDTO
+    public class RemoveOfficeFromAgreementRequestDTO
+    {
+        [Required]
+        public string agreementId { get; set; } = string.Empty;
+        [Required]
+        public string officeId { get; set; } = string.Empty;
+    }
+    public class UpdateAgreementDTO
         {
             [Required]
             public string agreementId { get; set; } = string.Empty;

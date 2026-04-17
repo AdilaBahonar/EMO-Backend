@@ -13,6 +13,7 @@ namespace EMO.Repositories.AgreementServicesRepo
         Task<ResponseModel> DeleteAgreementById(string agreementId);
         public Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId);
         public Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByAgreementId(string agreementId);
+        public Task<ResponseModel> RemoveOfficeFromAgreement(RemoveOfficeFromAgreementRequestDTO requestDTO);
     }
 
 }

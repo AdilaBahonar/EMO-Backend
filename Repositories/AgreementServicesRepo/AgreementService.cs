@@ -393,6 +393,44 @@ namespace EMO.Repositories.AgreementServicesRepo
                 };
             }
         }
+
+        public async Task<ResponseModel> RemoveOfficeFromAgreement(RemoveOfficeFromAgreementRequestDTO requestDTO)
+        {
+            try
+            {
+                var agreement = await db.tbl_office_agreement.Where(x=>x.agreement.is_active && x.fk_office == Guid.Parse(requestDTO.officeId) && x.fk_agreement == Guid.Parse(requestDTO.agreementId)).FirstOrDefaultAsync();
+
+                if (agreement != null)
+                {
+                    var office = await db.tbl_office.Where(x => x.office_id == agreement.fk_office).FirstOrDefaultAsync();
+                    office.is_occupied = false;
+                    agreement.is_deleted = true;
+                    await db.SaveChangesAsync();
+
+                    return new ResponseModel()
+                    {
+                        remarks = "Room Removed successfully",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel()
+                    {
+                        remarks = "Something went wrong.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel()
+                {
+                    remarks = $"There was a fatal error: {ex}",
+                    success = false
+                };
+            }
+        }
     }
 
 }
