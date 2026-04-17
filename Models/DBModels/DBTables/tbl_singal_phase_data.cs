@@ -22,4 +22,56 @@ namespace EMO.Models.DBModels.DBTables
         public tbl_sensor sensor { get; set; } = default!;
         public bool is_deleted { get; set; } = false;
     }
+    public class tbl_daily_energy
+    {
+        [Key]
+        public Guid daily_energy_id { get; set; } = Guid.NewGuid();
+
+        public Guid fk_sensor { get; set; }
+
+        public DateTime date { get; set; } // ONLY DATE (no time)
+
+        // ================= ENERGY =================
+        public double total_active_energy { get; set; }
+        public double total_reactive_energy { get; set; }
+
+        // ================= POWER =================
+        public double avg_active_power { get; set; }
+        public double max_active_power { get; set; }
+        public double min_active_power { get; set; }
+
+        public double avg_voltage { get; set; }
+        public double avg_current { get; set; }
+        public double avg_power_factor { get; set; }
+
+        // ================= META =================
+        public int sample_count { get; set; }
+
+        public DateTime created_at { get; set; } = DateTime.Now;
+    }
+
+    public class tbl_monthly_energy
+    {
+        [Key]
+        public Guid monthly_energy_id { get; set; } = Guid.NewGuid();
+
+        public Guid fk_sensor { get; set; }
+
+        public int year { get; set; }
+        public int month { get; set; }
+
+        // ================= ENERGY =================
+        public double total_active_energy { get; set; }
+        public double total_reactive_energy { get; set; }
+
+        // ================= POWER =================
+        public double avg_active_power { get; set; }
+        public double max_active_power { get; set; }
+
+        public double avg_voltage { get; set; }
+        public double avg_current { get; set; }
+
+        public DateTime created_at { get; set; } = DateTime.Now;
+    }
+
 }

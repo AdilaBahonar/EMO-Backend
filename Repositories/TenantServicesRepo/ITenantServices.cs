@@ -14,5 +14,6 @@ namespace EMO.Repositories.TenantServicesRepo
         public Task<ResponseModel> AssignTenant(AssignTenantDTO requestDto);
         public Task<ResponseModel<List<tenantResponseDTO>>> GetTenantByBusinessId(string BusinessId);
         public Task<ResponseModel<List<UserResponseDTO>>> GetTenantByAgreementId(string AgreementId);
+        public Task<ResponseModel<List<UserResponseDTO>>> GetTenantsByBusinessId(string BusinessId);
     }
 }

@@ -335,10 +335,11 @@ namespace EMO.Repositories.AgreementServicesRepo
                 }
 
                 var offices = await db.tbl_office_agreement
-                    .Where(x => x.fk_agreement == parsedAgreementId)
-                    .Select(x => x.office)
-                    .Include(o => o.section)
-                    .ToListAsync();
+                  .Where(x => x.fk_agreement == parsedAgreementId)
+                  .Include(x => x.office)
+                      .ThenInclude(o => o.section)
+                  .Select(x => x.office)
+                  .ToListAsync();
 
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
@@ -351,7 +352,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex.Message}",
+                    remarks = $"There was a fatal error:",
                     success = false
                 };
             }

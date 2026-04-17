@@ -6,6 +6,7 @@ using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.TenantDTOs;
 using EMO.Models.DTOs.UserDTOs;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.Replication;
 using System.Collections.Generic;
 
 namespace EMO.Repositories.TenantServicesRepo
@@ -375,7 +376,6 @@ namespace EMO.Repositories.TenantServicesRepo
         //        };
         //    }
         //}
-
         public async Task<ResponseModel<List<UserResponseDTO>>> GetTenantByAgreementId(string AgreementId)
         {
             try
@@ -426,6 +426,63 @@ namespace EMO.Repositories.TenantServicesRepo
                 return new ResponseModel<List<UserResponseDTO>>()
                 {
                     data = result,
+                    remarks = "Success",
+                    success = true
+                };
+            }
+            catch (Exception)
+            {
+                return new ResponseModel<List<UserResponseDTO>>()
+                {
+                    remarks = "There was a fatal error",
+                    success = false,
+                };
+            }
+        }
+        public async Task<ResponseModel<List<UserResponseDTO>>> GetTenantsByBusinessId(string BusinessId)
+        {
+            try
+            {
+                if (!Guid.TryParse(BusinessId, out Guid BusinessGuid))
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "Invalid Business Id",
+                        success = false
+                    };
+                }
+
+                var business = await db.tbl_business
+                    .Where(x => x.business_id == BusinessGuid && !x.is_deleted && x.is_active)
+                    .FirstOrDefaultAsync();
+
+                if (business == null)
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "No such business found.",
+                        success = false
+                    };
+                }
+
+                var tenants = await db.tbl_user
+                    .Include(x => x.sub_user_type)
+                    .Include(x => x.gender).Include(x => x.user_image).Where(x => x.fk_business == business.business_id && x.sub_user_type.user_type.user_type_name.ToLower() == "tenant" && !x.is_deleted)
+                    .ToListAsync();
+
+                if (tenants == null)
+                {
+                    return new ResponseModel<List<UserResponseDTO>>()
+                    {
+                        remarks = "No record found",
+                        success = false
+                    };
+                }
+
+
+                return new ResponseModel<List<UserResponseDTO>>()
+                {
+                    data = mapper.Map<List<UserResponseDTO>>(tenants),
                     remarks = "Success",
                     success = true
                 };
