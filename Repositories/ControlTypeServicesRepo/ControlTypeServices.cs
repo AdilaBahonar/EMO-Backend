@@ -53,7 +53,7 @@ namespace EMO.Repositories.ControlTypeServicesRepo
             {
                 return new ResponseModel<ControlTypeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -92,7 +92,7 @@ namespace EMO.Repositories.ControlTypeServicesRepo
             {
                 return new ResponseModel<ControlTypeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -128,7 +128,7 @@ namespace EMO.Repositories.ControlTypeServicesRepo
             {
                 return new ResponseModel<ControlTypeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -162,7 +162,7 @@ namespace EMO.Repositories.ControlTypeServicesRepo
             {
                 return new ResponseModel<List<ControlTypeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -198,7 +198,7 @@ namespace EMO.Repositories.ControlTypeServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

@@ -24,7 +24,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             try
             {
                 var existingUtility = await db.tbl_utility
-                    .Where(x => x.utility_name.ToLower() == requestDto.utilityName.ToLower())
+                    .Where(x => x.utility_name.ToLower() == requestDto.utilityName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingUtility == null)
@@ -53,7 +53,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             {
                 return new ResponseModel<UtilityResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -64,7 +64,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             try
             {
                 var existingUtility = await db.tbl_utility
-                    .Where(x => x.utility_id == Guid.Parse(requestDto.utilityId))
+                    .Where(x => x.utility_id == Guid.Parse(requestDto.utilityId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingUtility != null)
@@ -92,7 +92,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             {
                 return new ResponseModel<UtilityResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -103,7 +103,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             try
             {
                 var utility = await db.tbl_utility
-                    .Where(x => x.utility_id == Guid.Parse(utilityId))
+                    .Where(x => x.utility_id == Guid.Parse(utilityId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (utility != null)
@@ -128,7 +128,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             {
                 return new ResponseModel<UtilityResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -138,7 +138,7 @@ namespace EMO.Repositories.UtilityServicesRepo
         {
             try
             {
-                var utilities = await db.tbl_utility.ToListAsync();
+                var utilities = await db.tbl_utility.Where(x => !x.is_deleted).ToListAsync();
 
                 if (utilities.Any())
                 {
@@ -162,7 +162,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             {
                 return new ResponseModel<List<UtilityResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -172,11 +172,11 @@ namespace EMO.Repositories.UtilityServicesRepo
         {
             try
             {
-                var utility = await db.tbl_utility.FindAsync(Guid.Parse(utilityId));
+                var utility = await db.tbl_utility.Where(x=>x.utility_id == Guid.Parse(utilityId) && !x.is_deleted).FirstOrDefaultAsync();
 
                 if (utility != null)
                 {
-                    db.tbl_utility.Remove(utility);
+                    utility.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -198,7 +198,7 @@ namespace EMO.Repositories.UtilityServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

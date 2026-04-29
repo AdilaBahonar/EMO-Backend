@@ -23,7 +23,7 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var user = await db.tbl_user.Where(u => u.user_name.ToLower() == requestDto.userName.ToLower()).FirstOrDefaultAsync();
+                var user = await db.tbl_user.Where(u => u.user_name.ToLower() == requestDto.userName.ToLower() && !u.is_deleted).FirstOrDefaultAsync();
                 if (user == null)
                 {
                     var newUser = mapper.Map<tbl_user>(requestDto);
@@ -70,7 +70,7 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.Where(u => u.user_id == Guid.Parse(requestDto.userId)).Include(u => u.user_image).FirstOrDefaultAsync();
+                var existingUser = await db.tbl_user.Where(u => u.user_id == Guid.Parse(requestDto.userId) && !u.is_deleted).Include(u => u.user_image).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
                     mapper.Map(requestDto, existingUser);
@@ -123,7 +123,7 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.Include(u => u.sub_user_type).Where(u => u.user_id == Guid.Parse(userId)).Include(u => u.user_image).Include(u => u.gender).FirstOrDefaultAsync();
+                var existingUser = await db.tbl_user.Include(u => u.sub_user_type).Where(u => u.user_id == Guid.Parse(userId) && !u.is_deleted).Include(u => u.user_image).Include(u => u.gender).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
                     return new ResponseModel<UserResponseDTO>()
@@ -156,7 +156,7 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
+                var allUser = await db.tbl_user.Where(x=> !x.is_deleted).Include(u => u.sub_user_type).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
                 if (allUser.Any())
                 {
                     return new ResponseModel<List<UserResponseDTO>>()
@@ -188,7 +188,7 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Where(x => x.fk_sub_user_type == Guid.Parse(userTypeId)).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
+                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Where(x => x.fk_sub_user_type == Guid.Parse(userTypeId) && !x.is_deleted).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
                 if (allUser.Any())
                 {
                     return new ResponseModel<List<UserResponseDTO>>()
@@ -222,7 +222,7 @@ namespace EMO.Repositories.UserServicesRepo
             try
             {
 
-                var user = await db.tbl_user.Where(x => x.user_id == Guid.Parse(userId) && x.sub_user_type.user_type.user_type_name == "system admin").FirstOrDefaultAsync();
+                var user = await db.tbl_user.Where(x => x.user_id == Guid.Parse(userId) && x.sub_user_type.user_type.user_type_name == "system admin" && !x.is_deleted).FirstOrDefaultAsync();
                 if(user== null)
                 {
                     return new ResponseModel<List<UserResponseDTO>>()
@@ -268,7 +268,7 @@ namespace EMO.Repositories.UserServicesRepo
                 var userGuid = Guid.Parse(userId);
 
                 
-                var currentUserInfo = await db.tbl_user.Where(u => u.user_id == userGuid).Select(u => new{
+                var currentUserInfo = await db.tbl_user.Where(u => u.user_id == userGuid && !u.is_deleted).Select(u => new{
                         SubUserTypeId = u.fk_sub_user_type,  SubUserTypeLevel = u.sub_user_type.sub_user_type_level,UserTypelevel = u.sub_user_type.user_type.user_type_level , fkBusiness = u.fk_business,
                     UserTypeId= u.sub_user_type.fk_user_type,
                 })
@@ -379,10 +379,10 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.FindAsync(Guid.Parse(userId));
+                var existingUser = await db.tbl_user.Where(u=>u.user_id == Guid.Parse(userId) && !u.is_deleted).FirstOrDefaultAsync();
                 if (existingUser != null)
                 {
-                    db.tbl_user.Remove(existingUser); // Mark the entity for deletion
+                    existingUser.is_deleted = true; // Mark the entity for deletion
                     await db.SaveChangesAsync();
                     return new ResponseModel()
                     {

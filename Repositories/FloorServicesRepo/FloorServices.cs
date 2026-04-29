@@ -34,7 +34,7 @@ namespace EMO.Repositories.FloorServicesRepo
                 }
                 var floor = await db.tbl_floor
                     .Include(x => x.business).Include(x=>x.building)
-                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (floor.Any())
@@ -59,7 +59,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel<List<FloorResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -70,7 +70,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 var existingFloor = await db.tbl_floor
                     .Where(x => x.floor_name.ToLower() == requestDto.floorName.ToLower()
-                             && x.fk_building == Guid.Parse(requestDto.fkBuilding))
+                             && x.fk_building == Guid.Parse(requestDto.fkBuilding ) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingFloor == null)
@@ -99,7 +99,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel<FloorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -110,7 +110,7 @@ namespace EMO.Repositories.FloorServicesRepo
             try
             {
                 var existingFloor = await db.tbl_floor
-                    .Where(x => x.floor_id == Guid.Parse(requestDto.floorId))
+                    .Where(x => x.floor_id == Guid.Parse(requestDto.floorId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingFloor != null)
@@ -139,7 +139,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel<FloorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -151,7 +151,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 var floor = await db.tbl_floor
                     .Include(x => x.building)
-                    .Where(x => x.floor_id == Guid.Parse(floorId))
+                    .Where(x => x.floor_id == Guid.Parse(floorId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (floor != null)
@@ -176,7 +176,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel<FloorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -188,6 +188,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 var floors = await db.tbl_floor
                     .Include(x => x.building)
+                    .Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (floors.Any())
@@ -212,7 +213,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel<List<FloorResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -225,7 +226,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 var Building = await db.tbl_floor
                     .Include(x => x.building)
-                    .Where(x => x.fk_building == Guid.Parse(buildingId))
+                    .Where(x => x.fk_building == Guid.Parse(buildingId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (Building.Any())
@@ -250,7 +251,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel<List<FloorResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -259,11 +260,11 @@ namespace EMO.Repositories.FloorServicesRepo
         {
             try
             {
-                var floor = await db.tbl_floor.FindAsync(Guid.Parse(floorId));
+                var floor = await db.tbl_floor.FirstOrDefaultAsync(x => x.floor_id == Guid.Parse(floorId) && !x.is_deleted);
 
                 if (floor != null)
                 {
-                    db.tbl_floor.Remove(floor);
+                    floor.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -285,7 +286,7 @@ namespace EMO.Repositories.FloorServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

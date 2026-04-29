@@ -37,7 +37,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             {
                 return new ResponseModel<ContactPersonResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -48,7 +48,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             try
             {
                 var existingPerson = await db.tbl_contact_person
-                    .Where(x => x.contact_person_id == Guid.Parse(requestDto.contactPersonId))
+                    .Where(x => x.contact_person_id == Guid.Parse(requestDto.contactPersonId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingPerson != null)
@@ -76,7 +76,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             {
                 return new ResponseModel<ContactPersonResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -87,7 +87,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             try
             {
                 var person = await db.tbl_contact_person
-                    .Where(x => x.contact_person_id == Guid.Parse(contactPersonId))
+                    .Where(x => x.contact_person_id == Guid.Parse(contactPersonId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (person != null)
@@ -112,7 +112,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             {
                 return new ResponseModel<ContactPersonResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -122,7 +122,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
         {
             try
             {
-                var persons = await db.tbl_contact_person.ToListAsync();
+                var persons = await db.tbl_contact_person.Where(x => !x.is_deleted).ToListAsync();
 
                 if (persons.Any())
                 {
@@ -146,7 +146,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             {
                 return new ResponseModel<List<ContactPersonResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -156,11 +156,11 @@ namespace EMO.Repositories.ContactPersonServicesRepo
         {
             try
             {
-                var person = await db.tbl_contact_person.FindAsync(Guid.Parse(contactPersonId));
+                var person = await db.tbl_contact_person.FirstOrDefaultAsync(x => x.contact_person_id == Guid.Parse(contactPersonId) && !x.is_deleted);
 
                 if (person != null)
                 {
-                    db.tbl_contact_person.Remove(person);
+                    person.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -182,7 +182,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

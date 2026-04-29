@@ -13,7 +13,7 @@ namespace EMO.Models.DTOs.ContactPersonDTOs
         [Required]
         public string contactPersonEmail { get; set; } = string.Empty;
 
-        public string fkTenant { get; set; } = string.Empty;
+        public string fkAgreement { get; set; } = string.Empty;
     }
 
     public class UpdateContactPersonDTO
@@ -26,23 +26,22 @@ namespace EMO.Models.DTOs.ContactPersonDTOs
         public string contactPersonEmail { get; set; } = string.Empty;
 
         public bool isActive { get; set; } = false;
-        public string fkTenant { get; set; } = string.Empty;
+        public string fkAgreement { get; set; } = string.Empty;
     }
 
     public class ContactPersonResponseDTO
     {
-        [Required]
         public string contactPersonId { get; set; } = string.Empty;
 
         public string contactPersonName { get; set; } = string.Empty;
         public string contactPersonPhone { get; set; } = string.Empty;
         public string contactPersonEmail { get; set; } = string.Empty;
 
-        public string tenantName { get; set; } = string.Empty;
+        public string agreementName { get; set; } = string.Empty;
 
         public string createdAt { get; set; } = string.Empty;
         public string updatedAt { get; set; } = string.Empty;
         public bool isActive { get; set; } = false;
-        public string fkTenant { get; set; } = string.Empty;
+        public string fkAgreement { get; set; } = string.Empty;
     }
 }

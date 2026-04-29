@@ -23,7 +23,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             try
             {
                 var existingFacility = await db.tbl_facility
-                    .Where(x => x.facility_name.ToLower() == requestDto.facilityName.ToLower())
+                    .Where(x => x.facility_name.ToLower() == requestDto.facilityName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingFacility == null)
@@ -52,7 +52,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 return new ResponseModel<FacilityResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -62,7 +62,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             try
             {
                 var existingFacility = await db.tbl_facility
-                    .Where(x => x.facility_id == Guid.Parse(requestDto.facilityId))
+                    .Where(x => x.facility_id == Guid.Parse(requestDto.facilityId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingFacility != null)
@@ -91,7 +91,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 return new ResponseModel<FacilityResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -102,7 +102,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 var facility = await db.tbl_facility
                     .Include(x => x.business)
-                    .Where(x => x.facility_id == Guid.Parse(facilityId))
+                    .Where(x => x.facility_id == Guid.Parse(facilityId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (facility != null)
@@ -127,7 +127,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 return new ResponseModel<FacilityResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -147,7 +147,7 @@ namespace EMO.Repositories.FacilityServicesRepo
                 }
                 var facility = await db.tbl_facility
                     .Include(x => x.business)
-                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (facility.Any())
@@ -172,7 +172,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 return new ResponseModel<List<FacilityResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -183,6 +183,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 var facilities = await db.tbl_facility
                     .Include(x => x.business)
+                    .Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (facilities.Any())
@@ -207,7 +208,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 return new ResponseModel<List<FacilityResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -216,11 +217,11 @@ namespace EMO.Repositories.FacilityServicesRepo
         {
             try
             {
-                var facility = await db.tbl_facility.FindAsync(Guid.Parse(facilityId));
+                var facility = await db.tbl_facility.FirstOrDefaultAsync(x => x.facility_id == Guid.Parse(facilityId) && !x.is_deleted);
 
                 if (facility != null)
                 {
-                    db.tbl_facility.Remove(facility);
+                    facility.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -242,7 +243,7 @@ namespace EMO.Repositories.FacilityServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

@@ -23,7 +23,7 @@ namespace EMO.Repositories.SensorServicesRepo
             try
             {
                 var existingSensor = await db.tbl_sensor
-                    .Where(x => x.sensor_name.ToLower() == requestDto.sensorName.ToLower())
+                    .Where(x => x.sensor_name.ToLower() == requestDto.sensorName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingSensor == null)
@@ -52,7 +52,7 @@ namespace EMO.Repositories.SensorServicesRepo
             {
                 return new ResponseModel<SensorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -63,7 +63,7 @@ namespace EMO.Repositories.SensorServicesRepo
             try
             {
                 var existingSensor = await db.tbl_sensor
-                    .Where(x => x.sensor_id == Guid.Parse(requestDto.sensorId))
+                    .Where(x => x.sensor_id == Guid.Parse(requestDto.sensorId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingSensor != null)
@@ -91,7 +91,7 @@ namespace EMO.Repositories.SensorServicesRepo
             {
                 return new ResponseModel<SensorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -102,7 +102,7 @@ namespace EMO.Repositories.SensorServicesRepo
             try
             {
                 var sensor = await db.tbl_sensor.Include(x=>x.office).Include(x => x.device).Include(x => x.utility)
-                    .Where(x => x.sensor_id == Guid.Parse(sensorId))
+                    .Where(x => x.sensor_id == Guid.Parse(sensorId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (sensor != null)
@@ -127,7 +127,7 @@ namespace EMO.Repositories.SensorServicesRepo
             {
                 return new ResponseModel<SensorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -137,7 +137,7 @@ namespace EMO.Repositories.SensorServicesRepo
         {
             try
             {
-                var sensors = await db.tbl_sensor.Include(x => x.office).Include(x => x.device).Include(x => x.utility).ToListAsync();
+                var sensors = await db.tbl_sensor.Where(x=>!x.is_deleted).Include(x => x.office).Include(x => x.device).Include(x => x.utility).ToListAsync();
 
                 if (sensors.Any())
                 {
@@ -161,7 +161,7 @@ namespace EMO.Repositories.SensorServicesRepo
             {
                 return new ResponseModel<List<SensorResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -171,7 +171,7 @@ namespace EMO.Repositories.SensorServicesRepo
         {
             try
             {
-                var sensors = await db.tbl_sensor.Include(x => x.office).Include(x => x.device).Include(x => x.utility).Where(x=>x.device.fk_business == Guid.Parse(businessId)).ToListAsync();
+                var sensors = await db.tbl_sensor.Include(x => x.office).Include(x => x.device).Include(x => x.utility).Where(x=>x.device.fk_business == Guid.Parse(businessId) && !x.is_deleted).ToListAsync();
 
                 if (sensors.Any())
                 {
@@ -195,7 +195,7 @@ namespace EMO.Repositories.SensorServicesRepo
             {
                 return new ResponseModel<List<SensorResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -205,11 +205,11 @@ namespace EMO.Repositories.SensorServicesRepo
         {
             try
             {
-                var sensor = await db.tbl_sensor.FindAsync(Guid.Parse(sensorId));
+                var sensor = await db.tbl_sensor.Where(x=>x.sensor_id == Guid.Parse(sensorId) && !x.is_deleted).FirstOrDefaultAsync();
 
                 if (sensor != null)
                 {
-                    db.tbl_sensor.Remove(sensor);
+                    sensor.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -231,7 +231,7 @@ namespace EMO.Repositories.SensorServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

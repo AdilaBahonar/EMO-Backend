@@ -24,7 +24,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var existingBusiness = await db.tbl_business
-                    .Where(x => x.business_name.ToLower() == requestDto.businessName.ToLower())
+                    .Where(x => x.business_name.ToLower() == requestDto.businessName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingBusiness == null)
@@ -53,7 +53,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<BusinessResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -102,7 +102,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<BusinessResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -113,7 +113,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var business = await db.tbl_business
-                    .Where(x => x.business_id == Guid.Parse(businessId))
+                    .Where(x => x.business_id == Guid.Parse(businessId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (business != null)
@@ -138,7 +138,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<BusinessResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -149,7 +149,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
 
-                var user = await db.tbl_user.Where(x => x.user_id == Guid.Parse(userId) && x.sub_user_type.user_type.user_type_name.ToLower() == "business admin").FirstOrDefaultAsync();
+                var user = await db.tbl_user.Where(x => x.user_id == Guid.Parse(userId) && x.sub_user_type.user_type.user_type_name.ToLower() == "business admin" && !x.is_deleted).FirstOrDefaultAsync();
                 if(user!= null)
                 { 
                     var business = await db.tbl_business
@@ -187,7 +187,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<BusinessResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -197,7 +197,7 @@ namespace EMO.Repositories.BusinessServicesRepo
         {
             try
             {
-                var businesses = await db.tbl_business
+                var businesses = await db.tbl_business.Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (businesses.Any())
@@ -222,7 +222,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<List<BusinessResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -232,11 +232,11 @@ namespace EMO.Repositories.BusinessServicesRepo
         {
             try
             {
-                var business = await db.tbl_business.FindAsync(Guid.Parse(businessId));
+                var business = await db.tbl_business.FirstOrDefaultAsync(x => x.business_id == Guid.Parse(businessId) && !x.is_deleted);
 
                 if (business != null)
                 {
-                    db.tbl_business.Remove(business);
+                    business.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -258,7 +258,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -269,9 +269,9 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
                 var existingBusiness = await db.tbl_business
-                    .Where(x => x.business_name.ToLower() == requestDto.businessName.ToLower())
+                    .Where(x => x.business_name.ToLower() == requestDto.businessName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
-                var user = await db.tbl_user.Where(u => u.user_name.ToLower() == requestDto.userName.ToLower()).FirstOrDefaultAsync();
+                var user = await db.tbl_user.Where(u => u.user_name.ToLower() == requestDto.userName.ToLower() && !u.is_deleted).FirstOrDefaultAsync();
 
                 if (existingBusiness == null)
                 {
@@ -288,7 +288,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     await db.tbl_business.AddAsync(newBusiness);
 
                     var businessAdminFk = await db.tbl_sub_user_type
-                        .Where(x => x.user_type.user_type_name.ToLower() == "business admin" && x.sub_user_type_level == 0)
+                        .Where(x => x.user_type.user_type_name.ToLower() == "business admin" && x.sub_user_type_level == 0 && !x.is_deleted)
                         .Select(x => x.sub_user_type_id)
                         .FirstOrDefaultAsync();
                     requestDto.fkSubUserType = businessAdminFk.ToString();
@@ -331,7 +331,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             {
                 return new ResponseModel<BusinessResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -343,7 +343,7 @@ namespace EMO.Repositories.BusinessServicesRepo
             try
             {
 
-                var BuisnessAdmins = await db.tbl_user.Where(x => x.sub_user_type.user_type.user_type_name.ToLower() == "business admin" && x.sub_user_type.sub_user_type_name.ToLower() == "root").ToListAsync();
+                var BuisnessAdmins = await db.tbl_user.Where(x => x.sub_user_type.user_type.user_type_name.ToLower() == "business admin" && x.sub_user_type.sub_user_type_name.ToLower() == "root" && !x.is_deleted).ToListAsync();
 
                 /*                var allUser = await db.tbl_user.Include(u => u.sub_user_type).Where(x => x.fk_sub_user_type == Guid.Parse(userTypeId)).Include(u => u.user_image).Include(u => u.gender).ToListAsync();
                 */

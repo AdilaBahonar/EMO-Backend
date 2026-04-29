@@ -133,7 +133,7 @@ namespace EMO.Repositories.TenantServicesRepo
                 {
                     foreach (var cp in requestDto.contactPerson)
                     {
-                        cp.fkTenant = tenantId.ToString();
+                        cp.fkAgreement = agreement.agreement_id.ToString();
                         var contact = mapper.Map<tbl_contact_person>(cp);
 
                         await db.tbl_contact_person.AddAsync(contact);
@@ -200,7 +200,7 @@ namespace EMO.Repositories.TenantServicesRepo
         //    {
         //        return new ResponseModel<TenantResponseDTO>()
         //        {
-        //            remarks = $"There was a fatal error: {ex}",
+        //            remarks = $"There was a fatal error",
         //            success = false
         //        };
         //    }
@@ -239,7 +239,7 @@ namespace EMO.Repositories.TenantServicesRepo
         //    {
         //        return new ResponseModel<TenantResponseDTO>()
         //        {
-        //            remarks = $"There was a fatal error: {ex}",
+        //            remarks = $"There was a fatal error",
         //            success = false
         //        };
         //    }
@@ -274,7 +274,7 @@ namespace EMO.Repositories.TenantServicesRepo
         //    {
         //        return new ResponseModel<TenantResponseDTO>()
         //        {
-        //            remarks = $"There was a fatal error: {ex}",
+        //            remarks = $"There was a fatal error",
         //            success = false
         //        };
         //    }
@@ -316,7 +316,7 @@ namespace EMO.Repositories.TenantServicesRepo
             {
                 return new ResponseModel<List<tenantResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -524,7 +524,7 @@ namespace EMO.Repositories.TenantServicesRepo
         //    {
         //        return new ResponseModel<List<TenantResponseDTO>>()
         //        {
-        //            remarks = $"There was a fatal error: {ex}",
+        //            remarks = $"There was a fatal error",
         //            success = false
         //        };
         //    }
@@ -560,7 +560,7 @@ namespace EMO.Repositories.TenantServicesRepo
         //    {
         //        return new ResponseModel()
         //        {
-        //            remarks = $"There was a fatal error: {ex}",
+        //            remarks = $"There was a fatal error",
         //            success = false
         //        };
         //    }

@@ -51,7 +51,7 @@ namespace EMO.Repositories.SingalPhaseDataRepo
             try
             {
                 var existingData = await db.tbl_singal_phase_data
-                    .Where(x => x.singal_phase_data_id == Guid.Parse(requestDto.singalPhaseDataId))
+                    .Where(x => x.singal_phase_data_id == Guid.Parse(requestDto.singalPhaseDataId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingData == null)
@@ -89,7 +89,7 @@ namespace EMO.Repositories.SingalPhaseDataRepo
             try
             {
                 var data = await db.tbl_singal_phase_data
-                    .FirstOrDefaultAsync(x => x.singal_phase_data_id == singalPhaseDataId);
+                    .FirstOrDefaultAsync(x => x.singal_phase_data_id == singalPhaseDataId && !x.is_deleted);
 
                 if (data == null)
                 {
@@ -122,7 +122,7 @@ namespace EMO.Repositories.SingalPhaseDataRepo
         {
             try
             {
-                var list = await db.tbl_singal_phase_data.ToListAsync();
+                var list = await db.tbl_singal_phase_data.Where(x=>!x.is_deleted).ToListAsync();
 
                 if (!list.Any())
                 {
@@ -155,7 +155,7 @@ namespace EMO.Repositories.SingalPhaseDataRepo
         {
             try
             {
-                var data = await db.tbl_singal_phase_data.FindAsync(singalPhaseDataId);
+                var data = await db.tbl_singal_phase_data.Where(x=>x.singal_phase_data_id == singalPhaseDataId && !x.is_deleted).FirstOrDefaultAsync();
                 if (data == null)
                 {
                     return new ResponseModel()
@@ -165,7 +165,7 @@ namespace EMO.Repositories.SingalPhaseDataRepo
                     };
                 }
 
-                db.tbl_singal_phase_data.Remove(data);
+                data.is_deleted = true;
                 await db.SaveChangesAsync();
 
                 return new ResponseModel()

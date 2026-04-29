@@ -48,7 +48,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
         //    {
         //        return new ResponseModel<SubUserTypeResponseDTO>
         //        {
-        //            remarks = $"There was a fatal error: {ex}",
+        //            remarks = $"There was a fatal error",
         //            success = false
         //        };
         //    }
@@ -59,7 +59,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
             {
                 // 1. Check if SubUserType with same name already exists
                 var exists = await db.tbl_sub_user_type
-                    .AnyAsync(s => s.sub_user_type_name.ToLower() == requestDto.subUserTypeName.ToLower() && s.fk_user_type == Guid.Parse(requestDto.fkUserTypeId));
+                    .AnyAsync(s => s.sub_user_type_name.ToLower() == requestDto.subUserTypeName.ToLower() && s.fk_user_type == Guid.Parse(requestDto.fkUserTypeId) && !s.is_deleted);
 
                 if (exists)
                 {
@@ -121,7 +121,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
             {
                 var existing = await db.tbl_sub_user_type
                     .Include(s => s.user_type)
-                    .FirstOrDefaultAsync(s => s.sub_user_type_id == Guid.Parse(requestDto.subUserTypeId));
+                    .FirstOrDefaultAsync(s => s.sub_user_type_id == Guid.Parse(requestDto.subUserTypeId) && !s.is_deleted);
 
                 if (existing == null)
                     return new ResponseModel<SubUserTypeResponseDTO>
@@ -170,7 +170,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
             {
                 var existing = await db.tbl_sub_user_type
                     .Include(s => s.user_type)
-                    .FirstOrDefaultAsync(s => s.sub_user_type_id == Guid.Parse(subUserTypeId));
+                    .FirstOrDefaultAsync(s => s.sub_user_type_id == Guid.Parse(subUserTypeId) && !s.is_deleted);
 
                 if (existing == null)
                     return new ResponseModel<SubUserTypeResponseDTO>
@@ -199,7 +199,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
         {
             try
             {
-                var all = await db.tbl_sub_user_type
+                var all = await db.tbl_sub_user_type.Where(u=> !u.is_deleted)
                     .Include(s => s.user_type)
                     .ToListAsync();
 
@@ -230,7 +230,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
         {
             try
             {
-                var existing = await db.tbl_sub_user_type.FindAsync(Guid.Parse(subUserTypeId));
+                var existing = await db.tbl_sub_user_type.Where(x=>x.sub_user_type_id == Guid.Parse(subUserTypeId) && x.is_deleted).FirstOrDefaultAsync();
                 if (existing == null)
                     return new ResponseModel
                     {
@@ -238,7 +238,7 @@ namespace EMO.Repositories.SubUserTypeServicesRepo
                         success = false
                     };
 
-                db.tbl_sub_user_type.Remove(existing);
+                existing.is_deleted = true;
                 await db.SaveChangesAsync();
 
                 return new ResponseModel

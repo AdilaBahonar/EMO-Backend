@@ -35,7 +35,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                 }
                 var Office = await db.tbl_office
                     .Include(x => x.business).Include(x=>x.section)
-                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (Office.Any())
@@ -60,7 +60,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -71,7 +71,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 var existingOffice = await db.tbl_office
                     .Where(x => x.office_name.ToLower() == requestDto.officeName.ToLower()
-                             && x.fk_section == Guid.Parse(requestDto.fkSection))
+                             && x.fk_section == Guid.Parse(requestDto.fkSection) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingOffice == null)
@@ -100,7 +100,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<OfficeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -110,7 +110,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var existingOffice = await db.tbl_office
-                    .Where(x => x.office_id == Guid.Parse(requestDto.officeId))
+                    .Where(x => x.office_id == Guid.Parse(requestDto.officeId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingOffice != null)
@@ -139,7 +139,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<OfficeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -150,7 +150,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 var office = await db.tbl_office
                     .Include(x => x.section)
-                    .Where(x => x.office_id == Guid.Parse(officeId))
+                    .Where(x => x.office_id == Guid.Parse(officeId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (office != null)
@@ -175,7 +175,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<OfficeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -187,6 +187,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 var offices = await db.tbl_office
                     .Include(x => x.section)
+                    .Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (offices.Any())
@@ -211,7 +212,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -221,11 +222,11 @@ namespace EMO.Repositories.OfficeServicesRepo
         {
             try
             {
-                var office = await db.tbl_office.FindAsync(Guid.Parse(officeId));
+                var office = await db.tbl_office.Where(x => x.office_id == Guid.Parse(officeId) && !x.is_deleted).FirstOrDefaultAsync();
 
                 if (office != null)
                 {
-                    db.tbl_office.Remove(office);
+                    office.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -247,7 +248,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -259,7 +260,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 var Offices = await db.tbl_office
                     .Include(x => x.section)
-                    .Where(x => x.fk_section == Guid.Parse(sectionId))
+                    .Where(x => x.fk_section == Guid.Parse(sectionId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (Offices.Any())
@@ -284,7 +285,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -296,7 +297,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 var Offices = await db.tbl_office
                     .Include(x => x.section)
-                    .Where(x => x.fk_section == Guid.Parse(sectionId) && x.is_occupied == false)
+                    .Where(x => x.fk_section == Guid.Parse(sectionId) && x.is_occupied == false && !x.is_deleted)
                     .ToListAsync();
 
                 if (Offices.Any())
@@ -321,7 +322,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -333,7 +334,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 var Offices = await db.tbl_office
                     .Include(x => x.section)
-                    .Where(x => x.fk_business == Guid.Parse(businessId) && x.is_occupied == false)
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && x.is_occupied == false && !x.is_deleted)
                     .ToListAsync();
 
                 if (Offices.Any())
@@ -358,7 +359,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

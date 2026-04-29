@@ -52,7 +52,7 @@
 //            {
 //                return new ResponseModel<DeviceTypeResponseDTO>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -91,7 +91,7 @@
 //            {
 //                return new ResponseModel<DeviceTypeResponseDTO>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -127,7 +127,7 @@
 //            {
 //                return new ResponseModel<DeviceTypeResponseDTO>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -161,7 +161,7 @@
 //            {
 //                return new ResponseModel<List<DeviceTypeResponseDTO>>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -197,7 +197,7 @@
 //            {
 //                return new ResponseModel()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }

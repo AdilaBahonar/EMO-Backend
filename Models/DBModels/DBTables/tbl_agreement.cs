@@ -19,5 +19,6 @@ namespace EMO.Models.DBModels.DBTables
         public Guid fk_business { get; set; } = Guid.Empty;
         public tbl_business business { get; set; } = default!;
         public IEnumerable<tbl_office_agreement> office_agreement { get; set; } = default!;
+        public IEnumerable<tbl_contact_person> contact_persons { get; set; } = default!;
     }
 }

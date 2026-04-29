@@ -331,9 +331,9 @@ namespace EMO.Models.DBModels
 
             #region Contact Person
             modelBuilder.Entity<tbl_contact_person>()
-               .HasOne(p => p.tenant)
+               .HasOne(p => p.agreement)
                .WithMany(b => b.contact_persons)
-               .HasForeignKey(p => p.fk_tenant)
+               .HasForeignKey(p => p.fk_agreement)
                .OnDelete(DeleteBehavior.Restrict);
             #endregion
 

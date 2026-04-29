@@ -25,7 +25,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             try
             {
                 var existingAgreement = await db.tbl_agreement
-                    .Where(x => x.agreement_name.ToLower() == requestDto.agreementName.ToLower())
+                    .Where(x => x.agreement_name.ToLower() == requestDto.agreementName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingAgreement == null)
@@ -54,7 +54,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel<AgreementResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -65,7 +65,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             try
             {
                 var existingAgreement = await db.tbl_agreement
-                    .Where(x => x.agreement_id == Guid.Parse(requestDto.agreementId))
+                    .Where(x => x.agreement_id == Guid.Parse(requestDto.agreementId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingAgreement != null)
@@ -93,7 +93,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel<AgreementResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -105,7 +105,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 var agreement = await db.tbl_agreement
                     .Include(x => x.tenant)
-                    .Where(x => x.agreement_id == Guid.Parse(agreementId))
+                    .Where(x => x.agreement_id == Guid.Parse(agreementId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (agreement != null)
@@ -130,7 +130,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel<AgreementResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -217,7 +217,7 @@ namespace EMO.Repositories.AgreementServicesRepo
                 var now = DateTime.Now;
 
                 var agreements = await db.tbl_agreement
-                    .Where(x => x.fk_business == businessGuid)
+                    .Where(x => x.fk_business == businessGuid && !x.is_deleted)
                     .Include(x => x.tenant)
                     .ToListAsync();
 
@@ -282,6 +282,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 var agreements = await db.tbl_agreement
                     .Include(x => x.tenant)
+                    .Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (agreements.Any())
@@ -306,7 +307,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel<List<AgreementResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -335,7 +336,7 @@ namespace EMO.Repositories.AgreementServicesRepo
                 }
 
                 var offices = await db.tbl_office_agreement
-                  .Where(x => x.fk_agreement == parsedAgreementId)
+                  .Where(x => x.fk_agreement == parsedAgreementId && !x.is_deleted)
                   .Include(x => x.office)
                       .ThenInclude(o => o.section)
                   .Select(x => x.office)
@@ -362,11 +363,11 @@ namespace EMO.Repositories.AgreementServicesRepo
         {
             try
             {
-                var agreement = await db.tbl_agreement.FindAsync(Guid.Parse(agreementId));
+                var agreement = await db.tbl_agreement.FirstOrDefaultAsync(x => x.agreement_id == Guid.Parse(agreementId) && !x.is_deleted);
 
                 if (agreement != null)
                 {
-                    db.tbl_agreement.Remove(agreement);
+                    agreement.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -388,7 +389,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -398,7 +399,7 @@ namespace EMO.Repositories.AgreementServicesRepo
         {
             try
             {
-                var agreement = await db.tbl_office_agreement.Where(x=>x.agreement.is_active && x.fk_office == Guid.Parse(requestDTO.officeId) && x.fk_agreement == Guid.Parse(requestDTO.agreementId)).FirstOrDefaultAsync();
+                var agreement = await db.tbl_office_agreement.Where(x=>x.agreement.is_active && x.fk_office == Guid.Parse(requestDTO.officeId) && x.fk_agreement == Guid.Parse(requestDTO.agreementId) && !x.is_deleted).FirstOrDefaultAsync();
 
                 if (agreement != null)
                 {
@@ -426,7 +427,7 @@ namespace EMO.Repositories.AgreementServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

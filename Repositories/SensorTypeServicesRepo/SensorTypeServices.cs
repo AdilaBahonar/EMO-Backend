@@ -51,7 +51,7 @@
 //            {
 //                return new ResponseModel<SensorTypeResponseDTO>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -88,7 +88,7 @@
 //            {
 //                return new ResponseModel<SensorTypeResponseDTO>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -122,7 +122,7 @@
 //            {
 //                return new ResponseModel<SensorTypeResponseDTO>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -154,7 +154,7 @@
 //            {
 //                return new ResponseModel<List<SensorTypeResponseDTO>>()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }
@@ -188,7 +188,7 @@
 //            {
 //                return new ResponseModel()
 //                {
-//                    remarks = $"There was a fatal error: {ex}",
+//                    remarks = $"There was a fatal error",
 //                    success = false
 //                };
 //            }

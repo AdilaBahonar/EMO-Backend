@@ -34,7 +34,7 @@ namespace EMO.Repositories.BuildingServicesRepo
                 }
                 var facility = await db.tbl_building
                     .Include(x => x.business).Include(x=>x.facility)
-                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (facility.Any())
@@ -59,7 +59,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel<List<BuildingResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -69,7 +69,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             try
             {
                 var existingBuilding = await db.tbl_building
-                    .Where(b => b.building_name.ToLower() == requestDto.buildingName.ToLower())
+                    .Where(b => b.building_name.ToLower() == requestDto.buildingName.ToLower() && !b.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingBuilding == null)
@@ -98,7 +98,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel<BuildingResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -109,7 +109,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             try
             {
                 var existingBuilding = await db.tbl_building
-                    .Where(b => b.building_id == Guid.Parse(requestDto.buildingId))
+                    .Where(b => b.building_id == Guid.Parse(requestDto.buildingId) && !b.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingBuilding != null)
@@ -138,7 +138,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel<BuildingResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -150,7 +150,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 var building = await db.tbl_building
                     .Include(x => x.facility)
-                    .Where(b => b.building_id == Guid.Parse(buildingId))
+                    .Where(b => b.building_id == Guid.Parse(buildingId) && !b.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (building != null)
@@ -175,7 +175,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel<BuildingResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -187,6 +187,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 var buildings = await db.tbl_building
                     .Include(x => x.facility)
+                    .Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (buildings.Any())
@@ -211,7 +212,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel<List<BuildingResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -221,11 +222,11 @@ namespace EMO.Repositories.BuildingServicesRepo
         {
             try
             {
-                var building = await db.tbl_building.FindAsync(Guid.Parse(buildingId));
+                var building = await db.tbl_building.FirstOrDefaultAsync(x => x.building_id == Guid.Parse(buildingId) && !x.is_deleted);
 
                 if (building != null)
                 {
-                    db.tbl_building.Remove(building);
+                    building.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -247,7 +248,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -259,7 +260,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 var Building = await db.tbl_building
                     .Include(x => x.facility)
-                    .Where(x => x.fk_facility == Guid.Parse(facilityId))
+                    .Where(x => x.fk_facility == Guid.Parse(facilityId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (Building.Any())
@@ -284,7 +285,7 @@ namespace EMO.Repositories.BuildingServicesRepo
             {
                 return new ResponseModel<List<BuildingResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }

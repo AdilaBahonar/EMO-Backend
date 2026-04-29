@@ -34,7 +34,7 @@ namespace EMO.Repositories.SectionServicesRepo
                 }
                 var Section = await db.tbl_section
                     .Include(x => x.business).Include(x=>x.floor)
-                    .Where(x => x.fk_business == Guid.Parse(businessId))
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (Section.Any())
@@ -59,7 +59,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel<List<SectionResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -70,7 +70,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 var existingSection = await db.tbl_section
                     .Where(x => x.section_name.ToLower() == requestDto.sectionName.ToLower()
-                             && x.fk_floor == Guid.Parse(requestDto.fkFloor))
+                             && x.fk_floor == Guid.Parse(requestDto.fkFloor) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingSection == null)
@@ -99,7 +99,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel<SectionResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -110,7 +110,7 @@ namespace EMO.Repositories.SectionServicesRepo
             try
             {
                 var existingSection = await db.tbl_section
-                    .Where(x => x.section_id == Guid.Parse(requestDto.sectionId))
+                    .Where(x => x.section_id == Guid.Parse(requestDto.sectionId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingSection != null)
@@ -139,7 +139,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel<SectionResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -151,7 +151,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 var section = await db.tbl_section
                     .Include(x => x.floor)
-                    .Where(x => x.section_id == Guid.Parse(sectionId))
+                    .Where(x => x.section_id == Guid.Parse(sectionId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (section != null)
@@ -176,7 +176,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel<SectionResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -188,6 +188,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 var sections = await db.tbl_section
                     .Include(x => x.floor)
+                    .Where(x => !x.is_deleted)
                     .ToListAsync();
 
                 if (sections.Any())
@@ -212,7 +213,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel<List<SectionResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -222,11 +223,11 @@ namespace EMO.Repositories.SectionServicesRepo
         {
             try
             {
-                var section = await db.tbl_section.FindAsync(Guid.Parse(sectionId));
+                var section = await db.tbl_section.Where(x=>x.section_id == Guid.Parse(sectionId) && !x.is_deleted).FirstOrDefaultAsync();
 
                 if (section != null)
                 {
-                    db.tbl_section.Remove(section);
+                    section.is_deleted = true;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -248,7 +249,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -260,7 +261,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 var Building = await db.tbl_section
                     .Include(x => x.floor)
-                    .Where(x => x.fk_floor == Guid.Parse(floorId))
+                    .Where(x => x.fk_floor == Guid.Parse(floorId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (Building.Any())
@@ -285,7 +286,7 @@ namespace EMO.Repositories.SectionServicesRepo
             {
                 return new ResponseModel<List<SectionResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error.",
                     success = false
                 };
             }

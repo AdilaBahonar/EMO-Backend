@@ -21,7 +21,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
         {
             try
             {
-                var UserType = await db.tbl_user_type.Where(u => u.user_type_name.ToLower() == requestDto.userTypeName.ToLower()).FirstOrDefaultAsync();
+                var UserType = await db.tbl_user_type.Where(u => u.user_type_name.ToLower() == requestDto.userTypeName.ToLower() && !u.is_deleted).FirstOrDefaultAsync();
                 if (UserType == null)
                 {
                     var newUserType = mapper.Map<tbl_user_type>(requestDto);
@@ -58,7 +58,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
             {
                 var userTypeId = Guid.Parse(requestDto.userTypeId);
 
-                var existingUserType = await db.tbl_user_type .FirstOrDefaultAsync(u => u.user_type_id == userTypeId);
+                var existingUserType = await db.tbl_user_type .FirstOrDefaultAsync(u => u.user_type_id == userTypeId && !u.is_deleted);
 
                 if (existingUserType == null)
                 {
@@ -101,7 +101,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
         {
             try
             {
-                var existingUserType = await db.tbl_user_type.Where(u => u.user_type_id == Guid.Parse(UserTypeId)).FirstOrDefaultAsync();
+                var existingUserType = await db.tbl_user_type.Where(u => u.user_type_id == Guid.Parse(UserTypeId) && !u.is_deleted).FirstOrDefaultAsync();
                 if (existingUserType != null)
                 {
                     return new ResponseModel<UserTypeResponseDTO>()
@@ -133,7 +133,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
         {
             try
             {
-                var allUserType = await db.tbl_user_type.ToListAsync();
+                var allUserType = await db.tbl_user_type.Where(u=> !u.is_deleted).ToListAsync();
                 if (allUserType.Any())
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()
@@ -165,7 +165,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
         {
             try
             {
-                var allUserType = await db.tbl_user_type.Where(x=>x.is_active).ToListAsync();
+                var allUserType = await db.tbl_user_type.Where(x=>x.is_active && !x.is_deleted).ToListAsync();
                 if (allUserType.Any())
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()
@@ -200,7 +200,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
                 var existingUserType = await db.tbl_user_type.FindAsync(Guid.Parse(UserTypeId));
                 if (existingUserType != null)
                 {
-                    db.tbl_user_type.Remove(existingUserType); // Mark the entity for deletion
+                    existingUserType.is_deleted = true; // Mark the entity for deletion
                     await db.SaveChangesAsync();
                     return new ResponseModel()
                     {
@@ -230,7 +230,7 @@ namespace EMO.Repositories.UserTypeServicesRepo
         {
             try
             {
-                var subUserTypeId = await db.tbl_user.Where(x => x.user_id == Guid.Parse(UserId)).Select(x => x.fk_sub_user_type).FirstOrDefaultAsync();
+                var subUserTypeId = await db.tbl_user.Where(x => x.user_id == Guid.Parse(UserId) && !x.is_deleted).Select(x => x.fk_sub_user_type).FirstOrDefaultAsync();
                 if (subUserTypeId == Guid.Empty)
                 {
                     return new ResponseModel<List<UserTypeResponseDTO>>()

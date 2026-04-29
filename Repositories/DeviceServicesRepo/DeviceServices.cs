@@ -24,7 +24,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             try
             {
                 var existingDevice = await db.tbl_device
-                    .Where(x => x.device_name.ToLower() == requestDto.deviceName.ToLower())
+                    .Where(x => x.device_name.ToLower() == requestDto.deviceName.ToLower() && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingDevice == null)
@@ -53,7 +53,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             {
                 return new ResponseModel<DeviceResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -64,7 +64,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             try
             {
                 var existingDevice = await db.tbl_device
-                    .Where(x => x.device_id == Guid.Parse(requestDto.deviceId))
+                    .Where(x => x.device_id == Guid.Parse(requestDto.deviceId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (existingDevice != null)
@@ -92,7 +92,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             {
                 return new ResponseModel<DeviceResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -114,7 +114,7 @@ namespace EMO.Repositories.DeviceServicesRepo
                 }
                 var facility = await db.tbl_device
                     .Include(x => x.business)
-                    .Where(x => x.fk_business == Guid.Parse(deviceId))
+                    .Where(x => x.fk_business == Guid.Parse(deviceId) && !x.is_deleted)
                     .ToListAsync();
 
                 if (facility.Any())
@@ -139,7 +139,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             {
                 return new ResponseModel<List<DeviceResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -149,7 +149,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             try
             {
                 var device = await db.tbl_device
-                    .Where(x => x.device_id == Guid.Parse(deviceId))
+                    .Where(x => x.device_id == Guid.Parse(deviceId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
                 if (device != null)
@@ -174,7 +174,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             {
                 return new ResponseModel<DeviceResponseDTO>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -184,7 +184,7 @@ namespace EMO.Repositories.DeviceServicesRepo
         {
             try
             {
-                var devices = await db.tbl_device.ToListAsync();
+                var devices = await db.tbl_device.Where(x => !x.is_deleted).ToListAsync();
 
                 if (devices.Any())
                 {
@@ -208,7 +208,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             {
                 return new ResponseModel<List<DeviceResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
@@ -218,7 +218,7 @@ namespace EMO.Repositories.DeviceServicesRepo
         {
             try
             {
-                var device = await db.tbl_device.FindAsync(Guid.Parse(deviceId));
+                var device = await db.tbl_device.FirstOrDefaultAsync(x => x.device_id == Guid.Parse(deviceId) && !x.is_deleted);
 
                 if (device != null)
                 {
@@ -244,7 +244,7 @@ namespace EMO.Repositories.DeviceServicesRepo
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error: {ex}",
+                    remarks = $"There was a fatal error",
                     success = false
                 };
             }
