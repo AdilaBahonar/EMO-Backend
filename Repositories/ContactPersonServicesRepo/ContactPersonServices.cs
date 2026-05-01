@@ -118,6 +118,42 @@ namespace EMO.Repositories.ContactPersonServicesRepo
             }
         }
 
+        public async Task<ResponseModel<List<ContactPersonResponseDTO>>> GetContactPersonByAgreemenId(string agreementId)
+        {
+            try
+            {
+                var person = await db.tbl_contact_person
+                    .Where(x => x.fk_agreement == Guid.Parse(agreementId) && !x.is_deleted)
+                    .ToListAsync();
+
+                if (person.Any())
+                {
+                    return new ResponseModel<List<ContactPersonResponseDTO>>()
+                    {
+                        data = mapper.Map<List<ContactPersonResponseDTO>>(person),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<ContactPersonResponseDTO>>()
+                    {
+                        remarks = "No record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<ContactPersonResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error",
+                    success = false
+                };
+            }
+        }
+
         public async Task<ResponseModel<List<ContactPersonResponseDTO>>> GetAllContactPersons()
         {
             try

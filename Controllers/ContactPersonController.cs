@@ -77,6 +77,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [HttpGet("GetContactPersonByAgreemenId")]
+        public async Task<ActionResult<ResponseModel<List<ContactPersonResponseDTO>>>> GetContactPersonByAgreemenId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = ContactPersonServices.GetContactPersonByAgreemenId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<ContactPersonResponseDTO>>()
+                {
+                    remarks = "No record found.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
 
         [HttpGet]
         public async Task<ActionResult<ResponseModel<List<ContactPersonResponseDTO>>>> Get()

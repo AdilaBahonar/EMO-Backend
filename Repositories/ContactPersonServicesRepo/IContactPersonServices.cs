@@ -10,6 +10,7 @@ namespace EMO.Repositories.ContactPersonServicesRepo
         Task<ResponseModel<ContactPersonResponseDTO>> GetContactPersonById(string contactPersonId);
         Task<ResponseModel<List<ContactPersonResponseDTO>>> GetAllContactPersons();
         public Task<ResponseModel> DeleteContactPersonById(string contactPersonId);
+        public Task<ResponseModel<List<ContactPersonResponseDTO>>> GetContactPersonByAgreemenId(string agreementId);
 
     }
 }
