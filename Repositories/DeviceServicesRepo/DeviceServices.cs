@@ -180,6 +180,59 @@ namespace EMO.Repositories.DeviceServicesRepo
             }
         }
 
+        public async Task<ResponseModel<DeviceSensorsResponseDTO>> GetDeviceByMacAddress(string macAddress)
+        {
+            try
+            {
+                var device = await db.tbl_device
+                    .Where(x => x.mac_address == macAddress && x.is_active && !x.is_deleted)
+                    .FirstOrDefaultAsync();
+
+                if (device == null)
+                {
+                    return new ResponseModel<DeviceSensorsResponseDTO>()
+                    {
+                        remarks = "Device not found",
+                        success = false
+                    };
+                }
+
+                var sensors = await db.tbl_sensor
+                    .Where(x => x.fk_device == device.device_id && !x.is_deleted)
+                    .ToListAsync();
+
+                var response = new DeviceSensorsResponseDTO
+                {
+                    deviceId = device.device_id.ToString(),
+                    deviceName = device.device_name,
+                    isActive = device.is_active,
+
+                    sensors = sensors.Select(s => new sensorOfDeviceResponseDTO
+                    {
+                        sensorId = s.sensor_id.ToString(),
+                        sensorName = s.sensor_name,
+                        modeBusAddress = s.mode_bus_address,
+                        serialAddress = s.serial_address
+                    }).ToList()
+                };
+
+                return new ResponseModel<DeviceSensorsResponseDTO>()
+                {
+                    data = response,
+                    remarks = "Success",
+                    success = true
+                };
+            }
+            catch (Exception)
+            {
+                return new ResponseModel<DeviceSensorsResponseDTO>()
+                {
+                    remarks = "There was a fatal error",
+                    success = false
+                };
+            }
+        }
+
         public async Task<ResponseModel<List<DeviceResponseDTO>>> GetAllDevices()
         {
             try

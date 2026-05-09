@@ -203,5 +203,42 @@ namespace EMO.Repositories.UtilityServicesRepo
                 };
             }
         }
+
+
+        public async Task<ResponseModel<UtilityResponseDTO>> GetDataByUtilityType(string BusinessId)
+        {
+            try
+            {
+                var utility = await db.tbl_utility
+                    .Where(x => x.utility_id == Guid.Parse(utilityId) && !x.is_deleted)
+                    .FirstOrDefaultAsync();
+
+                if (utility != null)
+                {
+                    return new ResponseModel<UtilityResponseDTO>()
+                    {
+                        data = mapper.Map<UtilityResponseDTO>(utility),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<UtilityResponseDTO>()
+                    {
+                        remarks = "Utility not found",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<UtilityResponseDTO>()
+                {
+                    remarks = $"There was a fatal error",
+                    success = false
+                };
+            }
+        }
     }
 }

@@ -26,6 +26,7 @@ namespace EMO.Controllers
             this.otherServices = otherServices;
         }
 
+
         [HttpPost]
         public async Task<ActionResult<ResponseModel<DeviceResponseDTO>>> Post(AddDeviceDTO model)
         {
@@ -57,6 +58,26 @@ namespace EMO.Controllers
             else
             {
                 var Response = new ResponseModel<List<FacilityResponseDTO>>()
+                {
+                    remarks = "Invalid Request.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+
+        [HttpGet("GetDeviceByMacAddress")]
+        public async Task<ActionResult<ResponseModel<DeviceSensorsResponseDTO>>> GetDeviceByMacAddress(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = DeviceServices.GetDeviceByMacAddress(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<DeviceSensorsResponseDTO>()
                 {
                     remarks = "Invalid Request.",
                     success = false

@@ -12,5 +12,6 @@ namespace EMO.Repositories.DeviceServicesRepo
         Task<ResponseModel<List<DeviceResponseDTO>>> GetAllDevices();
         Task<ResponseModel> DeleteDeviceById(string deviceId);
         public Task<ResponseModel<List<DeviceResponseDTO>>> GetDeviceByBusinessId(string deviceId);
+        public Task<ResponseModel<DeviceSensorsResponseDTO>> GetDeviceByMacAddress(string macAddress);
     }
 }
