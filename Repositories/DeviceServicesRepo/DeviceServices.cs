@@ -99,12 +99,12 @@ namespace EMO.Repositories.DeviceServicesRepo
         }
 
 
-        public async Task<ResponseModel<List<DeviceResponseDTO>>> GetDeviceByBusinessId(string deviceId)
+        public async Task<ResponseModel<List<DeviceResponseDTO>>> GetDeviceByBusinessId(string businessId)
         {
             try
             {
 
-                if (string.IsNullOrEmpty(deviceId))
+                if (string.IsNullOrEmpty(businessId))
                 {
                     return new ResponseModel<List<DeviceResponseDTO>>()
                     {
@@ -112,16 +112,16 @@ namespace EMO.Repositories.DeviceServicesRepo
                         success = false
                     };
                 }
-                var facility = await db.tbl_device
+                var device = await db.tbl_device
                     .Include(x => x.business)
-                    .Where(x => x.fk_business == Guid.Parse(deviceId) && !x.is_deleted)
+                    .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
-                if (facility.Any())
+                if (device.Any())
                 {
                     return new ResponseModel<List<DeviceResponseDTO>>()
                     {
-                        data = mapper.Map<List<DeviceResponseDTO>>(facility),
+                        data = mapper.Map<List<DeviceResponseDTO>>(device),
                         remarks = "Success",
                         success = true
                     };
@@ -206,6 +206,7 @@ namespace EMO.Repositories.DeviceServicesRepo
                     deviceId = device.device_id.ToString(),
                     deviceName = device.device_name,
                     isActive = device.is_active,
+                    deviceMacAddress= device.mac_address,
 
                     sensors = sensors.Select(s => new sensorOfDeviceResponseDTO
                     {

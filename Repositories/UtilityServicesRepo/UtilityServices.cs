@@ -205,7 +205,7 @@ namespace EMO.Repositories.UtilityServicesRepo
         }
 
 
-        public async Task<ResponseModel<UtilityResponseDTO>> GetDataByUtilityType(string BusinessId)
+        public async Task<ResponseModel<UtilityResponseDTO>> GetDataByUtilityType(string utilityId)
         {
             try
             {
