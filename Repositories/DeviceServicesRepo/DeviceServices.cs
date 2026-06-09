@@ -4,6 +4,7 @@ using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.DeviceDTOs;
 using EMO.Models.DTOs.FacilityDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.DeviceRedisRepo;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.DeviceServicesRepo
@@ -12,11 +13,13 @@ namespace EMO.Repositories.DeviceServicesRepo
     {
         private readonly DBUserManagementContext db;
         private readonly IMapper mapper;
+        private readonly IDeviceRedisService deviceRedisService;
 
-        public DeviceServices(DBUserManagementContext db, IMapper mapper)
+        public DeviceServices(DBUserManagementContext db, IMapper mapper,IDeviceRedisService deviceRedisService)
         {
             this.db = db;
             this.mapper = mapper;
+            this.deviceRedisService = deviceRedisService;
         }
 
         public async Task<ResponseModel<DeviceResponseDTO>> AddDevice(AddDeviceDTO requestDto)
@@ -32,6 +35,9 @@ namespace EMO.Repositories.DeviceServicesRepo
                     var newDevice = mapper.Map<tbl_device>(requestDto);
                     await db.tbl_device.AddAsync(newDevice);
                     await db.SaveChangesAsync();
+
+                    if (newDevice.is_active)
+                        await deviceRedisService.AddMacAsync(newDevice.mac_address);
 
                     return new ResponseModel<DeviceResponseDTO>()
                     {
@@ -58,7 +64,6 @@ namespace EMO.Repositories.DeviceServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<DeviceResponseDTO>> UpdateDevice(UpdateDeviceDTO requestDto)
         {
             try
@@ -69,9 +74,16 @@ namespace EMO.Repositories.DeviceServicesRepo
 
                 if (existingDevice != null)
                 {
+                    var oldMac = existingDevice.mac_address;
+
                     mapper.Map(requestDto, existingDevice);
                     await db.SaveChangesAsync();
 
+                    await deviceRedisService.UpdateMacAsync(
+                        oldMac,
+                        existingDevice.mac_address,
+                        existingDevice.is_active
+                    );
                     return new ResponseModel<DeviceResponseDTO>()
                     {
                         data = mapper.Map<DeviceResponseDTO>(existingDevice),
@@ -97,8 +109,6 @@ namespace EMO.Repositories.DeviceServicesRepo
                 };
             }
         }
-
-
         public async Task<ResponseModel<List<DeviceResponseDTO>>> GetDeviceByBusinessId(string businessId)
         {
             try
@@ -113,8 +123,53 @@ namespace EMO.Repositories.DeviceServicesRepo
                     };
                 }
                 var device = await db.tbl_device
-                    .Include(x => x.business)
+                    .Include(x => x.business).Include(x => x.office)
                     .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
+                    .ToListAsync();
+
+                if (device.Any())
+                {
+                    return new ResponseModel<List<DeviceResponseDTO>>()
+                    {
+                        data = mapper.Map<List<DeviceResponseDTO>>(device),
+                        remarks = "Success",
+                        success = true
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<List<DeviceResponseDTO>>()
+                    {
+                        remarks = "no record found.",
+                        success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<DeviceResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error",
+                    success = false
+                };
+            }
+        }
+        public async Task<ResponseModel<List<DeviceResponseDTO>>> GetDeviceByOfficeId(string fkOffice)
+        {
+            try
+            {
+
+                if (string.IsNullOrEmpty(fkOffice))
+                {
+                    return new ResponseModel<List<DeviceResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+                var device = await db.tbl_device
+                    .Include(x => x.business).Include(x => x.office)
+                    .Where(x => x.fk_office == Guid.Parse(fkOffice) && !x.is_deleted)
                     .ToListAsync();
 
                 if (device.Any())
@@ -148,7 +203,7 @@ namespace EMO.Repositories.DeviceServicesRepo
         {
             try
             {
-                var device = await db.tbl_device
+                var device = await db.tbl_device.Include(x => x.office)
                     .Where(x => x.device_id == Guid.Parse(deviceId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
@@ -179,12 +234,11 @@ namespace EMO.Repositories.DeviceServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<DeviceSensorsResponseDTO>> GetDeviceByMacAddress(string macAddress)
         {
             try
             {
-                var device = await db.tbl_device
+                var device = await db.tbl_device.Include(x=>x.office)
                     .Where(x => x.mac_address == macAddress && x.is_active && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
@@ -212,7 +266,6 @@ namespace EMO.Repositories.DeviceServicesRepo
                     {
                         sensorId = s.sensor_id.ToString(),
                         sensorName = s.sensor_name,
-                        modeBusAddress = s.mode_bus_address,
                         serialAddress = s.serial_address
                     }).ToList()
                 };
@@ -233,12 +286,11 @@ namespace EMO.Repositories.DeviceServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel<List<DeviceResponseDTO>>> GetAllDevices()
         {
             try
             {
-                var devices = await db.tbl_device.Where(x => !x.is_deleted).ToListAsync();
+                var devices = await db.tbl_device.Include(x => x.office).Where(x => !x.is_deleted).ToListAsync();
 
                 if (devices.Any())
                 {
@@ -267,7 +319,6 @@ namespace EMO.Repositories.DeviceServicesRepo
                 };
             }
         }
-
         public async Task<ResponseModel> DeleteDeviceById(string deviceId)
         {
             try
@@ -276,8 +327,12 @@ namespace EMO.Repositories.DeviceServicesRepo
 
                 if (device != null)
                 {
-                    db.tbl_device.Remove(device);
+                    var mac = device.mac_address;
+                    device.is_deleted = true;
+                    
                     await db.SaveChangesAsync();
+
+                    await deviceRedisService.RemoveMacAsync(mac);
 
                     return new ResponseModel()
                     {

@@ -108,4 +108,11 @@ namespace EMO.Models.DTOs.UserDTOs
         public bool isActive { get; set; } = false;
         public string? imageBase64 { get; set; } = null;
     }
+
+    public class ValidateUserDTO
+    {
+        public string userToken { get; set; } = string.Empty;
+        public string userName { get; set; } = string.Empty;
+        public string userId { get; set; } = string.Empty;
+    }
 }

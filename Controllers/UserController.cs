@@ -79,6 +79,25 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+
+        [HttpGet("ValidateUser")]
+        public async Task<ActionResult<ResponseModel<ValidateUserDTO>>> ValidateUser(string username)
+        {
+            if (otherServices.Check(username))
+            {
+                var Response = userService.GetUserByUsername(username);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<ValidateUserDTO>()
+                {
+                    remarks = "no record",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
         [HttpGet]
         public async Task<ActionResult<ResponseModel<List<UserResponseDTO>>>> Get()
         {

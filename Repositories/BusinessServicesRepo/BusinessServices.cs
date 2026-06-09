@@ -213,7 +213,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                 {
                     return new ResponseModel<List<BusinessResponseDTO>>()
                     {
-                        remarks = "No Business found",
+                        remarks = "No Record found",
                         success = false
                     };
                 }

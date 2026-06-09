@@ -17,7 +17,7 @@ namespace EMO.Models.DBModels.DBTables
         public float frequency { get; set; } = 0;
         public float active_energy { get; set; } = 0;
         public float reactive_energy { get; set; } = 0;
-        public DateTime created_at { get; set; } = DateTime.Now;
+        public DateTime created_at { get; set; } = DateTime.UtcNow;
         public Guid fk_sensor { get; set; } = Guid.Empty;
         public tbl_sensor sensor { get; set; } = default!;
         public bool is_deleted { get; set; } = false;

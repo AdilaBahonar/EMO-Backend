@@ -49,4 +49,5 @@ app.UseAuthorization();
 app.UseCors("AllowAll");
 app.UseMiddleware<JWTMiddleWare>();
 app.MapControllers();
+
 app.Run();

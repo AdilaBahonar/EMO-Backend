@@ -61,6 +61,24 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [HttpGet("GetByDeviceId")]
+        public async Task<ActionResult<ResponseModel<List<SensorResponseDTO>>>> GetByDeviceId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = SensorServices.GetSensorsByDeviceId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<SensorResponseDTO>>()
+                {
+                    remarks = "No record found.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
 
         [HttpPut]
         public async Task<ActionResult<ResponseModel<SensorResponseDTO>>> Put(UpdateSensorDTO model)

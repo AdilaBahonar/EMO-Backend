@@ -6,7 +6,10 @@ namespace EMO.Models.DTOs.DeviceDTOs
     {
         [Required]
         public string deviceName { get; set; } = string.Empty;
+        [Required]
         public string fkBusiness { get; set; } = string.Empty;
+        [Required]
+        public string fkOffice { get; set; } = string.Empty;
         public string deviceMacAddress { get; set; } = string.Empty;
         public bool isActive { get; set; } = false;
     }
@@ -15,6 +18,7 @@ namespace EMO.Models.DTOs.DeviceDTOs
         [Required]
         public string deviceId { get; set; } = string.Empty;
         public string deviceName { get; set; } = string.Empty;
+        public string fkOffice { get; set; } = string.Empty;
         public string fkBusiness { get; set; } = string.Empty;
         public string deviceMacAddress { get; set; } = string.Empty;
         public bool isActive { get; set; } = false;
@@ -25,6 +29,8 @@ namespace EMO.Models.DTOs.DeviceDTOs
         public string deviceName { get; set; } = string.Empty;
         public string createdAt { get; set; } = string.Empty;
         public string updatedAt { get; set; } = string.Empty;
+        public string fkOffice { get; set; } = string.Empty;
+        public string officeName { get; set; } = string.Empty;
         public string fkBusiness { get; set; } = string.Empty;
         public string businessName { get; set; } = string.Empty;
         public bool isActive { get; set; } = false;
@@ -44,7 +50,6 @@ namespace EMO.Models.DTOs.DeviceDTOs
     {
         public string sensorId { get; set; } = string.Empty;
         public string sensorName { get; set; } = string.Empty;
-        public string modeBusAddress { get; set; } = string.Empty;
         public string serialAddress { get; set; } = string.Empty;
     }
 }

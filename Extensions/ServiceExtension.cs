@@ -1,28 +1,32 @@
-﻿using Microsoft.EntityFrameworkCore;
-using EMO.Repositories.JWTUtilsRepo;
-using EMO.Repositories.ApiKeyServiceRepo;
-using EMO.Extensions.MiddleWare;
+﻿using EMO.Extensions.MiddleWare;
 using EMO.Models.DBModels;
-using EMO.Repositories.UserServicesRepo;
-using EMO.Repositories.AuthServicesRepo;
-using EMO.Repositories.InnerServicesRepo;
-using EMO.Repositories.UserTypeServicesRepo;
-using EMO.Repositories.BusinessServicesRepo;
-using EMO.Repositories.BuildingServicesRepo;
-using EMO.Repositories.FacilityServicesRepo;
-using EMO.Repositories.SectionServicesRepo;
-using EMO.Repositories.FloorServicesRepo;
-using EMO.Repositories.OfficeServicesRepo;
-using EMO.Repositories.DeviceServicesRepo;
-using EMO.Repositories.ContactPersonServicesRepo;
-using EMO.Repositories.SingalPhaseDataServicesRepo;
-using EMO.Repositories.SingalPhaseDataRepo;
-using EMO.Repositories.TenantServicesRepo;
-using EMO.Repositories.UtilityServicesRepo;
-using EMO.Repositories.SensorServicesRepo;
 using EMO.Repositories.AgreementServicesRepo;
-using EMO.Repositories.SubUserTypeServicesRepo;
+using EMO.Repositories.ApiKeyServiceRepo;
+using EMO.Repositories.AuthServicesRepo;
+using EMO.Repositories.BuildingServicesRepo;
+using EMO.Repositories.BusinessServicesRepo;
+using EMO.Repositories.ContactPersonServicesRepo;
+using EMO.Repositories.DeviceRedisRepo;
+using EMO.Repositories.DeviceServicesRepo;
+using EMO.Repositories.FacilityServicesRepo;
+using EMO.Repositories.FloorServicesRepo;
 using EMO.Repositories.GenderServicesRepo;
+using EMO.Repositories.InnerServicesRepo;
+using EMO.Repositories.JWTUtilsRepo;
+using EMO.Repositories.OfficeServicesRepo;
+using EMO.Repositories.RedisStartupService;
+using EMO.Repositories.SectionServicesRepo;
+using EMO.Repositories.SensorsChainRepo;
+using EMO.Repositories.SensorServicesRepo;
+using EMO.Repositories.SingalPhaseDataRepo;
+using EMO.Repositories.SingalPhaseDataServicesRepo;
+using EMO.Repositories.SubUserTypeServicesRepo;
+using EMO.Repositories.TenantServicesRepo;
+using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.UserTypeServicesRepo;
+using EMO.Repositories.UtilityServicesRepo;
+using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace EMO.Extensions
 {
@@ -30,14 +34,25 @@ namespace EMO.Extensions
     {
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            /* services.AddDbContext<DBUserManagementContext>(options =>
-             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));*/
-
             services.AddDbContext<DBUserManagementContext>(options =>
-            options.UseMySql(
-                configuration.GetConnectionString("DefaultConnection"),
-                new MySqlServerVersion(new Version(8, 0, 32)) // replace with your MySQL version
-            ));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+            services.Configure<RedisKeys>(
+            configuration.GetSection("RedisKeys"));
+
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var redisConnection =
+                    configuration.GetConnectionString("Redis");
+
+                return ConnectionMultiplexer.Connect(redisConnection);
+            });
+
+            //services.AddDbContext<DBUserManagementContext>(options =>
+            //options.UseMySql(
+            //    configuration.GetConnectionString("DefaultConnection"),
+            //    new MySqlServerVersion(new Version(8, 0, 32)) // replace with your MySQL version
+            //));
             // Adding Cors
             services.AddCors(options =>
             {
@@ -50,9 +65,13 @@ namespace EMO.Extensions
                                       .AllowAnyMethod();
                                   });
             });
+            services.AddHostedService<SensorRedisStartupCacheService>();
+            services.AddHostedService<DeviceMacRedisStartupService>();
             services.AddAutoMapper(typeof(Program).Assembly);
             services.AddTransient<IJWTUtils, JWTUtils>();
             services.AddTransient<IApiKeyService, ApiKeyService>();
+            services.AddScoped<ISensorRedisCacheService, SensorRedisCacheService>();
+            services.AddScoped<IDeviceRedisService, DeviceRedisService>();
             services.AddSingleton<UserAuthorizeAttribute>();
             services.AddSingleton<ApiKeyAttribute>();
             services.AddTransient<OtherServices>();

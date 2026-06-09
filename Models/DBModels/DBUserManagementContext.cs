@@ -11,7 +11,7 @@ namespace EMO.Models.DBModels
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
-            #region Has Data
+            #region Have Data
             #region User Type
             var systemAdmin = new tbl_user_type
             {
@@ -138,292 +138,321 @@ namespace EMO.Models.DBModels
             };
             modelBuilder.Entity<tbl_user>().HasData(user);
             #endregion
-
+            modelBuilder.Entity<tbl_utility>().HasData(
+       new tbl_utility
+       {
+           utility_id = Guid.NewGuid(),
+           utility_name = "HVAC",
+           is_active = true,
+           is_deleted = false
+       },
+       new tbl_utility
+       {
+           utility_id = Guid.NewGuid(),
+           utility_name = "Miscellaneous",
+           is_active = true,
+           is_deleted = false
+       },
+       new tbl_utility
+       {
+           utility_id = Guid.NewGuid(),
+           utility_name = "Computing",
+           is_active = true,
+           is_deleted = false
+       },
+       new tbl_utility
+       {
+           utility_id = Guid.NewGuid(),
+           utility_name = "Lighting",
+           is_active = true,
+           is_deleted = false
+       }
+   );
 
             #endregion
-            #region Has RelationShip
+            /* #region Have RelationShip
 
-            #region User
-            modelBuilder.Entity<tbl_user>()
-                .HasOne(p => p.sub_user_type)
-                .WithMany(b => b.users)
-                .HasForeignKey(p => p.fk_sub_user_type)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<tbl_user>()
-           .HasOne(p => p.handler)
-           .WithMany(b => b.users)
-           .HasForeignKey(p => p.fk_handler)
-           .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<tbl_user>()
-                .HasOne(p => p.gender)
-                .WithMany(b => b.users)
-                .HasForeignKey(p => p.fk_gender)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<tbl_user>()
-              .HasOne(p => p.businesses)
-              .WithMany(b => b.users)
-              .HasForeignKey(p => p.fk_business)
-              .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<tbl_user>()
-           .Property<DateTime?>("last_activity_at")
-           .HasColumnType("DATETIME(6)");
-            #endregion
-
-            #region Business
-            //modelBuilder.Entity<tbl_business>()
-            //   .HasOne(p => p.user)
-            //   .WithMany(b => b.businesses)
-            //   .HasForeignKey(p => p.fk_user)
-            //   .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<tbl_business>()
-               .Property<DateTime>("created_at")
-               .HasColumnType("DATETIME(6)");
-
-            modelBuilder.Entity<tbl_business>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
-            #endregion
-
-            #region Facility
-            modelBuilder.Entity<tbl_facility>()
-               .HasOne(p => p.business)
-               .WithMany(b => b.facilities)
+             #region User
+             modelBuilder.Entity<tbl_user>()
+                 .HasOne(p => p.sub_user_type)
+                 .WithMany(b => b.users)
+                 .HasForeignKey(p => p.fk_sub_user_type)
+                 .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_user>()
+            .HasOne(p => p.handler)
+            .WithMany(b => b.users)
+            .HasForeignKey(p => p.fk_handler)
+            .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_user>()
+                 .HasOne(p => p.gender)
+                 .WithMany(b => b.users)
+                 .HasForeignKey(p => p.fk_gender)
+                 .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_user>()
+               .HasOne(p => p.businesses)
+               .WithMany(b => b.users)
                .HasForeignKey(p => p.fk_business)
                .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_user>()
+            .Property<DateTime?>("last_activity_at")
+            .HasColumnType("DATETIME(6)");
+             #endregion
 
-            modelBuilder.Entity<tbl_facility>()
-             .Property<DateTime>("created_at")
-             .HasColumnType("DATETIME(6)");
+             #region Business
+             //modelBuilder.Entity<tbl_business>()
+             //   .HasOne(p => p.user)
+             //   .WithMany(b => b.businesses)
+             //   .HasForeignKey(p => p.fk_user)
+             //   .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_facility>()
-                .Property<DateTime>("updated_at")
+             modelBuilder.Entity<tbl_business>()
+                .Property<DateTime>("created_at")
                 .HasColumnType("DATETIME(6)");
-            #endregion
 
-            #region Building
-            modelBuilder.Entity<tbl_building>()
-             .HasOne(p => p.facility)
-             .WithMany(b => b.buildings)
-             .HasForeignKey(p => p.fk_facility)
-             .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_business>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+             #endregion
 
-            modelBuilder.Entity<tbl_building>()
-             .Property<DateTime>("created_at")
-             .HasColumnType("DATETIME(6)");
+             #region Facility
+             modelBuilder.Entity<tbl_facility>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.facilities)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_building>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
-            modelBuilder.Entity<tbl_building>()
-           .HasOne(p => p.business)
-           .WithMany(b => b.buildings)
-           .HasForeignKey(p => p.fk_business)
-           .OnDelete(DeleteBehavior.Restrict);
-            #endregion
+             modelBuilder.Entity<tbl_facility>()
+              .Property<DateTime>("created_at")
+              .HasColumnType("DATETIME(6)");
 
-            #region Floor
-            modelBuilder.Entity<tbl_floor>()
-               .HasOne(p => p.building)
-               .WithMany(b => b.floors)
-               .HasForeignKey(p => p.fk_building)
-               .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<tbl_floor>()
-           .HasOne(p => p.business)
-           .WithMany(b => b.floors)
-           .HasForeignKey(p => p.fk_business)
-           .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<tbl_floor>()
-             .Property<DateTime>("created_at")
-             .HasColumnType("DATETIME(6)");
+             modelBuilder.Entity<tbl_facility>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+             #endregion
 
-            modelBuilder.Entity<tbl_floor>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
-            #endregion
+             #region Building
+             modelBuilder.Entity<tbl_building>()
+              .HasOne(p => p.facility)
+              .WithMany(b => b.buildings)
+              .HasForeignKey(p => p.fk_facility)
+              .OnDelete(DeleteBehavior.Restrict);
 
-            #region Section
-            modelBuilder.Entity<tbl_section>()
-             .HasOne(p => p.floor)
-             .WithMany(b => b.sections)
-             .HasForeignKey(p => p.fk_floor)
-             .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_building>()
+              .Property<DateTime>("created_at")
+              .HasColumnType("DATETIME(6)");
 
-            modelBuilder.Entity<tbl_section>()
+             modelBuilder.Entity<tbl_building>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+             modelBuilder.Entity<tbl_building>()
+            .HasOne(p => p.business)
+            .WithMany(b => b.buildings)
+            .HasForeignKey(p => p.fk_business)
+            .OnDelete(DeleteBehavior.Restrict);
+             #endregion
+
+             #region Floor
+             modelBuilder.Entity<tbl_floor>()
+                .HasOne(p => p.building)
+                .WithMany(b => b.floors)
+                .HasForeignKey(p => p.fk_building)
+                .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_floor>()
+            .HasOne(p => p.business)
+            .WithMany(b => b.floors)
+            .HasForeignKey(p => p.fk_business)
+            .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_floor>()
+              .Property<DateTime>("created_at")
+              .HasColumnType("DATETIME(6)");
+
+             modelBuilder.Entity<tbl_floor>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+             #endregion
+
+             #region Section
+             modelBuilder.Entity<tbl_section>()
+              .HasOne(p => p.floor)
+              .WithMany(b => b.sections)
+              .HasForeignKey(p => p.fk_floor)
+              .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<tbl_section>()
+          .HasOne(p => p.business)
+          .WithMany(b => b.sections)
+          .HasForeignKey(p => p.fk_business)
+          .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<tbl_section>()
+              .Property<DateTime>("created_at")
+              .HasColumnType("DATETIME(6)");
+
+             modelBuilder.Entity<tbl_section>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+             #endregion
+
+             #region Office
+             modelBuilder.Entity<tbl_office>()
+                .HasOne(p => p.section)
+                .WithMany(b => b.offices)
+                .HasForeignKey(p => p.fk_section)
+                .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<tbl_office>()
          .HasOne(p => p.business)
-         .WithMany(b => b.sections)
+         .WithMany(b => b.offices)
          .HasForeignKey(p => p.fk_business)
          .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_section>()
+             modelBuilder.Entity<tbl_office>()
+              .Property<DateTime>("created_at")
+              .HasColumnType("DATETIME(6)");
+
+             modelBuilder.Entity<tbl_office>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+             #endregion
+
+             #region Singal Phase Data
+             modelBuilder.Entity<tbl_singal_phase_data>()
+                .HasOne(p => p.sensor)
+                .WithMany(b => b.singal_phase_data)
+                .HasForeignKey(p => p.fk_sensor)
+                .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<tbl_singal_phase_data>()
              .Property<DateTime>("created_at")
              .HasColumnType("DATETIME(6)");
+             #endregion
 
-            modelBuilder.Entity<tbl_section>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
-            #endregion
+             #region Agreement
 
-            #region Office
-            modelBuilder.Entity<tbl_office>()
-               .HasOne(p => p.section)
-               .WithMany(b => b.offices)
-               .HasForeignKey(p => p.fk_section)
-               .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_agreement>()
+                .HasOne(p => p.tenant)
+                .WithMany(b => b.agreements)
+                .HasForeignKey(p => p.fk_tenant)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_office>()
-        .HasOne(p => p.business)
-        .WithMany(b => b.offices)
-        .HasForeignKey(p => p.fk_business)
-        .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_agreement>()
+              .HasOne(p => p.business)
+              .WithMany(b => b.agreements)
+              .HasForeignKey(p => p.fk_business)
+              .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_office>()
-             .Property<DateTime>("created_at")
+             modelBuilder.Entity<tbl_agreement>()
+              .Property<DateTime>("created_at")
+              .HasColumnType("DATETIME(6)");
+
+             modelBuilder.Entity<tbl_agreement>()
+                 .Property<DateTime>("updated_at")
+                 .HasColumnType("DATETIME(6)");
+
+             modelBuilder.Entity<tbl_agreement>()
+             .Property<DateTime>("agreement_start_date")
              .HasColumnType("DATETIME(6)");
 
-            modelBuilder.Entity<tbl_office>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
-            #endregion
+             modelBuilder.Entity<tbl_agreement>()
+                 .Property<DateTime>("agreement_end_date")
+                 .HasColumnType("DATETIME(6)");
+             #endregion
 
-            #region Singal Phase Data
-            modelBuilder.Entity<tbl_singal_phase_data>()
-               .HasOne(p => p.sensor)
-               .WithMany(b => b.singal_phase_data)
-               .HasForeignKey(p => p.fk_sensor)
-               .OnDelete(DeleteBehavior.Restrict);
+             #region Contact Person
+             modelBuilder.Entity<tbl_contact_person>()
+                .HasOne(p => p.agreement)
+                .WithMany(b => b.contact_persons)
+                .HasForeignKey(p => p.fk_agreement)
+                .OnDelete(DeleteBehavior.Restrict);
+             #endregion
 
-            modelBuilder.Entity<tbl_singal_phase_data>()
-            .Property<DateTime>("created_at")
-            .HasColumnType("DATETIME(6)");
-            #endregion
+             #region User Image
+             modelBuilder.Entity<tbl_user_image>()
+                 .HasOne(u => u.user)
+                      .WithOne(img => img.user_image)
+                      .HasForeignKey<tbl_user_image>(img => img.fk_user)
+                      .OnDelete(DeleteBehavior.Cascade);
+             #endregion
 
-            #region Agreement
+             #region Sensor
+             //modelBuilder.Entity<tbl_sensor>()
+             //   .HasOne(p => p.sensor_type)
+             //   .WithMany(b => b.sensors)
+             //   .HasForeignKey(p => p.fk_sensor_type)
+             //   .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_agreement>()
-               .HasOne(p => p.tenant)
-               .WithMany(b => b.agreements)
-               .HasForeignKey(p => p.fk_tenant)
-               .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_sensor>()
+              .HasOne(p => p.office)
+              .WithMany(b => b.sensors)
+              .HasForeignKey(p => p.fk_office)
+              .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_agreement>()
-             .HasOne(p => p.business)
-             .WithMany(b => b.agreements)
-             .HasForeignKey(p => p.fk_business)
-             .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<tbl_sensor>()
+              .HasOne(p => p.utility)
+              .WithMany(b => b.sensors)
+              .HasForeignKey(p => p.fk_utility)
+              .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_agreement>()
-             .Property<DateTime>("created_at")
-             .HasColumnType("DATETIME(6)");
+             modelBuilder.Entity<tbl_sensor>()
+              .HasOne(p => p.device)
+              .WithMany(b => b.sensors)
+              .HasForeignKey(p => p.fk_device)
+              .OnDelete(DeleteBehavior.Restrict);
+             #endregion
 
-            modelBuilder.Entity<tbl_agreement>()
-                .Property<DateTime>("updated_at")
-                .HasColumnType("DATETIME(6)");
+             #region Device
+             //modelBuilder.Entity<tbl_sensor>()
+             //   .HasOne(p => p.sensor_type)
+             //   .WithMany(b => b.sensors)
+             //   .HasForeignKey(p => p.fk_sensor_type)
+             //   .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_agreement>()
-            .Property<DateTime>("agreement_start_date")
-            .HasColumnType("DATETIME(6)");
+             modelBuilder.Entity<tbl_device>()
+              .HasOne(p => p.business)
+              .WithMany(b => b.devices)
+              .HasForeignKey(p => p.fk_business)
+              .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<tbl_agreement>()
-                .Property<DateTime>("agreement_end_date")
-                .HasColumnType("DATETIME(6)");
-            #endregion
+             //modelBuilder.Entity<tbl_device>()
+             // .HasOne(p => p.office)
+             // .WithMany(b => b.devices)
+             // .HasForeignKey(p => p.fk_office)
+             // .OnDelete(DeleteBehavior.Restrict);
+             #endregion
 
-            #region Contact Person
-            modelBuilder.Entity<tbl_contact_person>()
-               .HasOne(p => p.agreement)
-               .WithMany(b => b.contact_persons)
-               .HasForeignKey(p => p.fk_agreement)
-               .OnDelete(DeleteBehavior.Restrict);
-            #endregion
+             #region Office Agreement
+             modelBuilder.Entity<tbl_office_agreement>()
+            .HasOne(p => p.office)
+            .WithMany(b => b.office_agreement)
+            .HasForeignKey(p => p.fk_office)
+            .OnDelete(DeleteBehavior.Restrict);
 
-            #region User Image
-            modelBuilder.Entity<tbl_user_image>()
-                .HasOne(u => u.user)
-                     .WithOne(img => img.user_image)
-                     .HasForeignKey<tbl_user_image>(img => img.fk_user)
-                     .OnDelete(DeleteBehavior.Cascade);
-            #endregion
-
-            #region Sensor
-            //modelBuilder.Entity<tbl_sensor>()
-            //   .HasOne(p => p.sensor_type)
-            //   .WithMany(b => b.sensors)
-            //   .HasForeignKey(p => p.fk_sensor_type)
-            //   .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<tbl_sensor>()
-             .HasOne(p => p.office)
-             .WithMany(b => b.sensors)
-             .HasForeignKey(p => p.fk_office)
-             .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<tbl_sensor>()
-             .HasOne(p => p.utility)
-             .WithMany(b => b.sensors)
-             .HasForeignKey(p => p.fk_utility)
-             .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<tbl_sensor>()
-             .HasOne(p => p.device)
-             .WithMany(b => b.sensors)
-             .HasForeignKey(p => p.fk_device)
-             .OnDelete(DeleteBehavior.Restrict);
-            #endregion
-
-            #region Device
-            //modelBuilder.Entity<tbl_sensor>()
-            //   .HasOne(p => p.sensor_type)
-            //   .WithMany(b => b.sensors)
-            //   .HasForeignKey(p => p.fk_sensor_type)
-            //   .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<tbl_device>()
-             .HasOne(p => p.business)
-             .WithMany(b => b.devices)
-             .HasForeignKey(p => p.fk_business)
-             .OnDelete(DeleteBehavior.Restrict);
-
-            //modelBuilder.Entity<tbl_device>()
-            // .HasOne(p => p.office)
-            // .WithMany(b => b.devices)
-            // .HasForeignKey(p => p.fk_office)
-            // .OnDelete(DeleteBehavior.Restrict);
-            #endregion
-
-            #region Office Agreement
-            modelBuilder.Entity<tbl_office_agreement>()
-           .HasOne(p => p.office)
+             modelBuilder.Entity<tbl_office_agreement>()
+           .HasOne(p => p.agreement)
            .WithMany(b => b.office_agreement)
-           .HasForeignKey(p => p.fk_office)
+           .HasForeignKey(p => p.fk_agreement)
            .OnDelete(DeleteBehavior.Restrict);
+             #endregion
 
-            modelBuilder.Entity<tbl_office_agreement>()
-          .HasOne(p => p.agreement)
-          .WithMany(b => b.office_agreement)
-          .HasForeignKey(p => p.fk_agreement)
-          .OnDelete(DeleteBehavior.Restrict);
-            #endregion
+             //#region Tenant
+             //modelBuilder.Entity<tbl_tenant>()
+             // .Property<DateTime>("created_at")
+             // .HasColumnType("DATETIME(6)");
 
-            //#region Tenant
-            //modelBuilder.Entity<tbl_tenant>()
-            // .Property<DateTime>("created_at")
-            // .HasColumnType("DATETIME(6)");
+             //modelBuilder.Entity<tbl_tenant>()
+             //    .Property<DateTime>("updated_at")
+             //    .HasColumnType("DATETIME(6)");
+             //#endregion
 
-            //modelBuilder.Entity<tbl_tenant>()
-            //    .Property<DateTime>("updated_at")
-            //    .HasColumnType("DATETIME(6)");
-            //#endregion
+             #region SubUser Type
+             modelBuilder.Entity<tbl_sub_user_type>()
+                .HasOne(p => p.user_type)
+                .WithMany(b => b.subuser_types)
+                .HasForeignKey(p => p.fk_user_type)
+                .OnDelete(DeleteBehavior.Restrict);
+             #endregion
 
-            #region SubUser Type
-            modelBuilder.Entity<tbl_sub_user_type>()
-               .HasOne(p => p.user_type)
-               .WithMany(b => b.subuser_types)
-               .HasForeignKey(p => p.fk_user_type)
-               .OnDelete(DeleteBehavior.Restrict);
-            #endregion
-
-            #endregion
+             #endregion*/
 
             // #region Has RelationShip
 
@@ -592,6 +621,297 @@ namespace EMO.Models.DBModels
 
             // #endregion
 
+
+            #region Have RelationShip
+
+            #region User
+            modelBuilder.Entity<tbl_user>()
+                .HasOne(p => p.sub_user_type)
+                .WithMany(b => b.users)
+                .HasForeignKey(p => p.fk_sub_user_type)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_user>()
+                .HasOne(p => p.handler)
+                .WithMany(b => b.users)
+                .HasForeignKey(p => p.fk_handler)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_user>()
+                .HasOne(p => p.gender)
+                .WithMany(b => b.users)
+                .HasForeignKey(p => p.fk_gender)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_user>()
+                .HasOne(p => p.businesses)
+                .WithMany(b => b.users)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_user>()
+                .Property<DateTime?>("last_activity_at")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Business
+            //modelBuilder.Entity<tbl_business>()
+            //   .HasOne(p => p.user)
+            //   .WithMany(b => b.businesses)
+            //   .HasForeignKey(p => p.fk_user)
+            //   .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_business>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_business>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Facility
+            modelBuilder.Entity<tbl_facility>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.facilities)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_facility>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_facility>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Building
+            modelBuilder.Entity<tbl_building>()
+                .HasOne(p => p.facility)
+                .WithMany(b => b.buildings)
+                .HasForeignKey(p => p.fk_facility)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_building>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_building>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_building>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.buildings)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region Floor
+            modelBuilder.Entity<tbl_floor>()
+                .HasOne(p => p.building)
+                .WithMany(b => b.floors)
+                .HasForeignKey(p => p.fk_building)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_floor>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.floors)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_floor>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_floor>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Section
+            modelBuilder.Entity<tbl_section>()
+                .HasOne(p => p.floor)
+                .WithMany(b => b.sections)
+                .HasForeignKey(p => p.fk_floor)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_section>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.sections)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_section>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_section>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Office
+            modelBuilder.Entity<tbl_office>()
+                .HasOne(p => p.section)
+                .WithMany(b => b.offices)
+                .HasForeignKey(p => p.fk_section)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_office>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.offices)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_office>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_office>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Singal Phase Data
+            modelBuilder.Entity<tbl_singal_phase_data>()
+                .HasOne(p => p.sensor)
+                .WithMany(b => b.singal_phase_data)
+                .HasForeignKey(p => p.fk_sensor)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_singal_phase_data>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp with time zone");
+            #endregion
+
+            #region Agreement
+            modelBuilder.Entity<tbl_agreement>()
+                .HasOne(p => p.tenant)
+                .WithMany(b => b.agreements)
+                .HasForeignKey(p => p.fk_tenant)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_agreement>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.agreements)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_agreement>()
+                .Property<DateTime>("created_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_agreement>()
+                .Property<DateTime>("updated_at")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_agreement>()
+                .Property<DateTime>("agreement_start_date")
+                .HasColumnType("timestamp without time zone");
+
+            modelBuilder.Entity<tbl_agreement>()
+                .Property<DateTime>("agreement_end_date")
+                .HasColumnType("timestamp without time zone");
+            #endregion
+
+            #region Contact Person
+            modelBuilder.Entity<tbl_contact_person>()
+                .HasOne(p => p.agreement)
+                .WithMany(b => b.contact_persons)
+                .HasForeignKey(p => p.fk_agreement)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region User Image
+            modelBuilder.Entity<tbl_user_image>()
+                .HasOne(u => u.user)
+                .WithOne(img => img.user_image)
+                .HasForeignKey<tbl_user_image>(img => img.fk_user)
+                .OnDelete(DeleteBehavior.Cascade);
+            #endregion
+
+            #region Sensor
+            //modelBuilder.Entity<tbl_sensor>()
+            //   .HasOne(p => p.sensor_type)
+            //   .WithMany(b => b.sensors)
+            //   .HasForeignKey(p => p.fk_sensor_type)
+            //   .OnDelete(DeleteBehavior.Restrict);
+
+           
+
+            modelBuilder.Entity<tbl_sensor>()
+                .HasOne(p => p.utility)
+                .WithMany(b => b.sensors)
+                .HasForeignKey(p => p.fk_utility)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_sensor>()
+                .HasOne(p => p.device)
+                .WithMany(b => b.sensors)
+                .HasForeignKey(p => p.fk_device)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region Device
+            //modelBuilder.Entity<tbl_sensor>()
+            //   .HasOne(p => p.sensor_type)
+            //   .WithMany(b => b.sensors)
+            //   .HasForeignKey(p => p.fk_sensor_type)
+            //   .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_device>()
+                .HasOne(p => p.business)
+                .WithMany(b => b.devices)
+                .HasForeignKey(p => p.fk_business)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<tbl_device>()
+               .HasOne(p => p.office)
+               .WithMany(b => b.devices)
+               .HasForeignKey(p => p.fk_office)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            //modelBuilder.Entity<tbl_device>()
+            // .HasOne(p => p.office)
+            // .WithMany(b => b.devices)
+            // .HasForeignKey(p => p.fk_office)
+            // .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region Office Agreement
+            modelBuilder.Entity<tbl_office_agreement>()
+                .HasOne(p => p.office)
+                .WithMany(b => b.office_agreement)
+                .HasForeignKey(p => p.fk_office)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<tbl_office_agreement>()
+                .HasOne(p => p.agreement)
+                .WithMany(b => b.office_agreement)
+                .HasForeignKey(p => p.fk_agreement)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            //#region Tenant
+            //modelBuilder.Entity<tbl_tenant>()
+            // .Property<DateTime>("created_at")
+            // .HasColumnType("timestamp without time zone");
+
+            //modelBuilder.Entity<tbl_tenant>()
+            //    .Property<DateTime>("updated_at")
+            //    .HasColumnType("timestamp without time zone");
+            //#endregion
+
+            #region SubUser Type
+            modelBuilder.Entity<tbl_sub_user_type>()
+                .HasOne(p => p.user_type)
+                .WithMany(b => b.subuser_types)
+                .HasForeignKey(p => p.fk_user_type)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #endregion
         }
         public DbSet<tbl_user> tbl_user { get; set; }
         public DbSet<tbl_user_type> tbl_user_type { get; set; }

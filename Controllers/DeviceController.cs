@@ -7,12 +7,12 @@ using EMO.Models.DTOs.ResponseDTO;
 using EMO.Repositories.BuildingServicesRepo;
 using EMO.Repositories.DeviceServicesRepo;
 using EMO.Repositories.FacilityServicesRepo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EMO.Controllers
 {
-    [ApiKey]
     [Route("api/[controller]")]
     [ApiController]
     public class DeviceController : ControllerBase
@@ -57,7 +57,7 @@ namespace EMO.Controllers
             }
             else
             {
-                var Response = new ResponseModel<List<FacilityResponseDTO>>()
+                var Response = new ResponseModel<List<DeviceResponseDTO>>()
                 {
                     remarks = "Invalid Request.",
                     success = false
@@ -67,6 +67,26 @@ namespace EMO.Controllers
         }
 
 
+        [HttpGet("GetByOfficeId")]
+        public async Task<ActionResult<ResponseModel<List<DeviceResponseDTO>>>> GetByOfficeId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = DeviceServices.GetDeviceByOfficeId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<DeviceResponseDTO>>()
+                {
+                    remarks = "Invalid Request.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
+        [AllowAnonymous]
         [HttpGet("GetDeviceByMacAddress")]
         public async Task<ActionResult<ResponseModel<DeviceSensorsResponseDTO>>> GetDeviceByMacAddress(string id)
         {

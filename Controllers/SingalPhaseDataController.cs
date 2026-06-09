@@ -5,6 +5,7 @@ using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
 using EMO.Models.DTOs.ResponseDTO;
 using EMO.Repositories.SingalPhaseDataServicesRepo;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EMO.Controllers
 {
@@ -21,7 +22,7 @@ namespace EMO.Controllers
             this.SingalPhaseDataService = SingalPhaseDataService;
             this.otherServices = otherServices;
         }
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<ResponseModel<SingalPhaseDataResponseDTO>>> Post(AddSingalPhaseDataDTO model)
         {

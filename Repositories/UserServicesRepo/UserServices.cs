@@ -445,5 +445,45 @@ namespace EMO.Repositories.UserServicesRepo
                 };
             }
         }
+        public async Task<ResponseModel<ValidateUserDTO>> GetUserByUsername(string username)
+        {
+            try
+            {
+                var existingUser = await db.tbl_user.Where(x => x.user_name == username && x.is_deleted == false).FirstOrDefaultAsync();
+                if (existingUser != null)
+                {
+
+                    var response = new ValidateUserDTO()
+                    {
+                        userName = existingUser.user_name,
+                        userToken = existingUser.user_token,
+                        userId = existingUser.user_id.ToString()
+
+                    };
+                    return new ResponseModel<ValidateUserDTO>()
+                    {
+                        data = response,
+                        remarks = "Successfull",
+                        success = true,
+                    };
+                }
+                else
+                {
+                    return new ResponseModel<ValidateUserDTO>()
+                    {
+                        remarks = "User not found",
+                        success = false,
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<ValidateUserDTO>()
+                {
+                    remarks = $"Internal Server Error",
+                    success = false,
+                };
+            }
+        }
     }
 }

@@ -153,7 +153,7 @@ namespace EMO.Repositories.UtilityServicesRepo
                 {
                     return new ResponseModel<List<UtilityResponseDTO>>()
                     {
-                        remarks = "No Utility found",
+                        remarks = "No record found",
                         success = false
                     };
                 }

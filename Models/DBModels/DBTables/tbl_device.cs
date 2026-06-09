@@ -10,9 +10,10 @@ namespace EMO.Models.DBModels.DBTables
         public bool is_active { get; set; } = false;
         public string mac_address { get; set; } = string.Empty;
         public Guid fk_business { get; set; } = Guid.Empty;
+        public Guid fk_office { get; set; } = Guid.Empty; 
         
         //public Guid? fk_office { get; set; } = null;
-        //public tbl_office office { get; set; } = default!;
+        public tbl_office office { get; set; } = default!;
 
         public tbl_business business { get; set; } = default!;
         public IEnumerable<tbl_sensor> sensors { get; set; } = default!;
