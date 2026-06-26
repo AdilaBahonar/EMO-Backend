@@ -14,6 +14,7 @@ namespace EMO.Repositories.AgreementServicesRepo
         public Task<ResponseModel<List<AgreementResponseDTO>>> GetAgreementByBusinessId(string businessId);
         public Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByAgreementId(string agreementId);
         public Task<ResponseModel> RemoveOfficeFromAgreement(RemoveOfficeFromAgreementRequestDTO requestDTO);
+        public Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByTenantId(string tenantId);
     }
 
 }

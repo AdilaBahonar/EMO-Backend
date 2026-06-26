@@ -6,8 +6,11 @@ using EMO.Repositories.AuthServicesRepo;
 using EMO.Repositories.BuildingServicesRepo;
 using EMO.Repositories.BusinessServicesRepo;
 using EMO.Repositories.ContactPersonServicesRepo;
+using EMO.Repositories.DashboardServicesRepo;
 using EMO.Repositories.DeviceRedisRepo;
 using EMO.Repositories.DeviceServicesRepo;
+using EMO.Repositories.EnergyDashboardRepo;
+using EMO.Repositories.EnergyDashboardServicesRepo;
 using EMO.Repositories.FacilityServicesRepo;
 using EMO.Repositories.FloorServicesRepo;
 using EMO.Repositories.GenderServicesRepo;
@@ -21,10 +24,13 @@ using EMO.Repositories.SensorServicesRepo;
 using EMO.Repositories.SingalPhaseDataRepo;
 using EMO.Repositories.SingalPhaseDataServicesRepo;
 using EMO.Repositories.SubUserTypeServicesRepo;
+using EMO.Repositories.SuperAdminDashboardServicesRepo;
 using EMO.Repositories.TenantServicesRepo;
 using EMO.Repositories.UserServicesRepo;
 using EMO.Repositories.UserTypeServicesRepo;
 using EMO.Repositories.UtilityServicesRepo;
+
+using EnergyMonitor.Services;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -81,6 +87,8 @@ namespace EMO.Extensions
             services.AddTransient<IUserTypeService, UserTypeService>();
             services.AddTransient<IBusinessServices, BusinessServices>();
             services.AddTransient<IBuildingServices, BuildingServices>();
+            services.AddTransient<DashboardService>();
+            services.AddScoped<IEnergyDashboardService, EnergyDashboardService>();
             services.AddTransient<IFacilityServices, FacilityServices>();
             services.AddTransient<ISectionServices, SectionServices>();
             services.AddTransient<IFloorServices, FloorServices>();
@@ -90,8 +98,10 @@ namespace EMO.Extensions
             //services.AddTransient<IDeviceTypeServices, DeviceTypeServices>();
             services.AddTransient<IContactPersonServices, ContactPersonServices>();
             services.AddTransient<ISingalPhaseDataService, SingalPhaseDataService>();
+            services.AddScoped<IEnergyOverviewDashboardService, EnergyOverviewDashboardService>();
             services.AddTransient<ITenantServices, TenantServices>();
             services.AddTransient<IUtilityServices, UtilityServices>();
+            services.AddTransient<ISuperAdminDashboardServices, SuperAdminDashboardServices>();
             services.AddTransient<IAgreementServices, AgreementServices>();
             services.AddTransient<IGenderServices, GenderServices>();
             services.AddTransient<ISubUserTypeServices, SubUserTypeServices>();

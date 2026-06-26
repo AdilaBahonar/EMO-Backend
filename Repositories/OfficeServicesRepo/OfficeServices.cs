@@ -3,7 +3,6 @@ using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
-using EMO.Models.DTOs.SectionDTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.OfficeServicesRepo
@@ -19,12 +18,10 @@ namespace EMO.Repositories.OfficeServicesRepo
             this.mapper = mapper;
         }
 
-
         public async Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByBusinessId(string businessId)
         {
             try
             {
-
                 if (string.IsNullOrEmpty(businessId))
                 {
                     return new ResponseModel<List<OfficeResponseDTO>>()
@@ -33,61 +30,50 @@ namespace EMO.Repositories.OfficeServicesRepo
                         success = false
                     };
                 }
-                var Office = await db.tbl_office
-                    .Include(x => x.business).Include(x=>x.section)
+
+                var offices = await db.tbl_office
+                    .Include(x => x.business)
+                    .Include(x => x.section)
                     .Where(x => x.fk_business == Guid.Parse(businessId) && !x.is_deleted)
                     .ToListAsync();
 
-                if (Office.Any())
+                if (offices.Any())
                 {
                     return new ResponseModel<List<OfficeResponseDTO>>()
                     {
-                        data = mapper.Map<List<OfficeResponseDTO>>(Office),
+                        data = mapper.Map<List<OfficeResponseDTO>>(offices),
                         remarks = "Success",
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
-                    {
-                        remarks = "No record Found.",
-                        success = false
-                    };
-                }
+                    remarks = "No record Found.",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
         }
+
         public async Task<ResponseModel<OfficeResponseDTO>> AddOffice(AddOfficeDTO requestDto)
         {
             try
             {
                 var existingOffice = await db.tbl_office
                     .Where(x => x.office_name.ToLower() == requestDto.officeName.ToLower()
-                             && x.fk_section == Guid.Parse(requestDto.fkSection) && !x.is_deleted)
+                             && x.fk_section == Guid.Parse(requestDto.fkSection)
+                             && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
-                if (existingOffice == null)
-                {
-                    var newOffice = mapper.Map<tbl_office>(requestDto);
-                    await db.tbl_office.AddAsync(newOffice);
-                    await db.SaveChangesAsync();
-
-                    return new ResponseModel<OfficeResponseDTO>()
-                    {
-                        data = mapper.Map<OfficeResponseDTO>(newOffice),
-                        remarks = "Success",
-                        success = true
-                    };
-                }
-                else
+                if (existingOffice != null)
                 {
                     return new ResponseModel<OfficeResponseDTO>()
                     {
@@ -95,16 +81,33 @@ namespace EMO.Repositories.OfficeServicesRepo
                         success = false
                     };
                 }
+
+                var newOffice = mapper.Map<tbl_office>(requestDto);
+                await db.tbl_office.AddAsync(newOffice);
+                await db.SaveChangesAsync();
+
+                var createdOffice = await db.tbl_office
+                    .Include(x => x.business)
+                    .Include(x => x.section)
+                    .FirstOrDefaultAsync(x => x.office_id == newOffice.office_id);
+
+                return new ResponseModel<OfficeResponseDTO>()
+                {
+                    data = mapper.Map<OfficeResponseDTO>(createdOffice ?? newOffice),
+                    remarks = "Success",
+                    success = true
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<OfficeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
         }
+
         public async Task<ResponseModel<OfficeResponseDTO>> UpdateOffice(UpdateOfficeDTO requestDto)
         {
             try
@@ -113,20 +116,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                     .Where(x => x.office_id == Guid.Parse(requestDto.officeId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
-                if (existingOffice != null)
-                {
-                    mapper.Map(requestDto, existingOffice);
-                    existingOffice.updated_at = DateTime.Now;
-                    await db.SaveChangesAsync();
-
-                    return new ResponseModel<OfficeResponseDTO>()
-                    {
-                        data = mapper.Map<OfficeResponseDTO>(existingOffice),
-                        remarks = "Success",
-                        success = true
-                    };
-                }
-                else
+                if (existingOffice == null)
                 {
                     return new ResponseModel<OfficeResponseDTO>()
                     {
@@ -134,21 +124,39 @@ namespace EMO.Repositories.OfficeServicesRepo
                         success = false
                     };
                 }
+
+                mapper.Map(requestDto, existingOffice);
+                existingOffice.updated_at = DateTime.Now;
+                await db.SaveChangesAsync();
+
+                var updatedOffice = await db.tbl_office
+                    .Include(x => x.business)
+                    .Include(x => x.section)
+                    .FirstOrDefaultAsync(x => x.office_id == existingOffice.office_id);
+
+                return new ResponseModel<OfficeResponseDTO>()
+                {
+                    data = mapper.Map<OfficeResponseDTO>(updatedOffice ?? existingOffice),
+                    remarks = "Success",
+                    success = true
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<OfficeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
         }
+
         public async Task<ResponseModel<OfficeResponseDTO>> GetOfficeById(string officeId)
         {
             try
             {
                 var office = await db.tbl_office
+                    .Include(x => x.business)
                     .Include(x => x.section)
                     .Where(x => x.office_id == Guid.Parse(officeId) && !x.is_deleted)
                     .FirstOrDefaultAsync();
@@ -162,20 +170,18 @@ namespace EMO.Repositories.OfficeServicesRepo
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel<OfficeResponseDTO>()
                 {
-                    return new ResponseModel<OfficeResponseDTO>()
-                    {
-                        remarks = "Office not found",
-                        success = false
-                    };
-                }
+                    remarks = "Office not found",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<OfficeResponseDTO>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
@@ -186,6 +192,7 @@ namespace EMO.Repositories.OfficeServicesRepo
             try
             {
                 var offices = await db.tbl_office
+                    .Include(x => x.business)
                     .Include(x => x.section)
                     .Where(x => !x.is_deleted)
                     .ToListAsync();
@@ -199,20 +206,18 @@ namespace EMO.Repositories.OfficeServicesRepo
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
-                    {
-                        remarks = "No Office found",
-                        success = false
-                    };
-                }
+                    remarks = "No Office found",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
@@ -222,11 +227,14 @@ namespace EMO.Repositories.OfficeServicesRepo
         {
             try
             {
-                var office = await db.tbl_office.Where(x => x.office_id == Guid.Parse(officeId) && !x.is_deleted).FirstOrDefaultAsync();
+                var office = await db.tbl_office
+                    .Where(x => x.office_id == Guid.Parse(officeId) && !x.is_deleted)
+                    .FirstOrDefaultAsync();
 
                 if (office != null)
                 {
                     office.is_deleted = true;
+                    office.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
 
                     return new ResponseModel()
@@ -235,20 +243,18 @@ namespace EMO.Repositories.OfficeServicesRepo
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel()
                 {
-                    return new ResponseModel()
-                    {
-                        remarks = "Office not found",
-                        success = false
-                    };
-                }
+                    remarks = "Office not found",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
@@ -258,34 +264,33 @@ namespace EMO.Repositories.OfficeServicesRepo
         {
             try
             {
-                var Offices = await db.tbl_office
+                var offices = await db.tbl_office
+                    .Include(x => x.business)
                     .Include(x => x.section)
                     .Where(x => x.fk_section == Guid.Parse(sectionId) && !x.is_deleted)
                     .ToListAsync();
 
-                if (Offices.Any())
+                if (offices.Any())
                 {
                     return new ResponseModel<List<OfficeResponseDTO>>()
                     {
-                        data = mapper.Map<List<OfficeResponseDTO>>(Offices),
+                        data = mapper.Map<List<OfficeResponseDTO>>(offices),
                         remarks = "Success",
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
-                    {
-                        remarks = "No record found.",
-                        success = false
-                    };
-                }
+                    remarks = "No record found.",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
@@ -295,34 +300,35 @@ namespace EMO.Repositories.OfficeServicesRepo
         {
             try
             {
-                var Offices = await db.tbl_office
+                var offices = await db.tbl_office
+                    .Include(x => x.business)
                     .Include(x => x.section)
-                    .Where(x => x.fk_section == Guid.Parse(sectionId) && x.is_occupied == false && !x.is_deleted)
+                    .Where(x => x.fk_section == Guid.Parse(sectionId)
+                             && x.is_occupied == false
+                             && !x.is_deleted)
                     .ToListAsync();
 
-                if (Offices.Any())
+                if (offices.Any())
                 {
                     return new ResponseModel<List<OfficeResponseDTO>>()
                     {
-                        data = mapper.Map<List<OfficeResponseDTO>>(Offices),
+                        data = mapper.Map<List<OfficeResponseDTO>>(offices),
                         remarks = "Success",
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
-                    {
-                        remarks = "No record found.",
-                        success = false
-                    };
-                }
+                    remarks = "No record found.",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
@@ -332,34 +338,35 @@ namespace EMO.Repositories.OfficeServicesRepo
         {
             try
             {
-                var Offices = await db.tbl_office
+                var offices = await db.tbl_office
+                    .Include(x => x.business)
                     .Include(x => x.section)
-                    .Where(x => x.fk_business == Guid.Parse(businessId) && x.is_occupied == false && !x.is_deleted)
+                    .Where(x => x.fk_business == Guid.Parse(businessId)
+                             && x.is_occupied == false
+                             && !x.is_deleted)
                     .ToListAsync();
 
-                if (Offices.Any())
+                if (offices.Any())
                 {
                     return new ResponseModel<List<OfficeResponseDTO>>()
                     {
-                        data = mapper.Map<List<OfficeResponseDTO>>(Offices),
+                        data = mapper.Map<List<OfficeResponseDTO>>(offices),
                         remarks = "Success",
                         success = true
                     };
                 }
-                else
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
-                    {
-                        remarks = "No record found.",
-                        success = false
-                    };
-                }
+                    remarks = "No record found.",
+                    success = false
+                };
             }
-            catch (Exception ex)
+            catch
             {
                 return new ResponseModel<List<OfficeResponseDTO>>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }

@@ -100,6 +100,27 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+
+
+        [HttpGet("GetOfficesByTenantId")]
+        public async Task<ActionResult<ResponseModel<List<OfficeResponseDTO>>>> GetOfficesByTenantId(string id)
+        {
+            if (otherServices.Check(id))
+            {
+                var Response = AgreementServices.GetOfficeByTenantId(id);
+                return Ok(await Response);
+            }
+            else
+            {
+                var Response = new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = "No record found.",
+                    success = false
+                };
+                return BadRequest(Response);
+            }
+        }
+
         [HttpGet("GetByBusinessId")]
         public async Task<ActionResult<ResponseModel<List<AgreementResponseDTO>>>> GetByBusinessId(string id)
         {

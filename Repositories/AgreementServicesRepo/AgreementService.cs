@@ -5,6 +5,7 @@ using EMO.Models.DTOs.AgreementDTOs;
 using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using ZXing;
 
 namespace EMO.Repositories.AgreementServicesRepo
@@ -359,6 +360,58 @@ namespace EMO.Repositories.AgreementServicesRepo
             }
         }
 
+
+
+        public async Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByTenantId(string tenantId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(tenantId))
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "Invalid Id.",
+                        success = false
+                    };
+                }
+
+                if (!Guid.TryParse(tenantId, out Guid parsedTenantId))
+                {
+                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    {
+                        remarks = "Invalid Guid format.",
+                        success = false
+                    };
+                }
+                var responseList = new List<OfficeResponseDTO>();
+                var agreements = await db.tbl_agreement.Where(x => x.fk_tenant == parsedTenantId).ToListAsync();
+
+                foreach(var item in agreements)
+                {
+                    var offices = await db.tbl_office_agreement
+                  .Where(x => x.fk_agreement == item.agreement_id && !x.is_deleted)
+                  .Include(x => x.office)
+                  .Select(x => x.office)
+                  .ToListAsync();
+                   responseList.AddRange(mapper.Map<List<OfficeResponseDTO>>(offices));
+                }
+
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    data = responseList,
+                    remarks = responseList.Any() ? "Success" : "No record found.",
+                    success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseModel<List<OfficeResponseDTO>>()
+                {
+                    remarks = $"There was a fatal error:",
+                    success = false
+                };
+            }
+        }
         public async Task<ResponseModel> DeleteAgreementById(string agreementId)
         {
             try
