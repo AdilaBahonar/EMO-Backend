@@ -15,8 +15,9 @@ namespace EMO.Extensions.AutoMapper
             .ForMember(d => d.sensor_name, opt => opt.MapFrom(src => src.sensorName))
             .ForMember(d => d.meter_id, opt => opt.MapFrom(src => src.meterId))
             .ForMember(d => d.serial_address, opt => opt.MapFrom(src => src.serialAddress))
+             .ForMember(d => d.standby_auto_off, opt => opt.MapFrom(src => src.standbyAutoOff))
             //.ForMember(d => d.fk_sensor_type, opt => opt.MapFrom(src => Guid.Parse(src.fkSensortype)))
-           
+
             .ForMember(d => d.fk_device, opt => opt.MapFrom(src => Guid.Parse(src.fkDevice)))
             .ForMember(d => d.fk_utility, opt => opt.MapFrom(src => Guid.Parse(src.fkutility)));
 
@@ -25,6 +26,7 @@ namespace EMO.Extensions.AutoMapper
                 .ForMember(d => d.sensor_name, opt => opt.MapFrom(src => src.sensorName))
                 .ForMember(d => d.meter_id, opt => opt.MapFrom(src => src.meterId))
                 .ForMember(d => d.serial_address, opt => opt.MapFrom(src => src.serialAddress))
+                .ForMember(d => d.standby_auto_off, opt => opt.MapFrom(src => src.standbyAutoOff))
                 //.ForMember(d => d.fk_sensor_type, opt => opt.MapFrom(src => Guid.Parse(src.fkSensortype)))
 
                 .ForMember(d => d.fk_device, opt => opt.MapFrom(src => Guid.Parse(src.fkDevice)))
@@ -34,6 +36,7 @@ namespace EMO.Extensions.AutoMapper
                 .ForMember(d => d.sensorId, opt => opt.MapFrom(src => src.sensor_id.ToString()))
                 .ForMember(d => d.sensorName, opt => opt.MapFrom(src => src.sensor_name))
                 .ForMember(d => d.meterId, opt => opt.MapFrom(src => src.meter_id))
+                .ForMember(d => d.standbyAutoOff, opt => opt.MapFrom(src => src.standby_auto_off))
                 .ForMember(d => d.serialAddress, opt => opt.MapFrom(src => src.serial_address))/*
                 .ForMember(d => d.fkSensortype, opt => opt.MapFrom(src => src.fk_sensor_type.ToString()))
                 .ForMember(d => d.sensorTypeName, opt => opt.MapFrom(src => src.sensor_type.sensor_type_name))*/

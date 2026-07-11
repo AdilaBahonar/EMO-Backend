@@ -68,25 +68,12 @@ namespace EMO.Repositories.SensorServicesRepo
             try
             {
                 var sensorId = Guid.Parse(requestDto.sensorId);
+
                 var existingSensor = await db.tbl_sensor
                     .Where(x => x.sensor_id == sensorId && !x.is_deleted)
                     .FirstOrDefaultAsync();
 
-                if (existingSensor != null)
-                {
-                    mapper.Map(requestDto, existingSensor);
-                    await db.SaveChangesAsync();
-                    await sensorRedisCacheService.SetSensorChainAsync(sensorId);
-
-
-                    return new ResponseModel<SensorResponseDTO>()
-                    {
-                        data = mapper.Map<SensorResponseDTO>(existingSensor),
-                        remarks = "Success",
-                        success = true
-                    };
-                }
-                else
+                if (existingSensor == null)
                 {
                     return new ResponseModel<SensorResponseDTO>()
                     {
@@ -94,12 +81,59 @@ namespace EMO.Repositories.SensorServicesRepo
                         success = false
                     };
                 }
+
+                // Keep old utility before updating sensor
+                var oldUtilityId = existingSensor.fk_utility;
+
+                // Get new utility from request
+                var newUtilityId = Guid.Parse(requestDto.fkutility);
+
+                // Check if utility is changed
+                var isUtilityChanged = oldUtilityId != newUtilityId;
+
+                // Update sensor
+                mapper.Map(requestDto, existingSensor);
+
+                // If utility changed, unassign current active appliance
+                if (isUtilityChanged)
+                {
+                    var activeSensorAppliance = await db.tbl_sensor_appliance
+                        .Where(x =>
+                            x.fk_sensor == sensorId &&
+                            x.is_active &&
+                            !x.is_deleted)
+                        .FirstOrDefaultAsync();
+
+                    if (activeSensorAppliance != null)
+                    {
+                        activeSensorAppliance.is_active = false;
+                        activeSensorAppliance.remarks =
+                            "Appliance unassigned because sensor utility type was changed.";
+
+                        // Use these only if your table has these columns
+                        // activeSensorAppliance.updated_at = DateTime.UtcNow;
+                        // activeSensorAppliance.unassigned_at = DateTime.UtcNow;
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                await sensorRedisCacheService.SetSensorChainAsync(sensorId);
+
+                return new ResponseModel<SensorResponseDTO>()
+                {
+                    data = mapper.Map<SensorResponseDTO>(existingSensor),
+                    remarks = isUtilityChanged
+                        ? "Sensor updated successfully. Previous appliance assignment was removed because utility type changed."
+                        : "Success",
+                    success = true
+                };
             }
             catch (Exception ex)
             {
                 return new ResponseModel<SensorResponseDTO>()
                 {
-                    remarks = $"There was a fatal error",
+                    remarks = "There was a fatal error",
                     success = false
                 };
             }
@@ -208,7 +242,6 @@ namespace EMO.Repositories.SensorServicesRepo
                 };
             }
         }
-
 
         public async Task<ResponseModel<List<SensorResponseDTO>>> GetSensorsByDeviceId(string deviceId)
         {

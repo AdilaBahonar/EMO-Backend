@@ -22,6 +22,7 @@ namespace EMO.Models.DBModels.DBTables
         public IEnumerable<tbl_section> sections { get; set; } = default!;
         public IEnumerable<tbl_office> offices { get; set; } = default!;
         public IEnumerable<tbl_device> devices { get; set; } = default!;
+        public IEnumerable<tbl_business_appliance> business_appliances { get; set; } = default!;
         public bool is_deleted { get; set; } = false;
     }
 }

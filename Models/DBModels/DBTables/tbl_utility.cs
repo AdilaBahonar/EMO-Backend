@@ -10,6 +10,8 @@ namespace EMO.Models.DBModels.DBTables
         public bool is_deleted { get; set; } = false;
         public bool is_active { get; set; } = false;
         public IEnumerable<tbl_sensor> sensors { get; set; } = default!;
+        public IEnumerable<tbl_appliance> appliances { get; set; } = default!;
+        public IEnumerable<tbl_business_appliance> business_appliances { get; set; } = default!;
     }
 
 }

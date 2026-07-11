@@ -15,11 +15,15 @@ namespace EMO.Models.DBModels.DBTables
         public tbl_device device { get; set; } = default!;
         public bool is_deleted { get; set; } = false;
         public Guid fk_utility { get; set; } = Guid.Empty;
+        public bool standby_auto_off { get; set; } = false;
         public tbl_utility utility { get; set; } = default!;
         //public string mode_bus_address { get; set; } = string.Empty;
         public string meter_id {  get; set; } = string.Empty;
         public string serial_address {  get; set; } = string.Empty;
         public IEnumerable<tbl_singal_phase_data> singal_phase_data { get; set; } = default!;
+        public IEnumerable<tbl_sensor_appliance> sensor_appliances { get; set; } = default!;
+        public IEnumerable<tbl_hvac_loop_setting> hvac_loop_settings { get; set; } = default!;
+
 
     }
 }

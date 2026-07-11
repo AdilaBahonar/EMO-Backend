@@ -1,14 +1,12 @@
-﻿using EMO.Models.DBModels;
+using EMO.Models.DBModels;
 using EMO.Models.DTOs.SensorChainRedisDTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
-using System;
 using System.Text.Json;
+
 namespace EMO.Repositories.SensorsChainRepo
 {
-
-
     public class SensorRedisCacheService : ISensorRedisCacheService
     {
         private readonly DBUserManagementContext db;
@@ -41,9 +39,13 @@ namespace EMO.Repositories.SensorsChainRepo
                 {
                     SensorId = x.sensor_id,
                     SensorName = x.sensor_name,
+                    MeterId = x.meter_id,
+                    SerialAddress = x.serial_address,
+                    StandbyAutoOff = x.standby_auto_off,
 
                     DeviceId = x.device.device_id,
                     DeviceName = x.device.device_name,
+                    MacAddress = x.device.mac_address,
 
                     OfficeId = x.device.office.office_id,
                     OfficeName = x.device.office.office_name,
@@ -64,46 +66,67 @@ namespace EMO.Repositories.SensorsChainRepo
                     BusinessName = x.device.office.section.floor.building.facility.business.business_name,
 
                     UtilityId = x.fk_utility,
-                    UtilityName = x.utility.utility_name
+                    UtilityName = x.utility.utility_name,
+                    CachedAtUtc = DateTime.UtcNow
                 })
                 .FirstOrDefaultAsync();
 
             if (sensorChain == null)
+            {
+                await DeleteSensorChainAsync(sensorId);
                 return;
+            }
+
+            var activeAssignment = await db.tbl_sensor_appliance
+                .Include(x => x.appliance)
+                .Where(x => x.fk_sensor == sensorId && x.is_active && !x.is_deleted && !x.appliance.is_deleted)
+                .OrderByDescending(x => x.assigned_at)
+                .FirstOrDefaultAsync();
+
+            if (activeAssignment?.appliance != null)
+            {
+                sensorChain.ApplianceId = activeAssignment.appliance.business_appliance_id;
+                sensorChain.ApplianceName = activeAssignment.appliance.appliance_name;
+                sensorChain.ApplianceCompanyName = activeAssignment.appliance.company_name;
+                sensorChain.ApplianceModelNumber = activeAssignment.appliance.model_number;
+                sensorChain.RatedVoltage = activeAssignment.appliance.rated_voltage;
+                sensorChain.MinCurrent = activeAssignment.appliance.min_current;
+                sensorChain.MaxCurrent = activeAssignment.appliance.max_current;
+                sensorChain.MinPower = activeAssignment.appliance.min_power;
+                sensorChain.MaxPower = activeAssignment.appliance.max_power;
+                sensorChain.StandbyPower = activeAssignment.appliance.standby_power;
+                sensorChain.NormalPowerFactor = activeAssignment.appliance.normal_power_factor;
+                sensorChain.ApplianceIsShiftable = activeAssignment.appliance.is_shiftable;
+                sensorChain.AppliancePriorityLevel = activeAssignment.appliance.priority_level;
+                sensorChain.ApplianceNormalOperatingHours = activeAssignment.appliance.normal_operating_hours;
+                sensorChain.ApplianceCanAutoControl = activeAssignment.appliance.can_auto_control;
+                sensorChain.ApplianceMinimumOnDurationMinutes = activeAssignment.appliance.minimum_on_duration_minutes;
+                sensorChain.ApplianceMinimumOffDurationMinutes = activeAssignment.appliance.minimum_off_duration_minutes;
+            }
+
+            var loop = await db.tbl_hvac_loop_setting
+                .Where(x => x.fk_sensor == sensorId && !x.is_deleted)
+                .FirstOrDefaultAsync();
+
+            if (loop != null)
+            {
+                sensorChain.HvacLoopSettingId = loop.hvac_loop_setting_id;
+                sensorChain.HvacLoopEnabled = loop.loop_enabled;
+                sensorChain.HvacLoopOnSeconds = loop.loop_on_seconds;
+                sensorChain.HvacLoopOffSeconds = loop.loop_off_seconds;
+                sensorChain.HvacLoopStartedAt = loop.loop_started_at;
+            }
 
             var json = JsonSerializer.Serialize(sensorChain);
+            await redisDb.StringSetAsync($"{redisKeys.SensorChainKeyPrefix}{sensorId}", json);
 
-            await redisDb.StringSetAsync(
-                $"{redisKeys.SensorChainKeyPrefix}{sensorId}",
-                json);
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.BusinessSensorsKeyPrefix}{sensorChain.BusinessId}",
-                sensorId.ToString());
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.FacilitySensorsKeyPrefix}{sensorChain.FacilityId}",
-                sensorId.ToString());
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.BuildingSensorsKeyPrefix}{sensorChain.BuildingId}",
-                sensorId.ToString());
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.FloorSensorsKeyPrefix}{sensorChain.FloorId}",
-                sensorId.ToString());
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.SectionSensorsKeyPrefix}{sensorChain.SectionId}",
-                sensorId.ToString());
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.OfficeSensorsKeyPrefix}{sensorChain.OfficeId}",
-                sensorId.ToString());
-
-            await redisDb.SetAddAsync(
-                $"{redisKeys.DeviceSensorsKeyPrefix}{sensorChain.DeviceId}",
-                sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.BusinessSensorsKeyPrefix}{sensorChain.BusinessId}", sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.FacilitySensorsKeyPrefix}{sensorChain.FacilityId}", sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.BuildingSensorsKeyPrefix}{sensorChain.BuildingId}", sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.FloorSensorsKeyPrefix}{sensorChain.FloorId}", sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.SectionSensorsKeyPrefix}{sensorChain.SectionId}", sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.OfficeSensorsKeyPrefix}{sensorChain.OfficeId}", sensorId.ToString());
+            await redisDb.SetAddAsync($"{redisKeys.DeviceSensorsKeyPrefix}{sensorChain.DeviceId}", sensorId.ToString());
         }
 
         public async Task DeleteSensorChainAsync(Guid sensorId)
@@ -111,59 +134,41 @@ namespace EMO.Repositories.SensorsChainRepo
             var key = $"{redisKeys.SensorChainKeyPrefix}{sensorId}";
             var json = await redisDb.StringGetAsync(key);
 
-            if (!json.HasValue)
-            {
-                await redisDb.KeyDeleteAsync(key);
-                return;
-            }
-
-            var sensorChain = JsonSerializer.Deserialize<SensorChainRedisDTO>(json!);
-
             await redisDb.KeyDeleteAsync(key);
 
-            if (sensorChain == null)
-                return;
+            if (!json.HasValue) return;
 
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.BusinessSensorsKeyPrefix}{sensorChain.BusinessId}",
-                sensorId.ToString());
+            var sensorChain = JsonSerializer.Deserialize<SensorChainRedisDTO>(json!);
+            if (sensorChain == null) return;
 
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.FacilitySensorsKeyPrefix}{sensorChain.FacilityId}",
-                sensorId.ToString());
-
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.BuildingSensorsKeyPrefix}{sensorChain.BuildingId}",
-                sensorId.ToString());
-
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.FloorSensorsKeyPrefix}{sensorChain.FloorId}",
-                sensorId.ToString());
-
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.SectionSensorsKeyPrefix}{sensorChain.SectionId}",
-                sensorId.ToString());
-
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.OfficeSensorsKeyPrefix}{sensorChain.OfficeId}",
-                sensorId.ToString());
-
-            await redisDb.SetRemoveAsync(
-                $"{redisKeys.DeviceSensorsKeyPrefix}{sensorChain.DeviceId}",
-                sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.BusinessSensorsKeyPrefix}{sensorChain.BusinessId}", sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.FacilitySensorsKeyPrefix}{sensorChain.FacilityId}", sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.BuildingSensorsKeyPrefix}{sensorChain.BuildingId}", sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.FloorSensorsKeyPrefix}{sensorChain.FloorId}", sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.SectionSensorsKeyPrefix}{sensorChain.SectionId}", sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.OfficeSensorsKeyPrefix}{sensorChain.OfficeId}", sensorId.ToString());
+            await redisDb.SetRemoveAsync($"{redisKeys.DeviceSensorsKeyPrefix}{sensorChain.DeviceId}", sensorId.ToString());
         }
 
         public async Task<bool> HasSensorCacheAsync()
         {
-            var server = redisDb.Multiplexer.GetServer(
-                redisDb.Multiplexer.GetEndPoints().First());
-
-            var pattern = $"{redisKeys.SensorChainKeyPrefix}*";
-
-            return server.Keys(pattern: pattern).Any();
+            var server = redisDb.Multiplexer.GetServer(redisDb.Multiplexer.GetEndPoints().First());
+            return server.Keys(pattern: $"{redisKeys.SensorChainKeyPrefix}*").Any();
         }
 
+        public async Task<bool> HasSensorChainAsync(Guid sensorId)
+        {
+            return await redisDb.KeyExistsAsync($"{redisKeys.SensorChainKeyPrefix}{sensorId}");
+        }
+
+        // Backward-compatible method. Existing callers can keep using this name.
         public async Task LoadAllSensorsChainAsync()
+        {
+            await RebuildAllSensorsChainAsync();
+        }
+
+        // Missing-only warmup. Useful if you do not want to overwrite existing Redis chain entries.
+        public async Task EnsureAllSensorsChainAsync()
         {
             var sensorIds = await db.tbl_sensor
                 .Where(x => !x.is_deleted)
@@ -172,7 +177,41 @@ namespace EMO.Repositories.SensorsChainRepo
 
             foreach (var sensorId in sensorIds)
             {
+                if (!await HasSensorChainAsync(sensorId))
+                    await SetSensorChainAsync(sensorId);
+            }
+        }
+
+        // Recommended startup warmup. PostgreSQL is source of truth and Redis is rebuildable cache.
+        public async Task RebuildAllSensorsChainAsync()
+        {
+            await DeleteKeysByPatternAsync($"{redisKeys.SensorChainKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.BusinessSensorsKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.FacilitySensorsKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.BuildingSensorsKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.FloorSensorsKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.SectionSensorsKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.OfficeSensorsKeyPrefix}*");
+            await DeleteKeysByPatternAsync($"{redisKeys.DeviceSensorsKeyPrefix}*");
+
+            var sensorIds = await db.tbl_sensor
+                .Where(x => !x.is_deleted)
+                .Select(x => x.sensor_id)
+                .ToListAsync();
+
+            foreach (var sensorId in sensorIds)
                 await SetSensorChainAsync(sensorId);
+        }
+
+        private async Task DeleteKeysByPatternAsync(string pattern)
+        {
+            var endpoints = redisDb.Multiplexer.GetEndPoints();
+            if (endpoints.Length == 0) return;
+
+            var server = redisDb.Multiplexer.GetServer(endpoints.First());
+            foreach (var key in server.Keys(pattern: pattern).ToArray())
+            {
+                await redisDb.KeyDeleteAsync(key);
             }
         }
     }

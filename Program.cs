@@ -1,8 +1,68 @@
-using Microsoft.EntityFrameworkCore;
+//using EMO.Extensions;
+//using EMO.Extensions.MiddleWare;
+//using EMO.Extensions.Seeders;
+//using EMO.Models.DBModels;
+//using EMO.Repositories.AuthServicesRepo;
+//using Microsoft.EntityFrameworkCore;
+
+//var builder = WebApplication.CreateBuilder(args);
+
+//// Add services to the container.
+
+//builder.Services.AddControllers();
+//builder.Services.ConfigureServices(builder.Configuration);
+//// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowAll",
+//        policy => policy
+//            .AllowAnyOrigin()
+//            .AllowAnyHeader()
+//            .AllowAnyMethod());
+//});
+//builder.Services.AddSwaggerGen();
+//builder.Services.ConfigureJWT(builder.Configuration);
+//var app = builder.Build();
+//using (var scope = app.Services.CreateScope())
+//{
+//    using (var ctx = scope.ServiceProvider.GetRequiredService<DBUserManagementContext>())
+//    {
+//        if (ctx.Database.GetPendingMigrations().Any())
+//        {
+//            await ctx.Database.MigrateAsync();
+//        }
+//        await ctx.Database.EnsureCreatedAsync();
+//    }
+//}
+//// Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    await ApplianceRuntimeSeeder.SeedDefaultAppliancesAsync(scope.ServiceProvider);
+//}
+
+//app.UseHttpsRedirection();
+//app.UseAuthentication();
+//app.UseAuthorization();
+//app.UseCors("AllowAll");
+//app.UseMiddleware<JWTMiddleWare>();
+//app.MapControllers();
+
+//app.Run();
+
+
 using EMO.Extensions;
 using EMO.Extensions.MiddleWare;
+using EMO.Extensions.Seeders;
 using EMO.Models.DBModels;
 using EMO.Repositories.AuthServicesRepo;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +101,11 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     app.UseSwaggerUI();
 }
 
-
+using (var scope = app.Services.CreateScope())
+{
+    await ApplianceRuntimeSeeder.SeedDefaultAppliancesAsync(scope.ServiceProvider);
+    await DashboardRuntimeSeeder.SeedDefaultDashboardSettingsAsync(scope.ServiceProvider);
+}
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
@@ -51,3 +115,4 @@ app.UseMiddleware<JWTMiddleWare>();
 app.MapControllers();
 
 app.Run();
+

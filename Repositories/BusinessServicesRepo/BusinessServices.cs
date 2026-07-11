@@ -31,6 +31,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                 {
                     var newBusiness = mapper.Map<tbl_business>(requestDto);
                     await db.tbl_business.AddAsync(newBusiness);
+                    await AddDefaultAppliancesForBusinessAsync(newBusiness.business_id);
                     await db.SaveChangesAsync();
 
                     return new ResponseModel<BusinessResponseDTO>()
@@ -297,6 +298,7 @@ namespace EMO.Repositories.BusinessServicesRepo
 
                     newUser.fk_business = newBusiness.business_id;
                     await db.tbl_user.AddAsync(newUser);
+                    await AddDefaultAppliancesForBusinessAsync(newBusiness.business_id);
                     await db.SaveChangesAsync();
 
                     if (!string.IsNullOrEmpty(requestDto.imageBase64))
@@ -372,6 +374,43 @@ namespace EMO.Repositories.BusinessServicesRepo
                     remarks = $"There was a fatal error  ",
                     success = false,
                 };
+            }
+        }
+
+        private async Task AddDefaultAppliancesForBusinessAsync(Guid businessId)
+        {
+            var defaults = await db.tbl_appliance
+                .Where(x => x.is_default && x.is_active && !x.is_deleted)
+                .ToListAsync();
+
+            foreach (var defaultAppliance in defaults)
+            {
+                await db.tbl_business_appliance.AddAsync(new tbl_business_appliance
+                {
+                    fk_business = businessId,
+                    fk_appliance = defaultAppliance.appliance_id,
+                    appliance_name = defaultAppliance.appliance_name,
+                    company_name = defaultAppliance.company_name,
+                    model_number = defaultAppliance.model_number,
+                    rated_voltage = defaultAppliance.rated_voltage,
+                    min_current = defaultAppliance.min_current,
+                    max_current = defaultAppliance.max_current,
+                    min_power = defaultAppliance.min_power,
+                    max_power = defaultAppliance.max_power,
+                    standby_power = defaultAppliance.standby_power,
+                    normal_power_factor = defaultAppliance.normal_power_factor,
+                    description = defaultAppliance.description,
+                    is_shiftable = defaultAppliance.is_shiftable,
+                    priority_level = defaultAppliance.priority_level,
+                    normal_operating_hours = defaultAppliance.normal_operating_hours,
+                    can_auto_control = defaultAppliance.can_auto_control,
+                    minimum_on_duration_minutes = defaultAppliance.minimum_on_duration_minutes,
+                    minimum_off_duration_minutes = defaultAppliance.minimum_off_duration_minutes,
+                    is_default = true,
+                    is_custom = false,
+                    is_active = defaultAppliance.is_active,
+                    fk_utility = defaultAppliance.fk_utility
+                });
             }
         }
     }
