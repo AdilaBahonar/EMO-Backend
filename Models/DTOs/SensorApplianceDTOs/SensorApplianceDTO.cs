@@ -63,16 +63,8 @@ namespace EMO.Models.DTOs.SensorApplianceDTOs
         public float standbyPower { get; set; } = 0;
         public float normalPowerFactor { get; set; } = 0;
 
-        public bool isShiftable { get; set; } = false;
         public bool isCritical { get; set; } = false;
         public string priorityLevel { get; set; } = "Normal";
-        public string normalOperatingHours { get; set; } = string.Empty;
-        public bool canAutoControl { get; set; } = false;
-        public string allowedShiftStartTime { get; set; } = string.Empty;
-        public string allowedShiftEndTime { get; set; } = string.Empty;
-        public bool allowOptimizationSuggestions { get; set; } = true;
-        public int minimumOnDurationMinutes { get; set; } = 0;
-        public int minimumOffDurationMinutes { get; set; } = 0;
 
         public string remarks { get; set; } = string.Empty;
         public string assignedAt { get; set; } = string.Empty;

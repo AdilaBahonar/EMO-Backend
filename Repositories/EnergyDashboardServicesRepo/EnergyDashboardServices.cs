@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -5,6 +6,7 @@ using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.EnergyDashboardDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Models.DTOs.RedisRuntimeDTOs;
 using EMO.Repositories.EnergyDashboardServicesRepo;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
@@ -16,7 +18,12 @@ namespace EMO.Repositories.EnergyDashboardRepo
         private readonly DBUserManagementContext db;
         private readonly IDatabase? redis;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(65);
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> LiveAggregateLocks = new();
+        private static readonly JsonSerializerOptions RedisJsonOptions = new() { PropertyNameCaseInsensitive = true };
         private const int PakistanUtcOffsetHours = 5;
+        private const int MinimumOnlineThresholdSeconds = 180;
+        private const int DelayedThresholdSeconds = 600;
+        private const string LiveTodayGranularity = "crm-live-today";
 
         public EnergyDashboardService(DBUserManagementContext db, IConnectionMultiplexer? connectionMultiplexer = null)
         {
@@ -283,8 +290,9 @@ namespace EMO.Repositories.EnergyDashboardRepo
         {
             try
             {
-                var range = ResolveDashboardRange("7d", null, null);
-                return Success(await BuildAndStoreSuggestionsAsync(businessId, null, null, range));
+                // Suggestions are generated continuously by the Optimization Worker.
+                // Dashboard APIs are read-only so opening or refreshing the UI cannot create suggestions.
+                return Success(await ReadActiveSuggestionsAsync(businessId, null, null));
             }
             catch (Exception ex)
             {
@@ -298,13 +306,623 @@ namespace EMO.Repositories.EnergyDashboardRepo
             {
                 var officeIds = await GetTenantOfficeIdsAsync(tenantId, businessId);
                 var resolvedBusinessId = businessId ?? await ResolveBusinessIdForTenantAsync(tenantId, officeIds) ?? Guid.Empty;
-                var range = ResolveDashboardRange("7d", null, null);
-                return Success(await BuildAndStoreSuggestionsAsync(resolvedBusinessId, tenantId, officeIds, range));
+                return Success(await ReadActiveSuggestionsAsync(resolvedBusinessId, tenantId, officeIds));
             }
             catch (Exception ex)
             {
                 return Failure<List<CrmDashboardSuggestionResponseDTO>>(ex);
             }
+        }
+
+        public async Task<ResponseModel<CrmDashboardLiveOverviewResponseDTO>> GetBusinessDashboardLiveOverview(Guid businessId, bool forceRefresh = false)
+        {
+            try
+            {
+                return Success(await BuildLiveOverviewAsync(businessId, null, null, forceRefresh));
+            }
+            catch (Exception ex)
+            {
+                return Failure<CrmDashboardLiveOverviewResponseDTO>(ex);
+            }
+        }
+
+        public async Task<ResponseModel<CrmDashboardLiveOverviewResponseDTO>> GetTenantDashboardLiveOverview(Guid tenantId, Guid? businessId = null, bool forceRefresh = false)
+        {
+            try
+            {
+                var officeIds = await GetTenantOfficeIdsAsync(tenantId, businessId);
+                var resolvedBusinessId = businessId ?? await ResolveBusinessIdForTenantAsync(tenantId, officeIds) ?? Guid.Empty;
+                return Success(await BuildLiveOverviewAsync(resolvedBusinessId, tenantId, officeIds, forceRefresh));
+            }
+            catch (Exception ex)
+            {
+                return Failure<CrmDashboardLiveOverviewResponseDTO>(ex);
+            }
+        }
+
+        private async Task<CrmDashboardLiveOverviewResponseDTO> BuildLiveOverviewAsync(
+            Guid businessId,
+            Guid? tenantId,
+            List<Guid>? officeIds,
+            bool forceRefresh)
+        {
+            var nowUtc = DateTime.UtcNow;
+            var sensors = await GetLiveScopeSensorsAsync(businessId, tenantId, officeIds);
+            var sensorIds = sensors.Select(x => x.sensorId).Distinct().ToList();
+            var latestReadings = await GetLatestSensorReadingsAsync(sensorIds, nowUtc);
+            var configuration = await GetLiveDashboardConfigurationAsync(businessId, forceRefresh);
+            var onlineThresholdSeconds = Math.Max(
+                MinimumOnlineThresholdSeconds,
+                configuration.onlineThresholdSeconds);
+
+            var onlineCutoff = nowUtc.AddSeconds(-onlineThresholdSeconds);
+            var delayedCutoff = nowUtc.AddSeconds(-DelayedThresholdSeconds);
+
+            var online = new List<(LiveScopeSensor sensor, SensorLatestRedisDTO reading)>();
+            var delayedCount = 0;
+            var offlineCount = 0;
+            var neverConnectedCount = 0;
+
+            foreach (var sensor in sensors)
+            {
+                if (!latestReadings.TryGetValue(sensor.sensorId, out var reading))
+                {
+                    neverConnectedCount++;
+                    continue;
+                }
+
+                var receivedAtUtc = EnsureUtc(reading.ReceivedAtUtc);
+                if (receivedAtUtc >= onlineCutoff)
+                {
+                    online.Add((sensor, reading));
+                }
+                else if (receivedAtUtc >= delayedCutoff)
+                {
+                    delayedCount++;
+                }
+                else
+                {
+                    offlineCount++;
+                }
+            }
+
+            var currentLoadW = online.Sum(x => Math.Max(0, x.reading.ActivePower));
+            var utilityLoads = online
+                .GroupBy(x => string.IsNullOrWhiteSpace(x.sensor.utilityName) ? "Unassigned" : x.sensor.utilityName)
+                .Select(group => new CrmLiveUtilityLoadResponseDTO
+                {
+                    utilityName = group.Key,
+                    currentLoadW = Math.Round(group.Sum(x => Math.Max(0, x.reading.ActivePower)), 2),
+                    onlineSensors = group.Select(x => x.sensor.sensorId).Distinct().Count()
+                })
+                .OrderByDescending(x => x.currentLoadW)
+                .ToList();
+
+            foreach (var utility in utilityLoads)
+            {
+                utility.percentage = currentLoadW > 0
+                    ? Math.Round((utility.currentLoadW / currentLoadW) * 100, 1)
+                    : 0;
+            }
+
+            var topConsumers = online
+                .OrderByDescending(x => Math.Max(0, x.reading.ActivePower))
+                .Take(8)
+                .Select(x => new CrmLiveConsumerResponseDTO
+                {
+                    sensorId = x.sensor.sensorId.ToString(),
+                    sensorName = x.sensor.sensorName,
+                    applianceName = x.sensor.applianceName,
+                    utilityName = string.IsNullOrWhiteSpace(x.sensor.utilityName) ? "Unassigned" : x.sensor.utilityName,
+                    officeName = x.sensor.officeName,
+                    floorName = x.sensor.floorName,
+                    currentLoadW = Math.Round(Math.Max(0, x.reading.ActivePower), 2),
+                    voltage = Math.Round(Math.Max(0, x.reading.Voltage), 1),
+                    powerFactor = Math.Round(Math.Max(0, x.reading.PowerFactor), 2),
+                    relayState = x.reading.RelayState,
+                    receivedAtUtc = EnsureUtc(x.reading.ReceivedAtUtc).ToString("o")
+                })
+                .ToList();
+
+            var assignedSensorIds = sensors
+                .Where(x => x.hasApplianceAssignment)
+                .Select(x => x.sensorId)
+                .Distinct()
+                .ToHashSet();
+            var configuredSensorIds = sensors
+                .Where(x => x.hasOptimizationProfile)
+                .Select(x => x.sensorId)
+                .Distinct()
+                .ToHashSet();
+
+            var assignmentCoverage = sensors.Count > 0
+                ? (double)assignedSensorIds.Count / sensors.Count
+                : 0;
+            var optimizationCoverage = sensors.Count > 0
+                ? (double)configuredSensorIds.Count / sensors.Count
+                : 0;
+            var readiness =
+                (configuration.tariffConfigured ? 25 : 0) +
+                (configuration.demandLimitConfigured ? 25 : 0) +
+                (int)Math.Round(assignmentCoverage * 25) +
+                (int)Math.Round(optimizationCoverage * 25);
+
+            var todayAggregate = await GetOrBuildTodayAggregateAsync(
+                businessId,
+                tenantId,
+                officeIds,
+                configuration.tariffRatePerKwh,
+                configuration.tariffConfigured,
+                nowUtc,
+                forceRefresh);
+
+            var voltageValues = online
+                .Select(x => x.reading.Voltage)
+                .Where(x => x > 0)
+                .ToList();
+            var powerFactorValues = online
+                .Where(x => x.reading.ActivePower >= 50 && x.reading.PowerFactor > 0)
+                .Select(x => x.reading.PowerFactor)
+                .ToList();
+            var lastLiveUpdate = latestReadings.Count > 0
+                ? latestReadings.Values.Max(x => EnsureUtc(x.ReceivedAtUtc))
+                : (DateTime?)null;
+
+            return new CrmDashboardLiveOverviewResponseDTO
+            {
+                energyTodayKwh = Math.Round(todayAggregate.energyKwh, 2),
+                estimatedCostToday = configuration.tariffConfigured
+                    ? Math.Round(todayAggregate.estimatedCost, 2)
+                    : null,
+                costConfigured = configuration.tariffConfigured,
+                currentLoadW = Math.Round(currentLoadW, 2),
+                peakDemandTodayW = Math.Round(todayAggregate.peakDemandW, 2),
+                totalSensors = sensors.Count,
+                onlineSensors = online.Count,
+                delayedSensors = delayedCount,
+                offlineSensors = offlineCount,
+                neverConnectedSensors = neverConnectedCount,
+                averageVoltage = voltageValues.Count > 0 ? Math.Round(voltageValues.Average(), 1) : 0,
+                averagePowerFactor = powerFactorValues.Count > 0 ? Math.Round(powerFactorValues.Average(), 2) : 0,
+                assignedSensors = assignedSensorIds.Count,
+                configuredOptimizationSensors = configuredSensorIds.Count,
+                optimizationReadinessPercent = Math.Clamp(readiness, 0, 100),
+                tariffConfigured = configuration.tariffConfigured,
+                demandLimitConfigured = configuration.demandLimitConfigured,
+                demandLimitKw = configuration.demandLimitKw,
+                onlineThresholdSeconds = onlineThresholdSeconds,
+                delayedThresholdSeconds = DelayedThresholdSeconds,
+                liveUpdatedAtUtc = lastLiveUpdate?.ToString("o") ?? string.Empty,
+                aggregateUpdatedAtUtc = todayAggregate.updatedAtUtc.ToString("o"),
+                utilityLoads = utilityLoads,
+                topConsumers = topConsumers
+            };
+        }
+
+        private async Task<List<LiveScopeSensor>> GetLiveScopeSensorsAsync(Guid businessId, Guid? tenantId, List<Guid>? officeIds)
+        {
+            var cacheKey = tenantId.HasValue
+                ? $"dashboard:crm:live-metadata:tenant:{tenantId.Value}:business:{businessId}"
+                : $"dashboard:crm:live-metadata:business:{businessId}";
+            var cached = await GetCacheAsync<List<LiveScopeSensor>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var query =
+                from sensor in db.tbl_sensor.AsNoTracking()
+                join device in db.tbl_device.AsNoTracking() on sensor.fk_device equals device.device_id
+                join office in db.tbl_office.AsNoTracking() on device.fk_office equals office.office_id into officeJoin
+                from office in officeJoin.DefaultIfEmpty()
+                join section in db.tbl_section.AsNoTracking() on office.fk_section equals section.section_id into sectionJoin
+                from section in sectionJoin.DefaultIfEmpty()
+                join floor in db.tbl_floor.AsNoTracking() on section.fk_floor equals floor.floor_id into floorJoin
+                from floor in floorJoin.DefaultIfEmpty()
+                join utility in db.tbl_utility.AsNoTracking() on sensor.fk_utility equals utility.utility_id into utilityJoin
+                from utility in utilityJoin.DefaultIfEmpty()
+                where !sensor.is_deleted
+                      && !device.is_deleted
+                      && device.fk_business == businessId
+                select new LiveScopeSensor
+                {
+                    sensorId = sensor.sensor_id,
+                    sensorName = sensor.sensor_name,
+                    officeId = device.fk_office,
+                    officeName = office != null ? office.office_name : string.Empty,
+                    floorName = floor != null ? floor.floor_name : string.Empty,
+                    utilityName = utility != null ? utility.utility_name : "Unassigned"
+                };
+
+            if (officeIds != null)
+            {
+                query = query.Where(x => officeIds.Contains(x.officeId));
+            }
+
+            var sensors = await query.ToListAsync();
+            if (sensors.Count == 0)
+            {
+                return sensors;
+            }
+
+            var sensorIds = sensors.Select(x => x.sensorId).Distinct().ToList();
+            var assignments = await (
+                from assignment in db.tbl_sensor_appliance.AsNoTracking()
+                join appliance in db.tbl_business_appliance.AsNoTracking()
+                    on assignment.fk_appliance equals appliance.business_appliance_id
+                where sensorIds.Contains(assignment.fk_sensor)
+                      && assignment.is_active
+                      && !assignment.is_deleted
+                      && appliance.is_active
+                      && !appliance.is_deleted
+                select new
+                {
+                    sensorId = assignment.fk_sensor,
+                    appliance.appliance_name,
+                    appliance.priority_level,
+                    appliance.is_critical,
+                    appliance.rated_voltage,
+                    appliance.min_current,
+                    appliance.max_current,
+                    appliance.min_power,
+                    appliance.max_power,
+                    appliance.standby_power,
+                    appliance.normal_power_factor
+                })
+                .ToListAsync();
+
+            var assignmentMap = assignments
+                .GroupBy(x => x.sensorId)
+                .ToDictionary(x => x.Key, x => x.First());
+
+            foreach (var sensor in sensors)
+            {
+                if (!assignmentMap.TryGetValue(sensor.sensorId, out var assignment))
+                {
+                    continue;
+                }
+
+                sensor.hasApplianceAssignment = true;
+                sensor.applianceName = assignment.appliance_name;
+                sensor.hasOptimizationProfile = HasCompleteOptimizationProfile(
+                    assignment.priority_level,
+                    assignment.rated_voltage,
+                    assignment.min_current,
+                    assignment.max_current,
+                    assignment.min_power,
+                    assignment.max_power,
+                    assignment.standby_power,
+                    assignment.normal_power_factor);
+            }
+
+            await SetCacheAsync(cacheKey, sensors, TimeSpan.FromMinutes(5));
+            return sensors;
+        }
+
+        private static bool HasCompleteOptimizationProfile(
+            string? priorityLevel,
+            double ratedVoltage,
+            double minCurrent,
+            double maxCurrent,
+            double minPower,
+            double maxPower,
+            double standbyPower,
+            double normalPowerFactor)
+        {
+            return !string.IsNullOrWhiteSpace(priorityLevel)
+                   && ratedVoltage > 0
+                   && minCurrent >= 0
+                   && maxCurrent > 0
+                   && minCurrent <= maxCurrent
+                   && minPower >= 0
+                   && maxPower > 0
+                   && minPower <= maxPower
+                   && standbyPower >= 0
+                   && standbyPower <= maxPower
+                   && normalPowerFactor > 0
+                   && normalPowerFactor <= 1;
+        }
+
+        private static bool IsSafeOptimizationCandidate(
+            string? priorityLevel,
+            bool isCritical,
+            double ratedVoltage,
+            double minCurrent,
+            double maxCurrent,
+            double minPower,
+            double maxPower,
+            double standbyPower,
+            double normalPowerFactor)
+        {
+            if (isCritical || !HasCompleteOptimizationProfile(
+                    priorityLevel,
+                    ratedVoltage,
+                    minCurrent,
+                    maxCurrent,
+                    minPower,
+                    maxPower,
+                    standbyPower,
+                    normalPowerFactor))
+            {
+                return false;
+            }
+
+            return string.Equals(priorityLevel, "Low", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(priorityLevel, "Normal", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<Dictionary<Guid, SensorLatestRedisDTO>> GetLatestSensorReadingsAsync(
+            List<Guid> sensorIds,
+            DateTime nowUtc)
+        {
+            var result = new Dictionary<Guid, SensorLatestRedisDTO>();
+            if (sensorIds.Count == 0)
+            {
+                return result;
+            }
+
+            if (redis != null)
+            {
+                try
+                {
+                    var keys = sensorIds
+                        .Select(id => (RedisKey)$"sensor:latest:{id}")
+                        .ToArray();
+                    var values = await redis.StringGetAsync(keys);
+
+                    for (var index = 0; index < sensorIds.Count; index++)
+                    {
+                        if (!values[index].HasValue)
+                        {
+                            continue;
+                        }
+
+                        var reading = JsonSerializer.Deserialize<SensorLatestRedisDTO>(values[index]!, RedisJsonOptions);
+                        if (reading != null)
+                        {
+                            result[sensorIds[index]] = reading;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fall through to the recent database readings below.
+                }
+            }
+
+            var missingIds = sensorIds.Where(id => !result.ContainsKey(id)).ToList();
+            if (missingIds.Count == 0)
+            {
+                return result;
+            }
+
+            var fallbackCutoff = nowUtc.AddMinutes(-30);
+            var fallbackRows = await db.tbl_singal_phase_data
+                .AsNoTracking()
+                .Where(x => missingIds.Contains(x.fk_sensor)
+                            && !x.is_deleted
+                            && x.created_at >= fallbackCutoff)
+                .OrderByDescending(x => x.created_at)
+                .Select(x => new
+                {
+                    x.fk_sensor,
+                    x.created_at,
+                    x.volt,
+                    x.current,
+                    x.active_power,
+                    x.reactive_power,
+                    x.apperent_power,
+                    x.power_factor,
+                    x.frequency,
+                    x.active_energy,
+                    x.reactive_energy
+                })
+                .ToListAsync();
+
+            foreach (var row in fallbackRows.GroupBy(x => x.fk_sensor).Select(x => x.First()))
+            {
+                result[row.fk_sensor] = new SensorLatestRedisDTO
+                {
+                    SensorId = row.fk_sensor,
+                    ReceivedAtUtc = EnsureUtc(row.created_at),
+                    Voltage = row.volt,
+                    Current = row.current,
+                    ActivePower = row.active_power,
+                    ReactivePower = row.reactive_power,
+                    ApparentPower = row.apperent_power,
+                    PowerFactor = row.power_factor,
+                    Frequency = row.frequency,
+                    ActiveEnergy = row.active_energy,
+                    ReactiveEnergy = row.reactive_energy
+                };
+            }
+
+            return result;
+        }
+
+        private async Task<LiveDashboardConfiguration> GetLiveDashboardConfigurationAsync(Guid businessId, bool forceRefresh = false)
+        {
+            var cacheKey = $"dashboard:crm:live-config:business:{businessId}";
+            var cached = forceRefresh ? null : await GetCacheAsync<LiveDashboardConfiguration>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var tariff = await db.tbl_energy_tariff_plan
+                .AsNoTracking()
+                .Where(x => x.fk_business == businessId && x.is_active && !x.is_deleted)
+                .OrderByDescending(x => x.updated_at)
+                .FirstOrDefaultAsync();
+
+            var legacySetting = await db.tbl_business_dashboard_setting
+                .AsNoTracking()
+                .Where(x => x.fk_business == businessId && x.is_active && !x.is_deleted)
+                .OrderByDescending(x => x.updated_at)
+                .FirstOrDefaultAsync();
+
+            var demand = await db.tbl_demand_management_setting
+                .AsNoTracking()
+                .Where(x => x.fk_business == businessId && x.is_active && !x.is_deleted)
+                .OrderByDescending(x => x.updated_at)
+                .FirstOrDefaultAsync();
+
+            var tariffRate = tariff != null && tariff.standard_rate_per_kwh > 0
+                ? (double)tariff.standard_rate_per_kwh
+                : legacySetting != null && legacySetting.tariff_rate > 0
+                    ? (double)legacySetting.tariff_rate
+                    : 0;
+
+            var result = new LiveDashboardConfiguration
+            {
+                tariffConfigured = tariffRate > 0,
+                tariffRatePerKwh = tariffRate,
+                demandLimitConfigured = demand != null && demand.demand_limit_kw > 0,
+                demandLimitKw = demand != null && demand.demand_limit_kw > 0
+                    ? (double)demand.demand_limit_kw
+                    : null,
+                onlineThresholdSeconds = legacySetting?.online_sensor_threshold_seconds
+                    ?? MinimumOnlineThresholdSeconds
+            };
+
+            await SetCacheAsync(cacheKey, result, TimeSpan.FromMinutes(5));
+            return result;
+        }
+
+        private async Task<LiveDayAggregate> GetOrBuildTodayAggregateAsync(
+            Guid businessId,
+            Guid? tenantId,
+            List<Guid>? officeIds,
+            double tariffRatePerKwh,
+            bool tariffConfigured,
+            DateTime nowUtc,
+            bool forceRefresh)
+        {
+            var pakistanNow = nowUtc.AddHours(PakistanUtcOffsetHours);
+            var localDayStart = new DateTime(
+                pakistanNow.Year,
+                pakistanNow.Month,
+                pakistanNow.Day,
+                0,
+                0,
+                0,
+                DateTimeKind.Unspecified);
+            var dayStartUtc = DateTime.SpecifyKind(localDayStart.AddHours(-PakistanUtcOffsetHours), DateTimeKind.Utc);
+            var dayEndUtc = dayStartUtc.AddDays(1);
+            var freshnessCutoff = nowUtc.AddMinutes(-55);
+            var cacheKey = tenantId.HasValue
+                ? $"dashboard:crm:live-day:tenant:{tenantId.Value}:business:{businessId}:{dayStartUtc:yyyyMMdd}"
+                : $"dashboard:crm:live-day:business:{businessId}:{dayStartUtc:yyyyMMdd}";
+            var cached = forceRefresh ? null : await GetCacheAsync<LiveDayAggregate>(cacheKey);
+            if (cached != null && cached.updatedAtUtc >= freshnessCutoff)
+            {
+                return cached;
+            }
+
+            var existing = await db.tbl_dashboard_aggregate
+                .AsNoTracking()
+                .Where(x => x.fk_business == businessId
+                            && x.fk_tenant == tenantId
+                            && x.granularity == LiveTodayGranularity
+                            && x.from_time == dayStartUtc
+                            && x.to_time == dayEndUtc)
+                .OrderByDescending(x => x.updated_at)
+                .FirstOrDefaultAsync();
+
+            if (!forceRefresh && existing != null && existing.updated_at >= freshnessCutoff)
+            {
+                var stored = LiveDayAggregate.FromEntity(existing);
+                await SetCacheAsync(cacheKey, stored, TimeSpan.FromMinutes(55));
+                return stored;
+            }
+
+            var lockKey = $"{businessId}:{tenantId?.ToString() ?? "business"}:{dayStartUtc:yyyyMMdd}";
+            var gate = LiveAggregateLocks.GetOrAdd(lockKey, _ => new SemaphoreSlim(1, 1));
+            await gate.WaitAsync();
+            try
+            {
+                existing = await db.tbl_dashboard_aggregate
+                    .Where(x => x.fk_business == businessId
+                                && x.fk_tenant == tenantId
+                                && x.granularity == LiveTodayGranularity
+                                && x.from_time == dayStartUtc
+                                && x.to_time == dayEndUtc)
+                    .OrderByDescending(x => x.updated_at)
+                    .FirstOrDefaultAsync();
+
+                if (!forceRefresh && existing != null && existing.updated_at >= freshnessCutoff)
+                {
+                    var stored = LiveDayAggregate.FromEntity(existing);
+                    await SetCacheAsync(cacheKey, stored, TimeSpan.FromMinutes(55));
+                    return stored;
+                }
+
+                var rows = await GetReadingRowsAsync(dayStartUtc, nowUtc, businessId, officeIds);
+                var energyKwh = CalculateConsumptionBySensor(rows).Sum(x => x.totalKwh);
+                var peakDemandW = CalculateDemandBucketsByMinutes(rows, 15)
+                    .DefaultIfEmpty()
+                    .Max(x => x?.demandW ?? 0);
+                var estimatedCost = tariffConfigured ? energyKwh * tariffRatePerKwh : 0;
+
+                if (existing == null)
+                {
+                    existing = new tbl_dashboard_aggregate
+                    {
+                        fk_business = businessId,
+                        fk_tenant = tenantId,
+                        from_time = dayStartUtc,
+                        to_time = dayEndUtc,
+                        granularity = LiveTodayGranularity,
+                        created_at = nowUtc
+                    };
+                    db.tbl_dashboard_aggregate.Add(existing);
+                }
+
+                existing.total_energy_kwh = Math.Round(energyKwh, 4);
+                existing.estimated_cost = Math.Round(estimatedCost, 4);
+                existing.peak_demand_w = Math.Round(peakDemandW, 2);
+                existing.updated_at = nowUtc;
+                await db.SaveChangesAsync();
+
+                var result = LiveDayAggregate.FromEntity(existing);
+                await SetCacheAsync(cacheKey, result, TimeSpan.FromMinutes(55));
+                return result;
+            }
+            finally
+            {
+                gate.Release();
+            }
+        }
+
+        private List<DemandBucket> CalculateDemandBucketsByMinutes(List<ReadingRow> rows, int minutes)
+        {
+            var safeMinutes = Math.Max(1, minutes);
+            return rows
+                .Where(x => x.activePower >= 0 && x.activePower <= 1000000)
+                .GroupBy(x => new
+                {
+                    x.sensorId,
+                    bucketStart = new DateTime(
+                        x.createdAt.Year,
+                        x.createdAt.Month,
+                        x.createdAt.Day,
+                        x.createdAt.Hour,
+                        (x.createdAt.Minute / safeMinutes) * safeMinutes,
+                        0,
+                        DateTimeKind.Utc)
+                })
+                .Select(g => new
+                {
+                    g.Key.bucketStart,
+                    sensorAveragePower = g.Average(x => Math.Max(0, x.activePower))
+                })
+                .GroupBy(x => x.bucketStart)
+                .Select(g => new DemandBucket
+                {
+                    bucketStart = g.Key,
+                    demandW = g.Sum(x => x.sensorAveragePower)
+                })
+                .ToList();
         }
 
         private async Task<CrmDashboardSummaryResponseDTO> BuildAndStoreSummaryAsync(Guid businessId, Guid? tenantId, List<Guid>? officeIds, DashboardRange range)
@@ -460,6 +1078,69 @@ namespace EMO.Repositories.EnergyDashboardRepo
             await db.SaveChangesAsync();
         }
 
+        private async Task<List<CrmDashboardSuggestionResponseDTO>> ReadActiveSuggestionsAsync(
+            Guid businessId,
+            Guid? tenantId,
+            List<Guid>? officeIds)
+        {
+            var now = DateTime.UtcNow;
+            var query = db.tbl_dashboard_suggestion
+                .AsNoTracking()
+                .Where(x => x.fk_business == businessId
+                    && x.reason_code.StartsWith("LIVE_")
+                    && x.to_time > now);
+
+            // Optimization Worker stores business-level suggestions once. Tenant users may see
+            // business-level items plus suggestions for offices assigned to their agreement.
+            if (tenantId.HasValue)
+            {
+                var allowedOfficeIds = officeIds ?? new List<Guid>();
+                query = query.Where(x =>
+                    x.fk_office == null
+                    || allowedOfficeIds.Contains(x.fk_office.Value));
+            }
+
+            var rows = await query
+                .OrderByDescending(x => x.updated_at)
+                .Take(100)
+                .ToListAsync();
+
+            static int SeverityRank(string? severity) => (severity ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "critical" => 4,
+                "warning" => 3,
+                "opportunity" => 2,
+                "info" => 1,
+                _ => 0
+            };
+
+            return rows
+                .OrderByDescending(x => SeverityRank(x.severity))
+                .ThenByDescending(x => x.updated_at)
+                .Take(30)
+                .Select(x => new CrmDashboardSuggestionResponseDTO
+                {
+                    suggestionId = x.dashboard_suggestion_id.ToString(),
+                    severity = x.severity,
+                    type = x.type,
+                    title = x.title,
+                    message = x.description,
+                    action = string.IsNullOrWhiteSpace(x.action) ? x.recommendation : x.action,
+                    estimatedSavingKwh = x.estimated_saving_kwh,
+                    estimatedSavingCost = x.estimated_saving_cost,
+                    sensorId = x.fk_sensor?.ToString() ?? string.Empty,
+                    applianceId = x.fk_appliance?.ToString() ?? string.Empty,
+                    applianceName = x.affected_appliance,
+                    utilityName = x.affected_utility,
+                    officeName = x.affected_office,
+                    timeBucket = x.updated_at.ToString("O"),
+                    canApplyAction = x.can_apply_action,
+                    conflictsWithPeakHour = x.conflicts_with_peak_hour,
+                    reasonCode = x.reason_code
+                })
+                .ToList();
+        }
+
         private async Task<List<CrmDashboardSuggestionResponseDTO>> BuildAndStoreSuggestionsAsync(Guid businessId, Guid? tenantId, List<Guid>? officeIds, DashboardRange range)
         {
             var cacheKey = tenantId.HasValue
@@ -503,8 +1184,8 @@ namespace EMO.Repositories.EnergyDashboardRepo
                 foreach (var bucket in conflictBuckets)
                 {
                     var contributors = await GetTopContributorsAsync(bucket.bucketStart, bucket.bucketStart.AddHours(1), businessId, officeIds);
-                    var shiftable = contributors
-                        .Where(x => x.canShift)
+                    var optimizationCandidates = contributors
+                        .Where(x => x.isOptimizationCandidate)
                         .Select(x => x.applianceName)
                         .Where(x => !string.IsNullOrWhiteSpace(x))
                         .Distinct()
@@ -517,18 +1198,20 @@ namespace EMO.Repositories.EnergyDashboardRepo
                         type = "peak-demand-conflict",
                         title = "High demand overlaps peak hour",
                         message = $"Demand reached {Math.Round(bucket.demandW, 0)} W during the configured peak window ({setting.peak_start_time}-{setting.peak_end_time}).",
-                        action = shiftable.Count > 0
-                            ? $"Shift these appliances outside peak time where possible: {string.Join(", ", shiftable)}."
-                            : "No safely shiftable appliance metadata was found. Add appliance optimization settings before shifting load.",
+                        action = optimizationCandidates.Count > 0
+                            ? $"Review these non-critical Normal/Low-priority appliances for manual load reduction or rescheduling: {string.Join(", ", optimizationCandidates)}."
+                            : "No safe optimization candidates were found from the available appliance priority, criticality, and electrical profile data.",
                         estimatedSavingKwh = null,
                         estimatedSavingCost = null,
-                        applianceName = shiftable.FirstOrDefault() ?? string.Empty,
+                        applianceName = optimizationCandidates.FirstOrDefault() ?? string.Empty,
                         utilityName = contributors.FirstOrDefault()?.utilityName ?? string.Empty,
                         officeName = contributors.FirstOrDefault()?.officeName ?? string.Empty,
                         timeBucket = ToPakistanLocal(bucket.bucketStart).ToString("yyyy-MM-dd HH:00"),
                         canApplyAction = false,
                         conflictsWithPeakHour = true,
-                        reasonCode = shiftable.Count > 0 ? "HIGH_DEMAND_PEAK_SHIFTABLE" : "HIGH_DEMAND_PEAK_METADATA_MISSING"
+                        reasonCode = optimizationCandidates.Count > 0
+                            ? "HIGH_DEMAND_PEAK_OPTIMIZATION_CANDIDATE"
+                            : "HIGH_DEMAND_PEAK_PROFILE_MISSING"
                     });
                 }
             }
@@ -542,7 +1225,7 @@ namespace EMO.Repositories.EnergyDashboardRepo
                     type = "metadata",
                     title = "Appliance optimization settings missing",
                     message = $"{metadataMissingCount} assigned appliance(s) have incomplete optimization settings.",
-                    action = "Update appliance settings such as shiftable, critical, priority, and allowed shift window to enable safer suggestions.",
+                    action = "Complete the rated voltage, current range, power range, standby power, normal power factor, priority level, and critical-device classification.",
                     reasonCode = "APPLIANCE_METADATA_MISSING"
                 });
             }
@@ -952,15 +1635,16 @@ namespace EMO.Repositories.EnergyDashboardRepo
                     utilityName = utility != null ? utility.utility_name : "Unknown",
                     applianceId = appliance != null ? appliance.business_appliance_id : Guid.Empty,
                     applianceName = appliance != null ? appliance.appliance_name : string.Empty,
-                    powerW = reading.active_power,
-                    canShift = appliance != null
-                               && appliance.is_shiftable
-                               && !appliance.is_critical
-                               && appliance.allow_optimization_suggestions
-                               && appliance.allowed_shift_start_time != null
-                               && appliance.allowed_shift_start_time != string.Empty
-                               && appliance.allowed_shift_end_time != null
-                               && appliance.allowed_shift_end_time != string.Empty
+                    priorityLevel = appliance != null ? appliance.priority_level : string.Empty,
+                    isCritical = appliance != null && appliance.is_critical,
+                    ratedVoltage = appliance != null ? appliance.rated_voltage : 0,
+                    minCurrent = appliance != null ? appliance.min_current : 0,
+                    maxCurrent = appliance != null ? appliance.max_current : 0,
+                    minPower = appliance != null ? appliance.min_power : 0,
+                    maxPower = appliance != null ? appliance.max_power : 0,
+                    standbyPower = appliance != null ? appliance.standby_power : 0,
+                    normalPowerFactor = appliance != null ? appliance.normal_power_factor : 0,
+                    powerW = reading.active_power
                 };
 
             var rows = await query.ToListAsync();
@@ -970,8 +1654,32 @@ namespace EMO.Repositories.EnergyDashboardRepo
                 rows = rows.Where(x => allowed.Contains(x.officeId)).ToList();
             }
 
+            foreach (var row in rows)
+            {
+                row.isOptimizationCandidate = row.applianceId != Guid.Empty
+                    && IsSafeOptimizationCandidate(
+                        row.priorityLevel,
+                        row.isCritical,
+                        row.ratedVoltage,
+                        row.minCurrent,
+                        row.maxCurrent,
+                        row.minPower,
+                        row.maxPower,
+                        row.standbyPower,
+                        row.normalPowerFactor);
+            }
+
             return rows
-                .GroupBy(x => new { x.sensorId, x.sensorName, x.officeName, x.utilityName, x.applianceId, x.applianceName, x.canShift })
+                .GroupBy(x => new
+                {
+                    x.sensorId,
+                    x.sensorName,
+                    x.officeName,
+                    x.utilityName,
+                    x.applianceId,
+                    x.applianceName,
+                    x.isOptimizationCandidate
+                })
                 .Select(g => new ContributorRow
                 {
                     sensorId = g.Key.sensorId,
@@ -981,7 +1689,7 @@ namespace EMO.Repositories.EnergyDashboardRepo
                     utilityName = g.Key.utilityName,
                     applianceId = g.Key.applianceId,
                     applianceName = g.Key.applianceName,
-                    canShift = g.Key.canShift,
+                    isOptimizationCandidate = g.Key.isOptimizationCandidate,
                     powerW = g.Average(x => Math.Max(0, x.powerW))
                 })
                 .OrderByDescending(x => x.powerW)
@@ -1001,15 +1709,19 @@ namespace EMO.Repositories.EnergyDashboardRepo
                       && !sensor.is_deleted
                       && !device.is_deleted
                       && !appliance.is_deleted
+                      && appliance.is_active
                       && device.fk_business == businessId
                 select new
                 {
                     device.fk_office,
-                    appliance.allow_optimization_suggestions,
                     appliance.priority_level,
-                    appliance.is_shiftable,
-                    appliance.allowed_shift_start_time,
-                    appliance.allowed_shift_end_time
+                    appliance.rated_voltage,
+                    appliance.min_current,
+                    appliance.max_current,
+                    appliance.min_power,
+                    appliance.max_power,
+                    appliance.standby_power,
+                    appliance.normal_power_factor
                 };
 
             var rows = await query.ToListAsync();
@@ -1019,12 +1731,15 @@ namespace EMO.Repositories.EnergyDashboardRepo
                 rows = rows.Where(x => allowed.Contains(x.fk_office)).ToList();
             }
 
-            return rows.Count(x =>
-                !x.allow_optimization_suggestions
-                || string.IsNullOrWhiteSpace(x.priority_level)
-                || (x.is_shiftable
-                    && (string.IsNullOrWhiteSpace(x.allowed_shift_start_time)
-                        || string.IsNullOrWhiteSpace(x.allowed_shift_end_time))));
+            return rows.Count(x => !HasCompleteOptimizationProfile(
+                x.priority_level,
+                x.rated_voltage,
+                x.min_current,
+                x.max_current,
+                x.min_power,
+                x.max_power,
+                x.standby_power,
+                x.normal_power_factor));
         }
 
         private async Task<List<Guid>> GetTenantOfficeIdsAsync(Guid tenantId, Guid? businessId)
@@ -1164,16 +1879,16 @@ namespace EMO.Repositories.EnergyDashboardRepo
                 .Replace("-", string.Empty)
                 .Replace("_", string.Empty)
                 .ToLowerInvariant() switch
-                {
-                    "peaknonpeak" => "peaknonpeak",
-                    "peakdemand" => "peakdemand",
-                    "highdemand" => "highdemand",
-                    "hourlyusage" => "hourlyusage",
-                    "hourly" => "hourlyusage",
-                    "utilitywise" => "utilitywise",
-                    "utilitywiseusage" => "utilitywise",
-                    _ => "energyconsumption"
-                };
+            {
+                "peaknonpeak" => "peaknonpeak",
+                "peakdemand" => "peakdemand",
+                "highdemand" => "highdemand",
+                "hourlyusage" => "hourlyusage",
+                "hourly" => "hourlyusage",
+                "utilitywise" => "utilitywise",
+                "utilitywiseusage" => "utilitywise",
+                _ => "energyconsumption"
+            };
         }
 
         private static DateTime BuildBucketStart(DateTime utcDate, string bucketMode)
@@ -1277,7 +1992,12 @@ namespace EMO.Repositories.EnergyDashboardRepo
             }
         }
 
-        private async Task SetCacheAsync<T>(string key, T value)
+        private Task SetCacheAsync<T>(string key, T value)
+        {
+            return SetCacheAsync(key, value, CacheTtl);
+        }
+
+        private async Task SetCacheAsync<T>(string key, T value, TimeSpan ttl)
         {
             if (redis == null)
             {
@@ -1286,7 +2006,7 @@ namespace EMO.Repositories.EnergyDashboardRepo
 
             try
             {
-                await redis.StringSetAsync(key, JsonSerializer.Serialize(value), CacheTtl);
+                await redis.StringSetAsync(key, JsonSerializer.Serialize(value), ttl);
             }
             catch
             {
@@ -1306,6 +2026,44 @@ namespace EMO.Repositories.EnergyDashboardRepo
             remarks = $"Error: {ex.Message}",
             success = false
         };
+
+        private class LiveScopeSensor
+        {
+            public Guid sensorId { get; set; }
+            public string sensorName { get; set; } = string.Empty;
+            public Guid officeId { get; set; }
+            public string officeName { get; set; } = string.Empty;
+            public string floorName { get; set; } = string.Empty;
+            public string utilityName { get; set; } = string.Empty;
+            public string applianceName { get; set; } = string.Empty;
+            public bool hasApplianceAssignment { get; set; }
+            public bool hasOptimizationProfile { get; set; }
+        }
+
+        private class LiveDashboardConfiguration
+        {
+            public bool tariffConfigured { get; set; }
+            public double tariffRatePerKwh { get; set; }
+            public bool demandLimitConfigured { get; set; }
+            public double? demandLimitKw { get; set; }
+            public int onlineThresholdSeconds { get; set; } = MinimumOnlineThresholdSeconds;
+        }
+
+        private class LiveDayAggregate
+        {
+            public double energyKwh { get; set; }
+            public double estimatedCost { get; set; }
+            public double peakDemandW { get; set; }
+            public DateTime updatedAtUtc { get; set; }
+
+            public static LiveDayAggregate FromEntity(tbl_dashboard_aggregate entity) => new()
+            {
+                energyKwh = entity.total_energy_kwh,
+                estimatedCost = entity.estimated_cost,
+                peakDemandW = entity.peak_demand_w,
+                updatedAtUtc = EnsureUtc(entity.updated_at)
+            };
+        }
 
         private class DashboardRange
         {
@@ -1360,8 +2118,17 @@ namespace EMO.Repositories.EnergyDashboardRepo
             public string utilityName { get; set; } = string.Empty;
             public Guid applianceId { get; set; }
             public string applianceName { get; set; } = string.Empty;
+            public string priorityLevel { get; set; } = string.Empty;
+            public bool isCritical { get; set; }
+            public double ratedVoltage { get; set; }
+            public double minCurrent { get; set; }
+            public double maxCurrent { get; set; }
+            public double minPower { get; set; }
+            public double maxPower { get; set; }
+            public double standbyPower { get; set; }
+            public double normalPowerFactor { get; set; }
             public double powerW { get; set; }
-            public bool canShift { get; set; }
+            public bool isOptimizationCandidate { get; set; }
         }
     }
 }

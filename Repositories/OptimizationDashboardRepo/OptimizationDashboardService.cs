@@ -55,10 +55,9 @@ namespace EMO.Repositories.OptimizationDashboardRepo
 
                 var chains = await GetChainsAsync(sensorIds);
                 var latestReadings = await GetLatestReadingsAsync(sensorIds);
+                var stableReadings = await GetStableReadingsAsync(sensorIds);
                 var businessId = chains.Values.Select(x => x.BusinessId).FirstOrDefault(x => x != Guid.Empty);
-                var dashboardSetting = await GetDashboardSettingAsync(businessId);
                 var applianceMetadata = await GetApplianceOptimizationMetadataAsync(sensorIds);
-                var selectedRangeHours = Math.Max(1, (to - from).TotalHours);
 
                 var rows = await db.tbl_singal_phase_data
                     .AsNoTracking()
@@ -94,8 +93,8 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 var livePower = latestReadings.Values.Sum(x => x.ActivePower);
                 var peakPower = rows.Any() ? rows.Max(x => x.ActivePower) : 0;
 
-                var idleAppliances = BuildIdleAppliances(chains, latestReadings);
-                var faultyAppliances = BuildFaultyAppliances(chains, latestReadings, applianceMetadata);
+                var idleAppliances = BuildIdleAppliances(chains, latestReadings, stableReadings);
+                var faultyAppliances = BuildFaultyAppliances(chains, latestReadings, stableReadings, applianceMetadata);
                 var highConsumers = BuildHighConsumers(chains, latestReadings, sensorEnergy, energyResult.Consumption);
                 var utilityBreakdown = BuildUtilityBreakdown(chains, latestReadings, sensorEnergy, energyResult.Consumption);
                 var comparisons = BuildComparisons(normalizedLevel, chains, latestReadings, sensorEnergy);
@@ -131,21 +130,9 @@ namespace EMO.Repositories.OptimizationDashboardRepo
 
                 // API alerts are an initial snapshot/fallback. The CRM card should use WebSocket live-alerts after connection.
                 response.Alerts = BuildInitialAlertsSnapshot(response);
-                response.Suggestions = BuildSuggestions(
-                    chains,
-                    latestReadings,
-                    sensorEnergy,
-                    response.TotalEnergyKwh,
-                    response.MeterResetCount,
-                    response.IdleAppliances,
-                    response.FaultyAppliances,
-                    response.PeakDemandHours,
-                    response.PeakDemandSummary,
-                    response.Comparisons,
-                    response.UtilityBreakdown,
-                    dashboardSetting,
-                    applianceMetadata,
-                    selectedRangeHours);
+                // Suggestions are created continuously by the Optimization Worker and stored in
+                // tbl_dashboard_suggestion. This API only reads the active worker output.
+                response.Suggestions = await ReadLiveSuggestionsAsync(businessId, sensorIds);
 
                 return new ResponseModel<OptimizationDashboardResponseDTO>
                 {
@@ -302,17 +289,96 @@ namespace EMO.Repositories.OptimizationDashboardRepo
             return result;
         }
 
+        private async Task<Dictionary<Guid, SensorStableRedisDTO>> GetStableReadingsAsync(List<Guid> sensorIds)
+        {
+            const int maxAgeSeconds = 90;
+            var now = DateTime.UtcNow;
+            var result = new Dictionary<Guid, SensorStableRedisDTO>();
+
+            foreach (var sensorId in sensorIds)
+            {
+                var json = await redis.StringGetAsync($"sensor:stable:{sensorId}");
+                if (!json.HasValue) continue;
+
+                var dto = JsonSerializer.Deserialize<SensorStableRedisDTO>(json!, jsonOptions);
+                if (dto == null || !dto.IsReady || dto.GeneratedAtUtc == default) continue;
+
+                var generatedAtUtc = dto.GeneratedAtUtc.Kind == DateTimeKind.Utc
+                    ? dto.GeneratedAtUtc
+                    : DateTime.SpecifyKind(dto.GeneratedAtUtc, DateTimeKind.Utc);
+
+                if ((now - generatedAtUtc).TotalSeconds > maxAgeSeconds) continue;
+                result[sensorId] = dto;
+            }
+
+            return result;
+        }
+
+        private async Task<List<OptimizationSuggestionDTO>> ReadLiveSuggestionsAsync(
+            Guid businessId,
+            List<Guid> sensorIds)
+        {
+            if (businessId == Guid.Empty) return new List<OptimizationSuggestionDTO>();
+
+            var now = DateTime.UtcNow;
+            var rows = await db.tbl_dashboard_suggestion
+                .AsNoTracking()
+                .Where(x => x.fk_business == businessId
+                    && x.reason_code.StartsWith("LIVE_")
+                    && x.to_time > now
+                    && (x.fk_sensor == null || sensorIds.Contains(x.fk_sensor.Value)))
+                .OrderByDescending(x => x.updated_at)
+                .Take(50)
+                .ToListAsync();
+
+            static int SeverityRank(string? severity) => (severity ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "critical" => 4,
+                "warning" => 3,
+                "opportunity" => 2,
+                "info" => 1,
+                _ => 0
+            };
+
+            return rows
+                .OrderByDescending(x => SeverityRank(x.severity))
+                .ThenByDescending(x => x.updated_at)
+                .Take(30)
+                .Select(x => new OptimizationSuggestionDTO
+                {
+                    Severity = x.severity,
+                    Priority = x.priority,
+                    Type = x.type,
+                    ReasonCode = x.reason_code,
+                    Title = x.title,
+                    Message = x.description,
+                    Action = string.IsNullOrWhiteSpace(x.action) ? x.recommendation : x.action,
+                    SensorId = x.fk_sensor?.ToString() ?? string.Empty,
+                    ApplianceName = x.affected_appliance,
+                    UtilityName = x.affected_utility,
+                    OfficeName = x.affected_office,
+                    TimeBucket = x.updated_at.ToString("O"),
+                    EstimatedSavingKwh = x.estimated_saving_kwh ?? 0,
+                    EstimatedSavingCost = x.estimated_saving_cost ?? 0,
+                    CanApplyAction = x.can_apply_action,
+                    ConflictsWithPeakHour = x.conflicts_with_peak_hour
+                })
+                .ToList();
+        }
+
         private static List<IdleApplianceDTO> BuildIdleAppliances(
             Dictionary<Guid, SensorChainRedisDTO> chains,
-            Dictionary<Guid, SensorLatestRedisDTO> latest)
+            Dictionary<Guid, SensorLatestRedisDTO> latest,
+            Dictionary<Guid, SensorStableRedisDTO> stable)
         {
             var result = new List<IdleApplianceDTO>();
 
-            foreach (var item in latest)
+            foreach (var item in stable)
             {
                 if (!chains.TryGetValue(item.Key, out var chain)) continue;
-                var r = item.Value;
-                var currentPower = Math.Max(0, r.ActivePower);
+                if (!latest.TryGetValue(item.Key, out var r)) continue;
+                var evidence = item.Value;
+                var currentPower = Math.Max(0, evidence.AveragePowerW);
                 var standby = Math.Max(0, chain.StandbyPower);
                 if (standby <= 0 || currentPower <= 0) continue;
 
@@ -350,15 +416,17 @@ namespace EMO.Repositories.OptimizationDashboardRepo
         private static List<FaultyApplianceDTO> BuildFaultyAppliances(
             Dictionary<Guid, SensorChainRedisDTO> chains,
             Dictionary<Guid, SensorLatestRedisDTO> latest,
+            Dictionary<Guid, SensorStableRedisDTO> stable,
             Dictionary<Guid, ApplianceOptimizationMetadata> applianceMetadata)
         {
             var result = new List<FaultyApplianceDTO>();
 
-            foreach (var item in latest)
+            foreach (var item in stable)
             {
                 if (!chains.TryGetValue(item.Key, out var chain)) continue;
-                var r = item.Value;
-                var currentPower = Math.Max(0, r.ActivePower);
+                if (!latest.TryGetValue(item.Key, out var r)) continue;
+                var evidence = item.Value;
+                var currentPower = Math.Max(0, evidence.AveragePowerW);
                 var maxPower = Math.Max(0, chain.MaxPower);
                 var expectedPowerFactor = Math.Max(0, chain.NormalPowerFactor);
                 var ratedVoltage = Math.Max(0, chain.RatedVoltage);
@@ -369,34 +437,37 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     result.Add(CreateFaultyAppliance(
                         item.Key,
                         chain,
-                        r,
+                        evidence,
                         currentPower,
                         maxPower,
                         $"Power is more than 15% above appliance max rating. Current {currentPower:F0}W, expected max {maxPower:F0}W.",
                         "Inspect appliance, wiring, relay, or sensor calibration."));
                 }
 
-                if (currentPower >= 80 && expectedPowerFactor >= 0.60 && r.PowerFactor > 0 && r.PowerFactor < expectedPowerFactor * 0.75)
+                if (currentPower >= 80 && expectedPowerFactor >= 0.60
+                    && evidence.AveragePowerFactor > 0
+                    && evidence.AveragePowerFactor < expectedPowerFactor * 0.75)
                 {
                     result.Add(CreateFaultyAppliance(
                         item.Key,
                         chain,
-                        r,
+                        evidence,
                         currentPower,
                         maxPower,
-                        $"Power factor is lower than expected. Current PF {r.PowerFactor:F2}, expected around {expectedPowerFactor:F2}.",
+                        $"Average power factor over the confirmed one-minute window is {evidence.AveragePowerFactor:F2}, expected around {expectedPowerFactor:F2}.",
                         "Check appliance condition, loose wiring, capacitor/motor issue, or sensor calibration."));
                 }
 
-                if (ratedVoltage > 0 && currentPower >= 50 && (r.Voltage < ratedVoltage * 0.85 || r.Voltage > ratedVoltage * 1.15))
+                if (ratedVoltage > 0 && currentPower >= 50
+                    && (evidence.AverageVoltageV < ratedVoltage * 0.85 || evidence.AverageVoltageV > ratedVoltage * 1.15))
                 {
                     result.Add(CreateFaultyAppliance(
                         item.Key,
                         chain,
-                        r,
+                        evidence,
                         currentPower,
                         maxPower,
-                        $"Voltage is outside normal range. Current {r.Voltage:F0}V, rated around {ratedVoltage:F0}V.",
+                        $"Average voltage over the confirmed one-minute window is outside normal range. Current {evidence.AverageVoltageV:F0}V, rated around {ratedVoltage:F0}V.",
                         "Inspect power supply quality, phase connection, or voltage calibration."));
                 }
 
@@ -408,7 +479,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     result.Add(CreateFaultyAppliance(
                         item.Key,
                         chain,
-                        r,
+                        evidence,
                         currentPower,
                         maxPower,
                         "Relay is ON but appliance power is almost 0W.",
@@ -420,7 +491,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     result.Add(CreateFaultyAppliance(
                         item.Key,
                         chain,
-                        r,
+                        evidence,
                         currentPower,
                         maxPower,
                         $"Relay appears OFF but appliance is still consuming {currentPower:F0}W.",
@@ -439,7 +510,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
         private static FaultyApplianceDTO CreateFaultyAppliance(
             Guid sensorId,
             SensorChainRedisDTO chain,
-            SensorLatestRedisDTO reading,
+            SensorStableRedisDTO reading,
             double currentPower,
             double expectedMaxPower,
             string reason,
@@ -453,7 +524,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 UtilityName = chain.UtilityName,
                 CurrentPowerW = Math.Round(currentPower, 1),
                 ExpectedMaxPowerW = Math.Round(expectedMaxPower, 1),
-                PowerFactor = Math.Round(reading.PowerFactor, 2),
+                PowerFactor = Math.Round(reading.AveragePowerFactor, 2),
                 Reason = reason,
                 RecommendedAction = action,
                 DeviceName = chain.DeviceName,
@@ -718,15 +789,8 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     SensorId = assignment.fk_sensor,
                     ApplianceId = appliance.business_appliance_id,
                     ApplianceName = appliance.appliance_name,
-                    IsShiftable = appliance.is_shiftable,
-                    CanAutoControl = appliance.can_auto_control,
                     IsCritical = appliance.is_critical,
-                    AllowOptimizationSuggestions = appliance.allow_optimization_suggestions,
-                    PriorityLevel = appliance.priority_level,
-                    AllowedShiftStartTime = appliance.allowed_shift_start_time,
-                    AllowedShiftEndTime = appliance.allowed_shift_end_time,
-                    MinimumOnDurationMinutes = appliance.minimum_on_duration_minutes,
-                    MinimumOffDurationMinutes = appliance.minimum_off_duration_minutes
+                    PriorityLevel = appliance.priority_level
                 })
                 .ToListAsync();
 
@@ -804,15 +868,15 @@ namespace EMO.Repositories.OptimizationDashboardRepo
 
                 if (peak.PeakPowerW > averageHourlyPeak * 1.20 && peak.PeakPowerW >= 1000)
                 {
-                    var shiftableRunning = GetShiftableRunningSensors(chains, latest, applianceMetadata)
+                    var reviewCandidates = GetNonCriticalRunningSensors(chains, latest, applianceMetadata)
                         .OrderByDescending(x => x.LivePowerW)
                         .Take(4)
                         .ToList();
 
                     var estimatedShiftKwh = Math.Round(Math.Max(0.05, peak.EnergyKwh * 0.15), 2);
                     var estimatedSavingCost = Math.Round(estimatedShiftKwh * (tariffDelta > 0 ? tariffDelta : dashboardSetting.TariffRate), 2);
-                    var action = shiftableRunning.Any()
-                        ? $"Shift or delay non-critical loads such as {string.Join(", ", shiftableRunning.Select(x => x.ApplianceName).Distinct().Take(3))} outside {avoidHours}."
+                    var action = reviewCandidates.Any()
+                        ? $"Review or delay non-critical loads such as {string.Join(", ", reviewCandidates.Select(x => x.ApplianceName).Distinct().Take(3))} outside {avoidHours} where operationally safe."
                         : "Avoid starting HVAC, pumps, printers, and heavy computing loads together during this hour.";
 
                     suggestions.Add(new OptimizationSuggestionDTO
@@ -827,7 +891,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                         EstimatedSavingKwh = estimatedShiftKwh,
                         EstimatedSavingCost = estimatedSavingCost,
                         TimeBucket = peak.HourLabel,
-                        CanApplyAction = shiftableRunning.Any(x => x.CanAutoControl),
+                        CanApplyAction = false,
                         ConflictsWithPeakHour = peakIsConfiguredPeakHour
                     });
                 }
@@ -842,12 +906,11 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     .Select(x => x.Key)
                     .ToList();
 
-                var autoControllableHvac = hvacSensors.Any(id =>
+                var hvacLoopAvailable = hvacSensors.Any(id =>
                     chains.TryGetValue(id, out var chain)
+                    && chain.HvacLoopSettingId.HasValue
                     && applianceMetadata.TryGetValue(id, out var meta)
-                    && meta.CanAutoControl
-                    && !meta.IsCritical
-                    && meta.AllowOptimizationSuggestions);
+                    && !meta.IsCritical);
 
                 if (hvac.SharePercent >= 35 || (topPeak != null && hvac.CurrentPowerW >= Math.Max(1000, topPeak.PeakPowerW * 0.30)))
                 {
@@ -861,16 +924,16 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                         Severity = hvac.SharePercent >= 60 ? "warning" : "info",
                         Priority = hvac.SharePercent >= 60 ? "High" : "Medium",
                         Type = "hvac-peak-optimization",
-                        ReasonCode = autoControllableHvac ? "HVAC_LOOP_RECOMMENDED" : "HVAC_HIGH_SHARE_REVIEW",
-                        Title = autoControllableHvac ? "HVAC loop optimization available" : "HVAC consumption is high",
+                        ReasonCode = hvacLoopAvailable ? "HVAC_LOOP_RECOMMENDED" : "HVAC_HIGH_SHARE_REVIEW",
+                        Title = hvacLoopAvailable ? "HVAC loop optimization available" : "HVAC consumption is high",
                         Message = $"HVAC is responsible for {hvac.SharePercent:F1}% of selected-range energy ({hvac.EnergyKwh:F2} kWh).",
-                        Action = autoControllableHvac
-                            ? "Apply a controlled HVAC loop during peak hours, for example 20 minutes ON and 10 minutes OFF, with manual override protection."
-                            : "Review HVAC setpoint, maintenance, staggered start timing, and enable auto-control metadata before automatic loop control.",
+                        Action = hvacLoopAvailable
+                            ? "Apply the configured HVAC loop during peak hours with manual override protection."
+                            : "Review HVAC setpoint, maintenance, staggered start timing, and configure an HVAC loop before using automatic loop control.",
                         EstimatedSavingKwh = loopSavingKwh,
                         EstimatedSavingCost = Math.Round(loopSavingKwh * savingRate, 2),
                         UtilityName = "HVAC",
-                        CanApplyAction = autoControllableHvac,
+                        CanApplyAction = hvacLoopAvailable,
                         ConflictsWithPeakHour = isCurrentPeakHour || (topPeak != null && IsPeakLocal(topPeak.HourUtc, dashboardSetting))
                     });
                 }
@@ -905,28 +968,28 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 });
             }
 
-            // Tariff-based load shifting suggestions.
-            var shiftableLiveLoads = GetShiftableRunningSensors(chains, latest, applianceMetadata)
+            // Tariff-based manual schedule review for non-critical live loads.
+            var nonCriticalLiveLoads = GetNonCriticalRunningSensors(chains, latest, applianceMetadata)
                 .Where(x => x.LivePowerW >= 40)
                 .OrderByDescending(x => x.LivePowerW)
                 .Take(6)
                 .ToList();
 
-            if (shiftableLiveLoads.Any() && (isCurrentPeakHour || peakDemandHours.Any(x => x.IsPeakHour && IsPeakLocal(x.HourUtc, dashboardSetting))))
+            if (nonCriticalLiveLoads.Any() && (isCurrentPeakHour || peakDemandHours.Any(x => x.IsPeakHour && IsPeakLocal(x.HourUtc, dashboardSetting))))
             {
-                var estimatedKwh = Math.Round(shiftableLiveLoads.Sum(x => x.LivePowerW) / 1000.0, 2);
+                var estimatedKwh = Math.Round(nonCriticalLiveLoads.Sum(x => x.LivePowerW) / 1000.0, 2);
                 suggestions.Add(new OptimizationSuggestionDTO
                 {
                     Severity = "warning",
                     Priority = "Medium",
-                    Type = "tariff-load-shift",
-                    ReasonCode = "SHIFTABLE_LOAD_DURING_PEAK",
-                    Title = "Shift non-critical load outside peak hours",
-                    Message = $"{shiftableLiveLoads.Count} shiftable appliance(s) are running or contributing during the peak window {dashboardSetting.PeakStartTime}-{dashboardSetting.PeakEndTime}.",
-                    Action = $"Move {string.Join(", ", shiftableLiveLoads.Select(x => x.ApplianceName).Distinct().Take(4))} to allowed off-peak windows where possible.",
+                    Type = "tariff-schedule-review",
+                    ReasonCode = "NON_CRITICAL_LOAD_DURING_PEAK",
+                    Title = "Review non-critical load during peak hours",
+                    Message = $"{nonCriticalLiveLoads.Count} non-critical appliance(s) are running or contributing during the peak window {dashboardSetting.PeakStartTime}-{dashboardSetting.PeakEndTime}.",
+                    Action = $"Review the operating schedule for {string.Join(", ", nonCriticalLiveLoads.Select(x => x.ApplianceName).Distinct().Take(4))} and manually move usage outside peak hours where safe.",
                     EstimatedSavingKwh = estimatedKwh,
                     EstimatedSavingCost = Math.Round(estimatedKwh * tariffDelta, 2),
-                    CanApplyAction = shiftableLiveLoads.Any(x => x.CanAutoControl),
+                    CanApplyAction = false,
                     ConflictsWithPeakHour = true
                 });
             }
@@ -941,8 +1004,8 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 if (chain == null) continue;
                 applianceMetadata.TryGetValue(hc.Key, out var meta);
 
-                var action = meta?.IsShiftable == true && meta?.IsCritical == false
-                    ? BuildShiftAction(meta)
+                var action = meta?.IsCritical == false
+                    ? BuildReviewAction(meta)
                     : "Compare with similar sensors/floors and check working hours, standby behavior, and appliance rating.";
 
                 suggestions.Add(new OptimizationSuggestionDTO
@@ -950,7 +1013,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     Severity = share >= 35 ? "warning" : "info",
                     Priority = share >= 35 ? "High" : "Medium",
                     Type = "high-consumption",
-                    ReasonCode = meta?.IsShiftable == true ? "HIGH_CONSUMER_SHIFTABLE" : "HIGH_CONSUMER_REVIEW",
+                    ReasonCode = meta?.IsCritical == false ? "HIGH_CONSUMER_NON_CRITICAL_REVIEW" : "HIGH_CONSUMER_REVIEW",
                     Title = "High energy consumer",
                     SensorId = hc.Key.ToString(),
                     SensorName = chain.SensorName,
@@ -961,7 +1024,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     Action = action,
                     EstimatedSavingKwh = Math.Round(hc.Value * 0.08, 2),
                     EstimatedSavingCost = Math.Round(hc.Value * 0.08 * dashboardSetting.TariffRate, 2),
-                    CanApplyAction = meta?.CanAutoControl == true && meta?.IsCritical == false
+                    CanApplyAction = false
                 });
             }
 
@@ -988,12 +1051,10 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 }
             }
 
-            // Metadata quality suggestions make the optimization engine explain why it cannot apply actions.
+            // Metadata quality suggestions explain when prioritization cannot be applied.
             var metadataMissing = chains.Count(x =>
                 !applianceMetadata.TryGetValue(x.Key, out var meta)
-                || !meta.AllowOptimizationSuggestions
-                || string.IsNullOrWhiteSpace(meta.PriorityLevel)
-                || (meta.IsShiftable && (string.IsNullOrWhiteSpace(meta.AllowedShiftStartTime) || string.IsNullOrWhiteSpace(meta.AllowedShiftEndTime))));
+                || string.IsNullOrWhiteSpace(meta.PriorityLevel));
 
             if (metadataMissing > 0)
             {
@@ -1003,9 +1064,9 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                     Priority = "Low",
                     Type = "metadata",
                     ReasonCode = "APPLIANCE_OPTIMIZATION_METADATA_MISSING",
-                    Title = "Appliance optimization settings need review",
-                    Message = $"{metadataMissing} sensor/appliance mapping(s) have missing optimization metadata.",
-                    Action = "Set appliance priority, critical flag, shiftable flag, allowed shift window, and can-auto-control before enabling automatic actions."
+                    Title = "Appliance priority settings need review",
+                    Message = $"{metadataMissing} sensor/appliance mapping(s) have missing priority metadata.",
+                    Action = "Set appliance priority and critical status so recommendations can be ranked safely."
                 });
             }
 
@@ -1091,52 +1152,44 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 || chain.SensorName.Contains("HVAC", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static List<ShiftableRunningSensor> GetShiftableRunningSensors(
+        private static List<RunningReviewCandidate> GetNonCriticalRunningSensors(
             Dictionary<Guid, SensorChainRedisDTO> chains,
             Dictionary<Guid, SensorLatestRedisDTO> latest,
             Dictionary<Guid, ApplianceOptimizationMetadata> applianceMetadata)
         {
-            var result = new List<ShiftableRunningSensor>();
+            var result = new List<RunningReviewCandidate>();
 
             foreach (var item in latest)
             {
                 if (!chains.TryGetValue(item.Key, out var chain)) continue;
                 if (!applianceMetadata.TryGetValue(item.Key, out var meta)) continue;
-                if (!meta.AllowOptimizationSuggestions || !meta.IsShiftable || meta.IsCritical) continue;
+                if (meta.IsCritical) continue;
 
                 var power = Math.Max(0, item.Value.ActivePower);
                 var standbyLimit = Math.Max(chain.StandbyPower * 1.5, chain.StandbyPower + 8);
                 if (power <= Math.Max(20, standbyLimit)) continue;
 
-                result.Add(new ShiftableRunningSensor
+                result.Add(new RunningReviewCandidate
                 {
                     SensorId = item.Key,
                     SensorName = chain.SensorName,
                     ApplianceName = string.IsNullOrWhiteSpace(meta.ApplianceName) ? chain.ApplianceName : meta.ApplianceName,
                     UtilityName = chain.UtilityName,
                     OfficeName = chain.OfficeName,
-                    LivePowerW = power,
-                    CanAutoControl = meta.CanAutoControl,
-                    AllowedShiftStartTime = meta.AllowedShiftStartTime,
-                    AllowedShiftEndTime = meta.AllowedShiftEndTime
+                    LivePowerW = power
                 });
             }
 
             return result;
         }
 
-        private static string BuildShiftAction(ApplianceOptimizationMetadata meta)
+        private static string BuildReviewAction(ApplianceOptimizationMetadata meta)
         {
             if (meta.IsCritical)
-                return "Do not auto-shift this appliance because it is marked critical. Review manually only.";
+                return "This appliance is marked critical. Review consumption manually without interrupting operation.";
 
-            if (!meta.IsShiftable)
-                return "Review working hours and standby behavior before changing operating schedule.";
-
-            if (!string.IsNullOrWhiteSpace(meta.AllowedShiftStartTime) && !string.IsNullOrWhiteSpace(meta.AllowedShiftEndTime))
-                return $"Shift this non-critical appliance to its allowed window {meta.AllowedShiftStartTime}-{meta.AllowedShiftEndTime} where possible.";
-
-            return "Set allowed shift start/end time, then shift this non-critical appliance away from peak hours.";
+            var priority = string.IsNullOrWhiteSpace(meta.PriorityLevel) ? "Normal" : meta.PriorityLevel;
+            return $"Review working hours, standby behavior, and operating schedule for this {priority.ToLowerInvariant()}-priority non-critical appliance.";
         }
 
         private static bool IsPeakLocal(DateTime utcValue, BusinessOptimizationSetting setting)
@@ -1240,18 +1293,11 @@ namespace EMO.Repositories.OptimizationDashboardRepo
             public Guid SensorId { get; set; }
             public Guid ApplianceId { get; set; }
             public string ApplianceName { get; set; } = string.Empty;
-            public bool IsShiftable { get; set; }
-            public bool CanAutoControl { get; set; }
             public bool IsCritical { get; set; }
-            public bool AllowOptimizationSuggestions { get; set; } = true;
             public string PriorityLevel { get; set; } = "Normal";
-            public string AllowedShiftStartTime { get; set; } = string.Empty;
-            public string AllowedShiftEndTime { get; set; } = string.Empty;
-            public int MinimumOnDurationMinutes { get; set; }
-            public int MinimumOffDurationMinutes { get; set; }
         }
 
-        private class ShiftableRunningSensor
+        private class RunningReviewCandidate
         {
             public Guid SensorId { get; set; }
             public string SensorName { get; set; } = string.Empty;
@@ -1259,9 +1305,6 @@ namespace EMO.Repositories.OptimizationDashboardRepo
             public string UtilityName { get; set; } = string.Empty;
             public string OfficeName { get; set; } = string.Empty;
             public double LivePowerW { get; set; }
-            public bool CanAutoControl { get; set; }
-            public string AllowedShiftStartTime { get; set; } = string.Empty;
-            public string AllowedShiftEndTime { get; set; } = string.Empty;
         }
     }
 }

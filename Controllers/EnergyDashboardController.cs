@@ -1,4 +1,4 @@
-﻿//using EMO.Extensions.MiddleWare;
+//using EMO.Extensions.MiddleWare;
 //using EMO.Models.DTOs.EnergyDashboardDTOs;
 //using EMO.Models.DTOs.ResponseDTO;
 //using EMO.Repositories.EnergyDashboardServicesRepo;
@@ -118,6 +118,14 @@ namespace EMO.Controllers
             return Ok(response);
         }
 
+        [HttpGet("crm/business/live-overview")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<ResponseModel<CrmDashboardLiveOverviewResponseDTO>>> GetBusinessDashboardLiveOverview(Guid businessId, bool forceRefresh = false)
+        {
+            var response = await energyDashboardService.GetBusinessDashboardLiveOverview(businessId, forceRefresh);
+            return Ok(response);
+        }
+
         [HttpGet("crm/business/chart")]
         public async Task<ActionResult<ResponseModel<CrmDashboardChartResponseDTO>>> GetBusinessDashboardChart(Guid businessId, string chartType = "energyconsumption", string range = "30d", DateTime? fromDate = null, DateTime? toDate = null)
         {
@@ -136,6 +144,14 @@ namespace EMO.Controllers
         public async Task<ActionResult<ResponseModel<CrmDashboardSummaryResponseDTO>>> GetTenantDashboardSummary(Guid tenantId, Guid? businessId = null)
         {
             var response = await energyDashboardService.GetTenantDashboardSummary(tenantId, businessId);
+            return Ok(response);
+        }
+
+        [HttpGet("crm/tenant/live-overview")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<ResponseModel<CrmDashboardLiveOverviewResponseDTO>>> GetTenantDashboardLiveOverview(Guid tenantId, Guid? businessId = null, bool forceRefresh = false)
+        {
+            var response = await energyDashboardService.GetTenantDashboardLiveOverview(tenantId, businessId, forceRefresh);
             return Ok(response);
         }
 

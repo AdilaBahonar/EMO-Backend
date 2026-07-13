@@ -1,4 +1,4 @@
-﻿using EMO.Models.DBModels.DBTables;
+using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.BusinessDTOs;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -400,12 +400,7 @@ namespace EMO.Repositories.BusinessServicesRepo
                     standby_power = defaultAppliance.standby_power,
                     normal_power_factor = defaultAppliance.normal_power_factor,
                     description = defaultAppliance.description,
-                    is_shiftable = defaultAppliance.is_shiftable,
                     priority_level = defaultAppliance.priority_level,
-                    normal_operating_hours = defaultAppliance.normal_operating_hours,
-                    can_auto_control = defaultAppliance.can_auto_control,
-                    minimum_on_duration_minutes = defaultAppliance.minimum_on_duration_minutes,
-                    minimum_off_duration_minutes = defaultAppliance.minimum_off_duration_minutes,
                     is_default = true,
                     is_custom = false,
                     is_active = defaultAppliance.is_active,

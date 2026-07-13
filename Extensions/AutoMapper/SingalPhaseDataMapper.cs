@@ -14,6 +14,7 @@ namespace EMO.Extensions.AutoMapper
             CreateMap<AddSingalPhaseDataDTO, tbl_singal_phase_data>()
                 .ForMember(d => d.packet_id, opt => opt.MapFrom(src => src.packetId))
                 .ForMember(d => d.epoch_sec, opt => opt.MapFrom(src => src.epochSec))
+                .ForMember(d => d.created_at, opt => opt.MapFrom(src => ResolveMeasurementTime(src.epochSec)))
                 .ForMember(d => d.volt, opt => opt.MapFrom(src => src.volt))
                 .ForMember(d => d.current, opt => opt.MapFrom(src => src.current))
                 .ForMember(d => d.apperent_power, opt => opt.MapFrom(src => src.apperentPower))
@@ -29,6 +30,7 @@ namespace EMO.Extensions.AutoMapper
             CreateMap<UpdateSingalPhaseDataDTO, tbl_singal_phase_data>()
                 .ForMember(d => d.packet_id, opt => opt.MapFrom((src, dest) => src.packetId != 0 ? src.packetId : dest.packet_id))
                 .ForMember(d => d.epoch_sec, opt => opt.MapFrom((src, dest) => src.epochSec != 0 ? src.epochSec : dest.epoch_sec))
+                .ForMember(d => d.created_at, opt => opt.MapFrom((src, dest) => src.epochSec != 0 ? ResolveMeasurementTime(src.epochSec) : dest.created_at))
                 .ForMember(d => d.volt, opt => opt.MapFrom((src, dest) => src.volt != 0 ? src.volt : dest.volt))
                 .ForMember(d => d.current, opt => opt.MapFrom((src, dest) => src.current != 0 ? src.current : dest.current))
                 .ForMember(d => d.apperent_power, opt => opt.MapFrom((src, dest) => src.apperentPower != 0 ? src.apperentPower : dest.apperent_power))
@@ -55,6 +57,19 @@ namespace EMO.Extensions.AutoMapper
                 .ForMember(d => d.frequency, opt => opt.MapFrom(src => src.frequency))
                 .ForMember(d => d.activeEnergy, opt => opt.MapFrom(src => src.active_energy))
                 .ForMember(d => d.reactiveEnergy, opt => opt.MapFrom(src => src.reactive_energy));
+        }
+
+        private static DateTime ResolveMeasurementTime(int epochSeconds)
+        {
+            if (epochSeconds <= 0) return DateTime.UtcNow;
+            try
+            {
+                return DateTimeOffset.FromUnixTimeSeconds(epochSeconds).UtcDateTime;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return DateTime.UtcNow;
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace EMO.Models.DTOs.EnergyDashboardDTOs
+namespace EMO.Models.DTOs.EnergyDashboardDTOs
 {
     public class MonthlyDeviceTypeReportResponseDTO
     {
@@ -47,6 +47,57 @@
         public double peakDemandW { get; set; } = 0;
         public string fromDate { get; set; } = string.Empty;
         public string toDate { get; set; } = string.Empty;
+    }
+
+    public class CrmLiveUtilityLoadResponseDTO
+    {
+        public string utilityName { get; set; } = "Unassigned";
+        public double currentLoadW { get; set; } = 0;
+        public double percentage { get; set; } = 0;
+        public int onlineSensors { get; set; } = 0;
+    }
+
+    public class CrmLiveConsumerResponseDTO
+    {
+        public string sensorId { get; set; } = string.Empty;
+        public string sensorName { get; set; } = string.Empty;
+        public string applianceName { get; set; } = string.Empty;
+        public string utilityName { get; set; } = string.Empty;
+        public string officeName { get; set; } = string.Empty;
+        public string floorName { get; set; } = string.Empty;
+        public double currentLoadW { get; set; } = 0;
+        public double voltage { get; set; } = 0;
+        public double powerFactor { get; set; } = 0;
+        public string relayState { get; set; } = string.Empty;
+        public string receivedAtUtc { get; set; } = string.Empty;
+    }
+
+    public class CrmDashboardLiveOverviewResponseDTO
+    {
+        public double energyTodayKwh { get; set; } = 0;
+        public double? estimatedCostToday { get; set; }
+        public bool costConfigured { get; set; } = false;
+        public double currentLoadW { get; set; } = 0;
+        public double peakDemandTodayW { get; set; } = 0;
+        public int totalSensors { get; set; } = 0;
+        public int onlineSensors { get; set; } = 0;
+        public int delayedSensors { get; set; } = 0;
+        public int offlineSensors { get; set; } = 0;
+        public int neverConnectedSensors { get; set; } = 0;
+        public double averageVoltage { get; set; } = 0;
+        public double averagePowerFactor { get; set; } = 0;
+        public int assignedSensors { get; set; } = 0;
+        public int configuredOptimizationSensors { get; set; } = 0;
+        public int optimizationReadinessPercent { get; set; } = 0;
+        public bool tariffConfigured { get; set; } = false;
+        public bool demandLimitConfigured { get; set; } = false;
+        public double? demandLimitKw { get; set; }
+        public int onlineThresholdSeconds { get; set; } = 180;
+        public int delayedThresholdSeconds { get; set; } = 600;
+        public string liveUpdatedAtUtc { get; set; } = string.Empty;
+        public string aggregateUpdatedAtUtc { get; set; } = string.Empty;
+        public List<CrmLiveUtilityLoadResponseDTO> utilityLoads { get; set; } = new();
+        public List<CrmLiveConsumerResponseDTO> topConsumers { get; set; } = new();
     }
 
     public class CrmDashboardChartPointDTO

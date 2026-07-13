@@ -14,6 +14,13 @@ namespace EMO.Models.DTOs.SensorChainRedisDTOs
 
         public Guid OfficeId { get; set; }
         public string OfficeName { get; set; } = string.Empty;
+        public bool OfficeIsActive { get; set; }
+        public bool OfficeIsOccupied { get; set; }
+        public bool OfficeIs24Hours { get; set; }
+        public bool OfficeAfterHoursAlertEnabled { get; set; }
+        public TimeOnly OfficeOpeningTime { get; set; } = new(9, 0);
+        public TimeOnly OfficeClosingTime { get; set; } = new(18, 0);
+        public string OfficeWorkingDays { get; set; } = "Monday,Tuesday,Wednesday,Thursday,Friday";
 
         public Guid SectionId { get; set; }
         public string SectionName { get; set; } = string.Empty;
@@ -45,12 +52,8 @@ namespace EMO.Models.DTOs.SensorChainRedisDTOs
         public double MaxPower { get; set; }
         public double StandbyPower { get; set; }
         public double NormalPowerFactor { get; set; }
-        public bool ApplianceIsShiftable { get; set; }
         public string AppliancePriorityLevel { get; set; } = "Normal";
-        public string ApplianceNormalOperatingHours { get; set; } = string.Empty;
-        public bool ApplianceCanAutoControl { get; set; }
-        public int ApplianceMinimumOnDurationMinutes { get; set; }
-        public int ApplianceMinimumOffDurationMinutes { get; set; }
+        public bool ApplianceIsCritical { get; set; }
 
         // HVAC loop settings, only meaningful for HVAC sensors.
         public Guid? HvacLoopSettingId { get; set; }

@@ -13,6 +13,8 @@ namespace EMO.Repositories.EnergyDashboardServicesRepo
 
         Task<ResponseModel<CrmDashboardSummaryResponseDTO>> GetBusinessDashboardSummary(Guid businessId);
         Task<ResponseModel<CrmDashboardSummaryResponseDTO>> GetTenantDashboardSummary(Guid tenantId, Guid? businessId = null);
+        Task<ResponseModel<CrmDashboardLiveOverviewResponseDTO>> GetBusinessDashboardLiveOverview(Guid businessId, bool forceRefresh = false);
+        Task<ResponseModel<CrmDashboardLiveOverviewResponseDTO>> GetTenantDashboardLiveOverview(Guid tenantId, Guid? businessId = null, bool forceRefresh = false);
         Task<ResponseModel<CrmDashboardChartResponseDTO>> GetBusinessDashboardChart(Guid businessId, string chartType, string range = "30d", DateTime? fromDate = null, DateTime? toDate = null);
         Task<ResponseModel<CrmDashboardChartResponseDTO>> GetTenantDashboardChart(Guid tenantId, string chartType, string range = "30d", DateTime? fromDate = null, DateTime? toDate = null, Guid? businessId = null);
         Task<ResponseModel<List<CrmDashboardSuggestionResponseDTO>>> GetBusinessDashboardSuggestions(Guid businessId);

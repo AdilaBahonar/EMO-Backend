@@ -26,17 +26,9 @@ namespace EMO.Models.DBModels.DBTables
 
         public string description { get; set; } = string.Empty;
 
-        // Dashboard optimization metadata. Defaults keep existing appliances safe.
-        public bool is_shiftable { get; set; } = false;
+        // Optimization classification retained for safe prioritization.
         public string priority_level { get; set; } = "Normal";
-        public string normal_operating_hours { get; set; } = string.Empty;
-        public bool can_auto_control { get; set; } = false;
         public bool is_critical { get; set; } = false;
-        public bool allow_optimization_suggestions { get; set; } = true;
-        public string allowed_shift_start_time { get; set; } = string.Empty;
-        public string allowed_shift_end_time { get; set; } = string.Empty;
-        public int minimum_on_duration_minutes { get; set; } = 0;
-        public int minimum_off_duration_minutes { get; set; } = 0;
 
         public bool is_default { get; set; } = false;
         public bool is_custom { get; set; } = false;

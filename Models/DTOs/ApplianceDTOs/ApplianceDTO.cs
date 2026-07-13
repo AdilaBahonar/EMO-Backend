@@ -24,16 +24,8 @@ namespace EMO.Models.DTOs.ApplianceDTOs
 
         public string description { get; set; } = string.Empty;
 
-        public bool isShiftable { get; set; } = false;
         public string priorityLevel { get; set; } = "Normal";
-        public string normalOperatingHours { get; set; } = string.Empty;
-        public bool canAutoControl { get; set; } = false;
         public bool isCritical { get; set; } = false;
-        public bool allowOptimizationSuggestions { get; set; } = true;
-        public string allowedShiftStartTime { get; set; } = string.Empty;
-        public string allowedShiftEndTime { get; set; } = string.Empty;
-        public int minimumOnDurationMinutes { get; set; } = 0;
-        public int minimumOffDurationMinutes { get; set; } = 0;
 
         public bool isDefault { get; set; } = false;
         public bool isCustom { get; set; } = true;
@@ -66,16 +58,8 @@ namespace EMO.Models.DTOs.ApplianceDTOs
 
         public string description { get; set; } = string.Empty;
 
-        public bool isShiftable { get; set; } = false;
         public string priorityLevel { get; set; } = "Normal";
-        public string normalOperatingHours { get; set; } = string.Empty;
-        public bool canAutoControl { get; set; } = false;
         public bool isCritical { get; set; } = false;
-        public bool allowOptimizationSuggestions { get; set; } = true;
-        public string allowedShiftStartTime { get; set; } = string.Empty;
-        public string allowedShiftEndTime { get; set; } = string.Empty;
-        public int minimumOnDurationMinutes { get; set; } = 0;
-        public int minimumOffDurationMinutes { get; set; } = 0;
 
         public bool isDefault { get; set; } = false;
         public bool isCustom { get; set; } = true;
@@ -108,16 +92,8 @@ namespace EMO.Models.DTOs.ApplianceDTOs
 
         public string description { get; set; } = string.Empty;
 
-        public bool isShiftable { get; set; } = false;
         public string priorityLevel { get; set; } = "Normal";
-        public string normalOperatingHours { get; set; } = string.Empty;
-        public bool canAutoControl { get; set; } = false;
         public bool isCritical { get; set; } = false;
-        public bool allowOptimizationSuggestions { get; set; } = true;
-        public string allowedShiftStartTime { get; set; } = string.Empty;
-        public string allowedShiftEndTime { get; set; } = string.Empty;
-        public int minimumOnDurationMinutes { get; set; } = 0;
-        public int minimumOffDurationMinutes { get; set; } = 0;
 
         public bool isDefault { get; set; } = false;
         public bool isCustom { get; set; } = true;

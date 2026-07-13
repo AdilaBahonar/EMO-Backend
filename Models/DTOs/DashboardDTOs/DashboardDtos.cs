@@ -6,7 +6,7 @@ public class BreadcrumbDto
 {
     public Guid   Id    { get; set; }
     public string Name  { get; set; } = string.Empty;
-    public string Level { get; set; } = string.Empty; // business|facility|building|floor|section|office|sensor
+    public string Level { get; set; } = string.Empty; // business|facility|building|floor|section|office|device|sensor
 }
 
 // ─── Shared KPI block (reused at every level) ────────────────────────────────
@@ -136,6 +136,27 @@ public class OfficeDashboardDto
 {
     public Guid             OfficeId    { get; set; }
     public string           OfficeName  { get; set; } = string.Empty;
+    public KpiSummaryDto    Kpis        { get; set; } = new();
+    public List<DeviceCardDto> Devices  { get; set; } = new();
+    public List<TimeSeriesPointDto> HourlyEnergy { get; set; } = new();
+}
+
+// ─── Device level ───────────────────────────────────────────────────────────
+
+public class DeviceCardDto
+{
+    public Guid   DeviceId              { get; set; }
+    public string DeviceName            { get; set; } = string.Empty;
+    public double TotalActiveEnergyKwh  { get; set; }
+    public double AvgPowerFactor        { get; set; }
+    public int    SensorCount           { get; set; }
+    public int    AlertCount            { get; set; }
+}
+
+public class DeviceDashboardDto
+{
+    public Guid             DeviceId    { get; set; }
+    public string           DeviceName  { get; set; } = string.Empty;
     public KpiSummaryDto    Kpis        { get; set; } = new();
     public List<SensorCardDto> Sensors  { get; set; } = new();
     public List<TimeSeriesPointDto> HourlyEnergy { get; set; } = new();

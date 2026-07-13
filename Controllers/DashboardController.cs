@@ -1,6 +1,7 @@
 using EMO.Extensions.MiddleWare;
-using EMO.Models.DTOs.DashboardDTOs;
+using EMO.Models.DTOs.DeepDiveDTOs;
 using EMO.Repositories.DashboardServicesRepo;
+using EMO.Repositories.DeepDiveRepo;
 using EnergyMonitor.DTOs;
 using EnergyMonitor.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,11 @@ namespace EnergyMonitor.Controllers;
 
 /// <summary>
 /// Drill-down energy dashboard API.
-/// Every endpoint accepts ?range=24h|7d|30d  (or explicit ?from=&to= ISO timestamps).
+/// Every endpoint accepts ?range=24h|7d|30d|90d|1y (or explicit ?from=&to= ISO timestamps).
 ///
 /// Drill-down path:
 ///   /business/{id}  →  /facility/{id}  →  /building/{id}
-///   →  /floor/{id}  →  /section/{id}   →  /office/{id}  →  /sensor/{id}
+///   →  /floor/{id}  →  /section/{id}   →  /office/{id}  →  /device/{id}  →  /sensor/{id}
 /// </summary>
 [ApiController]
 [ApiKey]
@@ -22,14 +23,41 @@ namespace EnergyMonitor.Controllers;
 public class DashboardController : ControllerBase
 {
     private readonly DashboardService _svc;
-    private readonly IEnergyOverviewDashboardService _overviewSvc;
+    private readonly IDeepDiveService _deepDive;
 
-    public DashboardController(
-    DashboardService svc,
-    IEnergyOverviewDashboardService overviewSvc)
+    public DashboardController(DashboardService svc, IDeepDiveService deepDive)
     {
         _svc = svc;
-        _overviewSvc = overviewSvc;
+        _deepDive = deepDive;
+    }
+
+    // ─── Analysis snapshot ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns the persisted hierarchy analysis snapshot used by the Analysis tab.
+    /// The absolute route is retained so the existing Angular service does not change.
+    /// </summary>
+    [HttpGet("~/api/deep-dive/{level}/{id:guid}")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> GetDeepDive(
+        string level,
+        Guid id,
+        [FromQuery] DeepDiveQueryDto query)
+    {
+        var allowed = new[]
+        {
+            "business", "facility", "building", "floor",
+            "section", "office", "device", "sensor"
+        };
+
+        if (!allowed.Contains(level.ToLowerInvariant()))
+        {
+            return BadRequest(
+                "Unknown level. Use business|facility|building|floor|section|office|device|sensor.");
+        }
+
+        var result = await _deepDive.GetAsync(level, id, query);
+        return result is null ? NotFound() : Ok(result);
     }
 
     // ─── Business ─────────────────────────────────────────────────────────────
@@ -44,15 +72,6 @@ public class DashboardController : ControllerBase
     {
         var result = await _svc.GetBusinessAsync(businessId, q);
         return result is null ? NotFound() : Ok(result);
-    }
-    [HttpGet("overview/business/{businessId:guid}")]
-    [ProducesResponseType(typeof(EnergyOverviewDashboardDto), 200)]
-    public async Task<IActionResult> GetBusinessOverview(
-    Guid businessId,
-    [FromQuery] DashboardQueryParams q)
-    {
-        var result = await _overviewSvc.GetBusinessOverviewAsync(businessId, q);
-        return Ok(result);
     }
     // ─── Facility ─────────────────────────────────────────────────────────────
 
@@ -104,6 +123,17 @@ public class DashboardController : ControllerBase
         [FromQuery] DashboardQueryParams q)
         => Ok(await _svc.GetOfficeAsync(officeId, q));
 
+
+    // ─── Device ────────────────────────────────────────────────────────────────
+
+    /// <summary>Device view: all sensors assigned to this device.</summary>
+    [HttpGet("device/{deviceId:guid}")]
+    [ProducesResponseType(typeof(DeviceDashboardDto), 200)]
+    public async Task<IActionResult> GetDevice(
+        Guid deviceId,
+        [FromQuery] DashboardQueryParams q)
+        => Ok(await _svc.GetDeviceAsync(deviceId, q));
+
     // ─── Sensor ───────────────────────────────────────────────────────────────
 
     /// <summary>
@@ -127,30 +157,6 @@ public class DashboardController : ControllerBase
     /// </summary>
     /// 
 
-    [HttpGet("overview/{level}/{id:guid}")]
-    public async Task<IActionResult> GetOverviewDashboard(
-    string level,
-    Guid id,
-    [FromQuery] DashboardQueryParams q)
-    {
-        var allowedLevels = new[]
-        {
-        "business",
-        "facility",
-        "building",
-        "floor",
-        "section",
-        "office"
-    };
-
-        if (!allowedLevels.Contains(level.ToLowerInvariant()))
-        {
-            return BadRequest("Unknown overview level. Use: business|facility|building|floor|section|office");
-        }
-
-        var result = await _overviewSvc.GetOverviewAsync(level, id, q);
-        return Ok(result);
-    }
     [HttpGet("breadcrumb/{level}/{id:guid}")]
     [ProducesResponseType(typeof(List<BreadcrumbDto>), 200)]
     public async Task<IActionResult> GetBreadcrumb(string level, Guid id)
@@ -161,6 +167,10 @@ public class DashboardController : ControllerBase
 
         switch (level.ToLowerInvariant())
         {
+            case "device":
+                var device = await _svc.ResolveDeviceChainAsync(id);
+                crumbs = device;
+                break;
             case "sensor":
                 var sensor = await _svc.ResolveSensorChainAsync(id);
                 crumbs = sensor;
@@ -186,7 +196,7 @@ public class DashboardController : ControllerBase
                 crumbs = facility;
                 break;
             default:
-                return BadRequest("Unknown level. Use: sensor|office|section|floor|building|facility");
+                return BadRequest("Unknown level. Use: sensor|device|office|section|floor|building|facility");
         }
 
         return Ok(crumbs);

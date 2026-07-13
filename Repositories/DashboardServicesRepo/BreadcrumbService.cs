@@ -38,7 +38,40 @@ public partial class DashboardService
             new() { Id = fl.floor_id,       Name = fl.floor_name,       Level = "floor"     },
             new() { Id = sec.section_id,    Name = sec.section_name,    Level = "section"   },
             new() { Id = o.office_id,       Name = o.office_name,       Level = "office"    },
+            new() { Id = s.device.device_id, Name = s.device.device_name, Level = "device"  },
             new() { Id = s.sensor_id,       Name = s.sensor_name,       Level = "sensor"    },
+        };
+    }
+
+    public async Task<List<BreadcrumbDto>> ResolveDeviceChainAsync(Guid deviceId)
+    {
+        var device = await _db.tbl_device
+            .Include(x => x.office)
+                .ThenInclude(o => o.section)
+                    .ThenInclude(sec => sec.floor)
+                        .ThenInclude(f => f.building)
+                            .ThenInclude(b => b.facility)
+                                .ThenInclude(fac => fac.business)
+            .FirstOrDefaultAsync(x => x.device_id == deviceId && !x.is_deleted);
+
+        if (device is null) return new();
+
+        var office = device.office;
+        var section = office.section;
+        var floor = section.floor;
+        var building = floor.building;
+        var facility = building.facility;
+        var business = facility.business;
+
+        return new List<BreadcrumbDto>
+        {
+            new() { Id = business.business_id, Name = business.business_name, Level = "business" },
+            new() { Id = facility.facility_id, Name = facility.facility_name, Level = "facility" },
+            new() { Id = building.building_id, Name = building.building_name, Level = "building" },
+            new() { Id = floor.floor_id, Name = floor.floor_name, Level = "floor" },
+            new() { Id = section.section_id, Name = section.section_name, Level = "section" },
+            new() { Id = office.office_id, Name = office.office_name, Level = "office" },
+            new() { Id = device.device_id, Name = device.device_name, Level = "device" },
         };
     }
 

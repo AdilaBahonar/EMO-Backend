@@ -49,6 +49,13 @@ namespace EMO.Repositories.SensorsChainRepo
 
                     OfficeId = x.device.office.office_id,
                     OfficeName = x.device.office.office_name,
+                    OfficeIsActive = x.device.office.is_active,
+                    OfficeIsOccupied = x.device.office.is_occupied,
+                    OfficeIs24Hours = x.device.office.is_24_hours,
+                    OfficeAfterHoursAlertEnabled = x.device.office.after_hours_alert_enabled,
+                    OfficeOpeningTime = x.device.office.opening_time,
+                    OfficeClosingTime = x.device.office.closing_time,
+                    OfficeWorkingDays = x.device.office.working_days,
 
                     SectionId = x.device.office.section.section_id,
                     SectionName = x.device.office.section.section_name,
@@ -96,12 +103,8 @@ namespace EMO.Repositories.SensorsChainRepo
                 sensorChain.MaxPower = activeAssignment.appliance.max_power;
                 sensorChain.StandbyPower = activeAssignment.appliance.standby_power;
                 sensorChain.NormalPowerFactor = activeAssignment.appliance.normal_power_factor;
-                sensorChain.ApplianceIsShiftable = activeAssignment.appliance.is_shiftable;
                 sensorChain.AppliancePriorityLevel = activeAssignment.appliance.priority_level;
-                sensorChain.ApplianceNormalOperatingHours = activeAssignment.appliance.normal_operating_hours;
-                sensorChain.ApplianceCanAutoControl = activeAssignment.appliance.can_auto_control;
-                sensorChain.ApplianceMinimumOnDurationMinutes = activeAssignment.appliance.minimum_on_duration_minutes;
-                sensorChain.ApplianceMinimumOffDurationMinutes = activeAssignment.appliance.minimum_off_duration_minutes;
+                sensorChain.ApplianceIsCritical = activeAssignment.appliance.is_critical;
             }
 
             var loop = await db.tbl_hvac_loop_setting

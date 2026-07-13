@@ -1,8 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.OfficeDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.SensorsChainRepo;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMO.Repositories.OfficeServicesRepo
@@ -11,11 +12,16 @@ namespace EMO.Repositories.OfficeServicesRepo
     {
         private readonly DBUserManagementContext db;
         private readonly IMapper mapper;
+        private readonly ISensorRedisCacheService sensorRedisCacheService;
 
-        public OfficeServices(DBUserManagementContext db, IMapper mapper)
+        public OfficeServices(
+            DBUserManagementContext db,
+            IMapper mapper,
+            ISensorRedisCacheService sensorRedisCacheService)
         {
             this.db = db;
             this.mapper = mapper;
+            this.sensorRedisCacheService = sensorRedisCacheService;
         }
 
         public async Task<ResponseModel<List<OfficeResponseDTO>>> GetOfficeByBusinessId(string businessId)
@@ -128,6 +134,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                 mapper.Map(requestDto, existingOffice);
                 existingOffice.updated_at = DateTime.Now;
                 await db.SaveChangesAsync();
+                await RefreshOfficeSensorChainsAsync(existingOffice.office_id);
 
                 var updatedOffice = await db.tbl_office
                     .Include(x => x.business)
@@ -236,6 +243,7 @@ namespace EMO.Repositories.OfficeServicesRepo
                     office.is_deleted = true;
                     office.updated_at = DateTime.Now;
                     await db.SaveChangesAsync();
+                    await RefreshOfficeSensorChainsAsync(office.office_id);
 
                     return new ResponseModel()
                     {
@@ -369,6 +377,26 @@ namespace EMO.Repositories.OfficeServicesRepo
                     remarks = "There was a fatal error",
                     success = false
                 };
+            }
+        }
+
+        private async Task RefreshOfficeSensorChainsAsync(Guid officeId)
+        {
+            try
+            {
+                var sensorIds = await db.tbl_sensor
+                    .AsNoTracking()
+                    .Where(x => x.device.fk_office == officeId && !x.is_deleted)
+                    .Select(x => x.sensor_id)
+                    .ToListAsync();
+
+                foreach (var sensorId in sensorIds)
+                    await sensorRedisCacheService.SetSensorChainAsync(sensorId);
+            }
+            catch
+            {
+                // Redis is a rebuildable runtime cache. An office update must not
+                // fail after PostgreSQL has already committed successfully.
             }
         }
     }
