@@ -1,10 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace EMO.Models.DTOs.UserDTOs
 {
     public class AddUserDTO
     {
-        [Required]
+       
         public string userName { get; set; } = string.Empty;
         public string name { get; set; } = string.Empty;
         public string userEmail { get; set; } = string.Empty;
@@ -114,5 +114,17 @@ namespace EMO.Models.DTOs.UserDTOs
         public string userToken { get; set; } = string.Empty;
         public string userName { get; set; } = string.Empty;
         public string userId { get; set; } = string.Empty;
+        public string userTypeName { get; set; } = string.Empty;
+        public int userTypeLevel { get; set; }
+        public bool hasGlobalAccess { get; set; }
+        public bool isLoginAllowed { get; set; }
+        public List<string> businessIds { get; set; } = new();
+        public List<string> facilityIds { get; set; } = new();
+        public List<string> buildingIds { get; set; } = new();
+        public List<string> floorIds { get; set; } = new();
+        public List<string> sectionIds { get; set; } = new();
+        public List<string> officeIds { get; set; } = new();
+        public List<string> deviceIds { get; set; } = new();
+        public List<string> sensorIds { get; set; } = new();
     }
 }

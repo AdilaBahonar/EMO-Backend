@@ -10,6 +10,7 @@ namespace EMO.Repositories.DeepDiveRepo;
 public interface IDeepDiveService
 {
     Task<DeepDiveResponseDto?> GetAsync(string level, Guid id, DeepDiveQueryDto query);
+    Task<DeepDiveResponseDto?> GetTenantAsync(string level, Guid id, DeepDiveQueryDto query, IReadOnlyCollection<Guid> allowedOfficeIds);
     Task WarmScopeAsync(string level, Guid id, string range, CancellationToken cancellationToken = default);
 }
 
@@ -27,7 +28,21 @@ public class DeepDiveService : IDeepDiveService
         _energyAggregateStore = energyAggregateStore;
     }
 
-    public async Task<DeepDiveResponseDto?> GetAsync(string level, Guid id, DeepDiveQueryDto query)
+    public Task<DeepDiveResponseDto?> GetAsync(string level, Guid id, DeepDiveQueryDto query) =>
+        GetInternalAsync(level, id, query, null);
+
+    public Task<DeepDiveResponseDto?> GetTenantAsync(
+        string level,
+        Guid id,
+        DeepDiveQueryDto query,
+        IReadOnlyCollection<Guid> allowedOfficeIds) =>
+        GetInternalAsync(level, id, query, allowedOfficeIds.ToHashSet());
+
+    private async Task<DeepDiveResponseDto?> GetInternalAsync(
+        string level,
+        Guid id,
+        DeepDiveQueryDto query,
+        HashSet<Guid>? allowedOfficeIds)
     {
         level = NormalizeLevel(level);
         var rangeKey = NormalizeRangeKey(query);
@@ -35,10 +50,13 @@ public class DeepDiveService : IDeepDiveService
         var responseTo = ResolveResponseTo(query, aggregateTo);
         if (aggregateTo <= from || responseTo <= from) return null;
 
+        var isTenantScoped = allowedOfficeIds is not null;
         DeepDiveResponseDto? result = null;
         var servedFromAggregate = false;
 
-        if (!query.ForceRefresh)
+        // Business aggregates must never be shared with a tenant-scoped request,
+        // because the same hierarchy id can represent a different set of offices.
+        if (!isTenantScoped && !query.ForceRefresh)
         {
             result = await TryReadAggregateAsync(level, id, rangeKey, from, aggregateTo);
             servedFromAggregate = result is not null;
@@ -46,26 +64,26 @@ public class DeepDiveService : IDeepDiveService
 
         if (result is null)
         {
-            result = await BuildAsync(level, id, query);
+            result = await BuildAsync(level, id, query, allowedOfficeIds);
             if (result is null) return null;
 
             result.CalculatedAt = DateTime.UtcNow;
             result.ServedFromAggregate = false;
-            var businessId = await ResolveBusinessIdAsync(level, id) ?? Guid.Empty;
 
-            // Persist only the stable, completed-range snapshot. The unfinished
-            // live edge is merged below and is intentionally not written into this
-            // cache entry, otherwise every sensor packet would invalidate it.
-            await UpsertAggregateAsync(
-                level, id, businessId, rangeKey, from, aggregateTo, "deepdive", result);
+            if (!isTenantScoped)
+            {
+                var businessId = await ResolveBusinessIdAsync(level, id) ?? Guid.Empty;
+                await UpsertAggregateAsync(
+                    level, id, businessId, rangeKey, from, aggregateTo, "deepdive", result);
+            }
         }
 
-        await RefreshLiveOverlayAsync(level, id, result);
+        await RefreshLiveOverlayAsync(level, id, result, allowedOfficeIds);
 
         if (!IsCustomRange(query) && responseTo > aggregateTo)
         {
             await AppendLatestRangeAsync(
-                level, id, rangeKey, aggregateTo, responseTo, result, query.TimeZone);
+                level, id, rangeKey, aggregateTo, responseTo, result, query.TimeZone, allowedOfficeIds);
         }
 
         result.CalculatedAt = DateTime.UtcNow;
@@ -87,7 +105,7 @@ public class DeepDiveService : IDeepDiveService
         });
     }
 
-    private async Task<DeepDiveResponseDto?> BuildAsync(string level, Guid id, DeepDiveQueryDto query)
+    private async Task<DeepDiveResponseDto?> BuildAsync(string level, Guid id, DeepDiveQueryDto query, HashSet<Guid>? allowedOfficeIds = null)
     {
         level = level.ToLowerInvariant();
         var (from, to) = ResolveRange(query);
@@ -99,7 +117,7 @@ public class DeepDiveService : IDeepDiveService
         var duration = to - from;
         var previousFrom = from - duration;
         var previousTo = from;
-        var sensorIds = await ResolveSensorIdsAsync(level, id);
+        var sensorIds = await ResolveSensorIdsAsync(level, id, allowedOfficeIds);
         var businessId = await ResolveBusinessIdAsync(level, id);
 
         var currentRows = await LoadRowsAsync(sensorIds, from, to);
@@ -117,9 +135,11 @@ public class DeepDiveService : IDeepDiveService
             sensorIds, config.OnlineThresholdSeconds);
         var issues = health.Issues;
         var children = await BuildChildrenAsync(
-            level, id, currentRows, previousRows, energy, config, health);
+            level, id, currentRows, previousRows, energy, config, health, allowedOfficeIds);
         var suggestions = businessId.HasValue
-            ? await LoadSuggestionsAsync(businessId.Value, sensorIds, from, to, config)
+            ? await LoadSuggestionsAsync(
+                businessId.Value, sensorIds, from, to, config,
+                allowedOfficeIds, includeBusinessLevel: allowedOfficeIds is null && level == "business")
             : new List<DeepDiveSuggestionDto>();
 
         var savingKwh = suggestions.Sum(x => x.EstimatedSavingKwh ?? 0);
@@ -427,18 +447,31 @@ public class DeepDiveService : IDeepDiveService
         return string.IsNullOrWhiteSpace(name) ? null : (id, name);
     }
 
-    private async Task<List<Guid>> ResolveSensorIdsAsync(string level, Guid id)
+    private async Task<List<Guid>> ResolveSensorIdsAsync(
+        string level,
+        Guid id,
+        HashSet<Guid>? allowedOfficeIds = null)
     {
+        bool OfficeAllowed(Guid officeId) => allowedOfficeIds is null || allowedOfficeIds.Contains(officeId);
+
         IQueryable<Guid> query = level switch
         {
-            "business" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.fk_business == id).Select(s => s.sensor_id),
-            "facility" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.section.floor.building.fk_facility == id).Select(s => s.sensor_id),
-            "building" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.section.floor.fk_building == id).Select(s => s.sensor_id),
-            "floor" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.section.fk_floor == id).Select(s => s.sensor_id),
-            "section" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.fk_section == id).Select(s => s.sensor_id),
-            "office" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.fk_office == id).Select(s => s.sensor_id),
-            "device" => _db.tbl_sensor.Where(s => !s.is_deleted && s.fk_device == id).Select(s => s.sensor_id),
-            "sensor" => _db.tbl_sensor.Where(s => !s.is_deleted && s.sensor_id == id).Select(s => s.sensor_id),
+            "business" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.fk_business == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "facility" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.section.floor.building.fk_facility == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "building" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.section.floor.fk_building == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "floor" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.section.fk_floor == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "section" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.office.fk_section == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "office" => _db.tbl_sensor.Where(s => !s.is_deleted && s.device.fk_office == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "device" => _db.tbl_sensor.Where(s => !s.is_deleted && s.fk_device == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
+            "sensor" => _db.tbl_sensor.Where(s => !s.is_deleted && s.sensor_id == id
+                && (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office))).Select(s => s.sensor_id),
             _ => _db.tbl_sensor.Where(s => false).Select(s => s.sensor_id)
         };
         return await query.Distinct().ToListAsync();
@@ -463,9 +496,10 @@ public class DeepDiveService : IDeepDiveService
     private async Task RefreshLiveOverlayAsync(
         string level,
         Guid id,
-        DeepDiveResponseDto cached)
+        DeepDiveResponseDto cached,
+        HashSet<Guid>? allowedOfficeIds = null)
     {
-        var sensorIds = await ResolveSensorIdsAsync(level, id);
+        var sensorIds = await ResolveSensorIdsAsync(level, id, allowedOfficeIds);
         if (sensorIds.Count == 0)
         {
             cached.ActiveIssues = new List<DeepDiveIssueDto>();
@@ -502,7 +536,9 @@ public class DeepDiveService : IDeepDiveService
                 sensorIds,
                 cached.From,
                 cached.To,
-                new ConfigurationContext { Features = cached.Features });
+                new ConfigurationContext { Features = cached.Features },
+                allowedOfficeIds,
+                includeBusinessLevel: allowedOfficeIds is null && level == "business");
             cached.Summary.SavingOpportunityKwh = Round(
                 cached.Suggestions.Sum(x => x.EstimatedSavingKwh ?? 0));
             cached.Summary.SavingOpportunityCost = cached.Features.SavingsCostAnalysis
@@ -513,7 +549,7 @@ public class DeepDiveService : IDeepDiveService
         if (cached.Children.Count == 0)
             return;
 
-        var mappings = await LoadChildSensorMappingsAsync(level, id);
+        var mappings = await LoadChildSensorMappingsAsync(level, id, allowedOfficeIds);
         var sensorsByChild = mappings
             .GroupBy(x => x.ChildId)
             .ToDictionary(
@@ -539,12 +575,13 @@ public class DeepDiveService : IDeepDiveService
         DateTime aggregateTo,
         DateTime responseTo,
         DeepDiveResponseDto response,
-        string requestedTimeZone)
+        string requestedTimeZone,
+        HashSet<Guid>? allowedOfficeIds = null)
     {
         if (responseTo <= aggregateTo)
             return;
 
-        var sensorIds = await ResolveSensorIdsAsync(level, id);
+        var sensorIds = await ResolveSensorIdsAsync(level, id, allowedOfficeIds);
         response.To = responseTo;
         if (sensorIds.Count == 0)
             return;
@@ -640,7 +677,7 @@ public class DeepDiveService : IDeepDiveService
                 tailLast > response.DataStatus.LastReadingAt.Value)
                 response.DataStatus.LastReadingAt = tailLast;
 
-            await MergeChildrenWithTailAsync(level, id, response, tailRows, config);
+            await MergeChildrenWithTailAsync(level, id, response, tailRows, config, allowedOfficeIds);
             MergeTrendWithTail(response, tailRows, config, rangeKey, aggregateTo);
             MergeMainChartsWithTail(response, tailRows, config, rangeKey, responseTo);
         }
@@ -687,12 +724,13 @@ public class DeepDiveService : IDeepDiveService
         Guid id,
         DeepDiveResponseDto response,
         List<ReadingRow> tailRows,
-        ConfigurationContext config)
+        ConfigurationContext config,
+        HashSet<Guid>? allowedOfficeIds = null)
     {
         if (response.Children.Count == 0 || tailRows.Count == 0)
             return;
 
-        var mappings = await LoadChildSensorMappingsAsync(level, id);
+        var mappings = await LoadChildSensorMappingsAsync(level, id, allowedOfficeIds);
         var sensorIdsByChild = mappings
             .GroupBy(x => x.ChildId)
             .ToDictionary(
@@ -1169,19 +1207,23 @@ public class DeepDiveService : IDeepDiveService
                     NormalPowerFactor = x.appliance.normal_power_factor
                 }).ToListAsync();
 
-        var officeRows = await ScopeOffices(level, entityId)
-            .Select(x => new
-            {
-                x.is_24_hours,
-                x.working_days,
-                x.opening_time,
-                x.closing_time
-            })
-            .ToListAsync();
+        var officeRows = sensorIds.Count == 0
+            ? new List<OfficeScheduleRow>()
+            : await _db.tbl_sensor.AsNoTracking()
+                .Where(x => sensorIds.Contains(x.sensor_id))
+                .Select(x => new OfficeScheduleRow
+                {
+                    Is24Hours = x.device.office.is_24_hours,
+                    WorkingDays = x.device.office.working_days,
+                    OpeningTime = x.device.office.opening_time,
+                    ClosingTime = x.device.office.closing_time
+                })
+                .Distinct()
+                .ToListAsync();
         var officeCount = officeRows.Count;
         var officeScheduleCount = officeRows.Count(x =>
-            x.is_24_hours ||
-            (!string.IsNullOrWhiteSpace(x.working_days) && x.opening_time != x.closing_time));
+            x.Is24Hours ||
+            (!string.IsNullOrWhiteSpace(x.WorkingDays) && x.OpeningTime != x.ClosingTime));
 
         requestedTimeZone = string.IsNullOrWhiteSpace(requestedTimeZone)
             ? "UTC"
@@ -2064,12 +2106,13 @@ public class DeepDiveService : IDeepDiveService
         List<ReadingRow> previousRows,
         double parentEnergy,
         ConfigurationContext config,
-        SensorHealthContext health)
+        SensorHealthContext health,
+        HashSet<Guid>? allowedOfficeIds = null)
     {
-        var refs = await LoadChildRefsAsync(level, id);
+        var refs = await LoadChildRefsAsync(level, id, allowedOfficeIds);
         if (refs.Count == 0) return new List<DeepDiveChildDto>();
 
-        var mappings = await LoadChildSensorMappingsAsync(level, id);
+        var mappings = await LoadChildSensorMappingsAsync(level, id, allowedOfficeIds);
         var sensorIdsByChild = mappings
             .GroupBy(x => x.ChildId)
             .ToDictionary(
@@ -2083,6 +2126,7 @@ public class DeepDiveService : IDeepDiveService
         foreach (var child in refs)
         {
             var ids = sensorIdsByChild.GetValueOrDefault(child.id) ?? new HashSet<Guid>();
+            if (allowedOfficeIds is not null && ids.Count == 0) continue;
             var rows = ids.SelectMany(sensorId => currentBySensor[sensorId]).ToList();
             var previous = ids.SelectMany(sensorId => previousBySensor[sensorId]).ToList();
             var energy = CalculateEnergy(rows);
@@ -2128,7 +2172,7 @@ public class DeepDiveService : IDeepDiveService
             .Sum(x => x.EnergyKwh * ResolveRate(x.At, config));
     }
 
-    private async Task<List<(Guid id, string name, string level)>> LoadChildRefsAsync(string level, Guid id)
+    private async Task<List<(Guid id, string name, string level)>> LoadChildRefsAsync(string level, Guid id, HashSet<Guid>? allowedOfficeIds = null)
     {
         if (level == "business")
             return (await _db.tbl_facility.Where(x => x.fk_business == id && !x.is_deleted)
@@ -2170,12 +2214,14 @@ public class DeepDiveService : IDeepDiveService
 
     private async Task<List<ChildSensorMap>> LoadChildSensorMappingsAsync(
         string level,
-        Guid id)
+        Guid id,
+        HashSet<Guid>? allowedOfficeIds = null)
     {
         IQueryable<ChildSensorMap> query = level switch
         {
             "business" => _db.tbl_sensor
                 .Where(s => !s.is_deleted && s.device.fk_business == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)) &&
                             !s.device.is_deleted && !s.device.office.is_deleted)
                 .Select(s => new ChildSensorMap
                 {
@@ -2184,7 +2230,8 @@ public class DeepDiveService : IDeepDiveService
                 }),
             "facility" => _db.tbl_sensor
                 .Where(s => !s.is_deleted &&
-                            s.device.office.section.floor.building.fk_facility == id)
+                            s.device.office.section.floor.building.fk_facility == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)))
                 .Select(s => new ChildSensorMap
                 {
                     ChildId = s.device.office.section.floor.building.building_id,
@@ -2192,35 +2239,40 @@ public class DeepDiveService : IDeepDiveService
                 }),
             "building" => _db.tbl_sensor
                 .Where(s => !s.is_deleted &&
-                            s.device.office.section.floor.fk_building == id)
+                            s.device.office.section.floor.fk_building == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)))
                 .Select(s => new ChildSensorMap
                 {
                     ChildId = s.device.office.section.floor.floor_id,
                     SensorId = s.sensor_id
                 }),
             "floor" => _db.tbl_sensor
-                .Where(s => !s.is_deleted && s.device.office.section.fk_floor == id)
+                .Where(s => !s.is_deleted && s.device.office.section.fk_floor == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)))
                 .Select(s => new ChildSensorMap
                 {
                     ChildId = s.device.office.section.section_id,
                     SensorId = s.sensor_id
                 }),
             "section" => _db.tbl_sensor
-                .Where(s => !s.is_deleted && s.device.office.fk_section == id)
+                .Where(s => !s.is_deleted && s.device.office.fk_section == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)))
                 .Select(s => new ChildSensorMap
                 {
                     ChildId = s.device.office.office_id,
                     SensorId = s.sensor_id
                 }),
             "office" => _db.tbl_sensor
-                .Where(s => !s.is_deleted && s.device.fk_office == id)
+                .Where(s => !s.is_deleted && s.device.fk_office == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)))
                 .Select(s => new ChildSensorMap
                 {
                     ChildId = s.device.device_id,
                     SensorId = s.sensor_id
                 }),
             "device" => _db.tbl_sensor
-                .Where(s => !s.is_deleted && s.fk_device == id)
+                .Where(s => !s.is_deleted && s.fk_device == id &&
+                            (allowedOfficeIds == null || allowedOfficeIds.Contains(s.device.fk_office)))
                 .Select(s => new ChildSensorMap
                 {
                     ChildId = s.sensor_id,
@@ -2242,7 +2294,9 @@ public class DeepDiveService : IDeepDiveService
         List<Guid> sensorIds,
         DateTime from,
         DateTime to,
-        ConfigurationContext config)
+        ConfigurationContext config,
+        HashSet<Guid>? allowedOfficeIds = null,
+        bool includeBusinessLevel = false)
     {
         if (!config.Features.OptimizationSuggestions) return new();
 
@@ -2252,13 +2306,30 @@ public class DeepDiveService : IDeepDiveService
                 && ((x.reason_code.StartsWith("LIVE_") && x.to_time >= nowUtc)
                     || (!x.reason_code.StartsWith("LIVE_") && x.to_time >= from && x.from_time <= to)));
 
-        if (sensorIds.Count > 0)
-            query = query.Where(x => !x.fk_sensor.HasValue || sensorIds.Contains(x.fk_sensor.Value));
+        var relevantOfficeIds = allowedOfficeIds ?? (sensorIds.Count == 0
+            ? new HashSet<Guid>()
+            : (await _db.tbl_sensor.AsNoTracking()
+                .Where(x => sensorIds.Contains(x.sensor_id))
+                .Select(x => x.device.fk_office)
+                .Distinct()
+                .ToListAsync()).ToHashSet());
 
-        var suggestions = await query
-            .OrderByDescending(x => x.priority == "High")
+        query = query.Where(x =>
+            (x.fk_sensor.HasValue && sensorIds.Contains(x.fk_sensor.Value))
+            || (x.fk_office.HasValue && relevantOfficeIds.Contains(x.fk_office.Value))
+            || (includeBusinessLevel && !x.fk_sensor.HasValue && !x.fk_office.HasValue));
+
+        var rows = await query
+            .OrderByDescending(x => x.updated_at)
+            .Take(100)
+            .ToListAsync();
+
+        var suggestions = rows
+            .GroupBy(x => x.reason_code)
+            .Select(x => x.OrderByDescending(y => y.updated_at).First())
+            .OrderByDescending(x => string.Equals(x.priority, "High", StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(x => x.estimated_saving_kwh)
-            .Take(8)
+            .Take(20)
             .Select(x => new DeepDiveSuggestionDto
             {
                 Priority = x.priority,
@@ -2268,7 +2339,7 @@ public class DeepDiveService : IDeepDiveService
                 EstimatedSavingKwh = x.estimated_saving_kwh,
                 EstimatedSavingCost = x.estimated_saving_cost,
                 CanApplyAction = x.can_apply_action
-            }).ToListAsync();
+            }).ToList();
 
         if (!config.Features.SavingsCostAnalysis)
             foreach (var suggestion in suggestions) suggestion.EstimatedSavingCost = null;
@@ -2602,6 +2673,14 @@ public class DeepDiveService : IDeepDiveService
         public double MaxPower { get; set; }
         public double StandbyPower { get; set; }
         public double NormalPowerFactor { get; set; }
+    }
+
+    private sealed class OfficeScheduleRow
+    {
+        public bool Is24Hours { get; init; }
+        public string WorkingDays { get; init; } = string.Empty;
+        public TimeOnly OpeningTime { get; init; }
+        public TimeOnly ClosingTime { get; init; }
     }
 
     private sealed class ConfigurationContext

@@ -3,8 +3,7 @@ using EMO.Repositories.DeepDiveRepo;
 using EnergyMonitor.DTOs;
 using Microsoft.EntityFrameworkCore;
 
-namespace EnergyMonitor.Services;
-
+namespace EMO.Repositories.DashboardServicesRepo;
 public partial class DashboardService
 {
     private readonly DBUserManagementContext _db;

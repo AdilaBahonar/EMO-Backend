@@ -1,8 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using EMO.Models.DBModels;
 using EMO.Models.DTOs.UserDTOs;
 using EMO.Models.DTOs.ResponseDTO;
+using EMO.Repositories.UserAccessRepo;
 
 namespace EMO.Repositories.InnerServicesRepo
 {
@@ -10,10 +11,12 @@ namespace EMO.Repositories.InnerServicesRepo
     {
         private readonly DBUserManagementContext db;
         private readonly IMapper mapper;
-        public InnerServices(DBUserManagementContext db, IMapper mapper)
+        private readonly IUserAccessService userAccessService;
+        public InnerServices(DBUserManagementContext db, IMapper mapper, IUserAccessService userAccessService)
         {
             this.db = db;
             this.mapper = mapper;
+            this.userAccessService = userAccessService;
         }
         public async Task<ResponseModel<UserInnerResponseDTO>> GetUserByOfficialEmail(string username)
         {
@@ -39,40 +42,16 @@ namespace EMO.Repositories.InnerServicesRepo
                     };
                 }
 
-                // ================= BUSINESS CHECK =================
-                if (existingUser.fk_business != null)
+                // Central access validation checks active business and, for tenants,
+                // at least one agreement whose date range includes today.
+                var access = await userAccessService.GetByUserIdAsync(existingUser.user_id);
+                if (access is null || !access.IsLoginAllowed)
                 {
-                    var business = await db.tbl_business
-                        .FirstOrDefaultAsync(b => b.business_id == existingUser.fk_business
-                                               && b.is_active
-                                               && !b.is_deleted);
-
-                    if (business == null)
+                    return new ResponseModel<UserInnerResponseDTO>()
                     {
-                        return new ResponseModel<UserInnerResponseDTO>()
-                        {
-                            remarks = "Business isn't active. Contact your administrator.",
-                            success = false,
-                        };
-                    }
-
-                    // ================= AGREEMENT CHECK =================
-                    bool isBusinessAdmin = existingUser.sub_user_type?.user_type?.user_type_name == "Business Admin";
-
-                    if (!isBusinessAdmin)
-                    {
-                        bool hasActiveAgreement = await db.tbl_agreement
-                            .AnyAsync(x => x.fk_tenant == existingUser.user_id && x.is_active);
-
-                        if (!hasActiveAgreement)
-                        {
-                            return new ResponseModel<UserInnerResponseDTO>()
-                            {
-                                remarks = "Your agreement has expired. You can't log in.",
-                                success = false,
-                            };
-                        }
-                    }
+                        remarks = access?.DenialReason ?? "User access could not be validated.",
+                        success = false,
+                    };
                 }
 
                 // ================= SUCCESS =================

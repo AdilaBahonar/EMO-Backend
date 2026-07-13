@@ -258,3 +258,14 @@ public class DashboardQueryParams
     public DateTime? To    { get; set; }
     public string    Range { get; set; } = "24h"; // "24h"|"7d"|"30d"
 }
+
+// Tenant root keeps the existing dashboard shape while exposing only offices
+// covered by current agreements.
+public class TenantDashboardDto
+{
+    public Guid BusinessId { get; set; }
+    public string BusinessName { get; set; } = "Assigned offices";
+    public KpiSummaryDto Kpis { get; set; } = new();
+    public List<OfficeCardDto> Offices { get; set; } = new();
+    public List<TimeSeriesPointDto> HourlyEnergy { get; set; } = new();
+}

@@ -19,13 +19,10 @@ using System.ComponentModel.DataAnnotations;
 
         public class AddTenantDTO
         {
-            [Required]
             public string tenantName { get; set; } = string.Empty;
-            [Required]
+
             public string tenantNtn { get; set; } = string.Empty;
-            [Required]
             public string tenantAddress { get; set; } = string.Empty;
-            [Required]
             public string tenantCoin { get; set; } = string.Empty;
         }
 

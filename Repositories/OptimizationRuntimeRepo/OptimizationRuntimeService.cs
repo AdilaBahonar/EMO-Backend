@@ -130,8 +130,15 @@ namespace EMO.Repositories.OptimizationRuntimeRepo
             var incoming = request.Suggestions
                 .Where(x => !string.IsNullOrWhiteSpace(x.ReasonCode))
                 .Take(100)
-                .GroupBy(x => x.ReasonCode.Trim(), StringComparer.OrdinalIgnoreCase)
-                .Select(x => x.Last())
+                .Select(x => new
+                {
+                    Item = x,
+                    NormalizedReason = x.ReasonCode.Trim().StartsWith(LiveReasonPrefix, StringComparison.OrdinalIgnoreCase)
+                        ? x.ReasonCode.Trim()
+                        : $"{LiveReasonPrefix}{x.ReasonCode.Trim()}"
+                })
+                .GroupBy(x => x.NormalizedReason, StringComparer.OrdinalIgnoreCase)
+                .Select(x => (ReasonCode: x.Key, Item: x.Last().Item))
                 .ToList();
 
             var existing = await db.tbl_dashboard_suggestion
@@ -148,20 +155,18 @@ namespace EMO.Repositories.OptimizationRuntimeRepo
             var activeReasons = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new OptimizationSuggestionSyncResultDTO { SyncedAtUtc = now };
 
-            // Older versions did not enforce a live-suggestion uniqueness rule.
-            // Expire duplicates safely instead of failing dictionary creation.
+            // Remove legacy duplicate live rows. One business/reason code is the
+            // authoritative active suggestion record.
             foreach (var duplicate in existing.Where(x => !retainedIds.Contains(x.dashboard_suggestion_id)))
             {
-                duplicate.to_time = now;
-                duplicate.updated_at = now;
+                db.tbl_dashboard_suggestion.Remove(duplicate);
                 result.Expired++;
             }
 
-            foreach (var item in incoming)
+            foreach (var incomingItem in incoming)
             {
-                var reasonCode = item.ReasonCode.Trim();
-                if (!reasonCode.StartsWith(LiveReasonPrefix, StringComparison.OrdinalIgnoreCase))
-                    reasonCode = $"{LiveReasonPrefix}{reasonCode}";
+                var reasonCode = incomingItem.ReasonCode;
+                var item = incomingItem.Item;
 
                 activeReasons.Add(reasonCode);
                 if (!byReason.TryGetValue(reasonCode, out var entity))
@@ -185,7 +190,7 @@ namespace EMO.Repositories.OptimizationRuntimeRepo
                 Apply(entity, item, now);
             }
 
-            foreach (var entity in existing.Where(x => !activeReasons.Contains(x.reason_code) && x.to_time > now))
+            foreach (var entity in byReason.Values.Where(x => !activeReasons.Contains(x.reason_code) && x.to_time > now))
             {
                 entity.to_time = now;
                 entity.updated_at = now;

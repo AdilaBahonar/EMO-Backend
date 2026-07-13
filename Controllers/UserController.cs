@@ -79,6 +79,7 @@ namespace EMO.Controllers
                 return BadRequest(Response);
             }
         }
+        [AllowAnonymous]
 
         [HttpGet("ValidateUser")]
         public async Task<ActionResult<ResponseModel<ValidateUserDTO>>> ValidateUser(string username)

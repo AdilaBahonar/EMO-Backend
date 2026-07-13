@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.AgreementDTOs;
@@ -215,57 +215,18 @@ namespace EMO.Repositories.AgreementServicesRepo
             try
             {
                 var businessGuid = Guid.Parse(businessId);
-                var now = DateTime.Now;
-
                 var agreements = await db.tbl_agreement
+                    .AsNoTracking()
                     .Where(x => x.fk_business == businessGuid && !x.is_deleted)
                     .Include(x => x.tenant)
+                    .OrderByDescending(x => x.agreement_start_date)
                     .ToListAsync();
-
-                if (!agreements.Any())
-                {
-                    return new ResponseModel<List<AgreementResponseDTO>>()
-                    {
-                        remarks = "No record found",
-                        success = false
-                    };
-                }
-                var expiredAgreements = agreements
-                    .Where(a => a.agreement_end_date < now && a.is_active)
-                    .ToList();
-
-                if (expiredAgreements.Any())
-                {
-                    var expiredIds = expiredAgreements.Select(x => x.agreement_id).ToList();
-
-                    foreach (var agreement in expiredAgreements)
-                    {
-                        agreement.is_active = false;
-                        agreement.updated_at = now;
-                    }
-
-                    var offices = await db.tbl_office_agreement
-                        .Where(x => expiredIds.Contains(x.fk_agreement))
-                        .Include(x => x.office)
-                        .Select(x => x.office)
-                        .Distinct()
-                        .ToListAsync();
-
-                    foreach (var office in offices)
-                    {
-                        office.is_occupied = false;
-                    }
-
-                    await db.SaveChangesAsync();
-                }
-
-                var dto = mapper.Map<List<AgreementResponseDTO>>(agreements);
 
                 return new ResponseModel<List<AgreementResponseDTO>>
                 {
-                    data = dto,
+                    data = mapper.Map<List<AgreementResponseDTO>>(agreements),
                     success = true,
-                    remarks = "Success"
+                    remarks = agreements.Any() ? "Success" : "No record found"
                 };
             }
             catch (Exception ex)
@@ -366,48 +327,50 @@ namespace EMO.Repositories.AgreementServicesRepo
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(tenantId))
+                if (!Guid.TryParse(tenantId, out var parsedTenantId))
                 {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
+                    return new ResponseModel<List<OfficeResponseDTO>>
                     {
-                        remarks = "Invalid Id.",
+                        remarks = "Invalid tenant id.",
                         success = false
                     };
                 }
 
-                if (!Guid.TryParse(tenantId, out Guid parsedTenantId))
-                {
-                    return new ResponseModel<List<OfficeResponseDTO>>()
-                    {
-                        remarks = "Invalid Guid format.",
-                        success = false
-                    };
-                }
-                var responseList = new List<OfficeResponseDTO>();
-                var agreements = await db.tbl_agreement.Where(x => x.fk_tenant == parsedTenantId).ToListAsync();
+                var today = DateTime.Today;
+                var offices = await (
+                    from agreement in db.tbl_agreement.AsNoTracking()
+                    join officeAgreement in db.tbl_office_agreement.AsNoTracking()
+                        on agreement.agreement_id equals officeAgreement.fk_agreement
+                    join office in db.tbl_office.AsNoTracking()
+                        on officeAgreement.fk_office equals office.office_id
+                    where agreement.fk_tenant == parsedTenantId
+                          && agreement.is_active
+                          && !agreement.is_deleted
+                          && agreement.agreement_start_date.Date <= today
+                          && agreement.agreement_end_date.Date >= today
+                          && !officeAgreement.is_deleted
+                          && office.is_active
+                          && !office.is_deleted
+                          && office.business.is_active
+                          && !office.business.is_deleted
+                    select office)
+                    .Include(x => x.section)
+                    .Distinct()
+                    .OrderBy(x => x.office_name)
+                    .ToListAsync();
 
-                foreach(var item in agreements)
+                return new ResponseModel<List<OfficeResponseDTO>>
                 {
-                    var offices = await db.tbl_office_agreement
-                  .Where(x => x.fk_agreement == item.agreement_id && !x.is_deleted)
-                  .Include(x => x.office)
-                  .Select(x => x.office)
-                  .ToListAsync();
-                   responseList.AddRange(mapper.Map<List<OfficeResponseDTO>>(offices));
-                }
-
-                return new ResponseModel<List<OfficeResponseDTO>>()
-                {
-                    data = responseList,
-                    remarks = responseList.Any() ? "Success" : "No record found.",
+                    data = mapper.Map<List<OfficeResponseDTO>>(offices),
+                    remarks = offices.Any() ? "Success" : "No active agreement offices found.",
                     success = true
                 };
             }
             catch (Exception ex)
             {
-                return new ResponseModel<List<OfficeResponseDTO>>()
+                return new ResponseModel<List<OfficeResponseDTO>>
                 {
-                    remarks = $"There was a fatal error:",
+                    remarks = $"There was a fatal error: {ex.Message}",
                     success = false
                 };
             }
@@ -452,37 +415,45 @@ namespace EMO.Repositories.AgreementServicesRepo
         {
             try
             {
-                var agreement = await db.tbl_office_agreement.Where(x=>x.agreement.is_active && x.fk_office == Guid.Parse(requestDTO.officeId) && x.fk_agreement == Guid.Parse(requestDTO.agreementId) && !x.is_deleted).FirstOrDefaultAsync();
+                var agreementId = Guid.Parse(requestDTO.agreementId);
+                var officeId = Guid.Parse(requestDTO.officeId);
+                var assignment = await db.tbl_office_agreement
+                    .FirstOrDefaultAsync(x => x.fk_office == officeId
+                                              && x.fk_agreement == agreementId
+                                              && !x.is_deleted);
+                if (assignment is null)
+                    return new ResponseModel { remarks = "Office assignment was not found.", success = false };
 
-                if (agreement != null)
-                {
-                    var office = await db.tbl_office.Where(x => x.office_id == agreement.fk_office).FirstOrDefaultAsync();
-                    office.is_occupied = false;
-                    agreement.is_deleted = true;
-                    await db.SaveChangesAsync();
+                assignment.is_deleted = true;
 
-                    return new ResponseModel()
-                    {
-                        remarks = "Room Removed successfully",
-                        success = true
-                    };
-                }
-                else
+                var today = DateTime.Today;
+                var occupiedByAnotherAgreement = await (
+                    from agreement in db.tbl_agreement.AsNoTracking()
+                    join officeAgreement in db.tbl_office_agreement.AsNoTracking()
+                        on agreement.agreement_id equals officeAgreement.fk_agreement
+                    where officeAgreement.fk_office == officeId
+                          && officeAgreement.office_agreement_id != assignment.office_agreement_id
+                          && !officeAgreement.is_deleted
+                          && agreement.is_active
+                          && !agreement.is_deleted
+                          && agreement.agreement_start_date.Date <= today
+                          && agreement.agreement_end_date.Date >= today
+                    select agreement.agreement_id)
+                    .AnyAsync();
+
+                var office = await db.tbl_office.FirstOrDefaultAsync(x => x.office_id == officeId);
+                if (office is not null)
                 {
-                    return new ResponseModel()
-                    {
-                        remarks = "Something went wrong.",
-                        success = false
-                    };
+                    office.is_occupied = occupiedByAnotherAgreement;
+                    office.updated_at = DateTime.Now;
                 }
+
+                await db.SaveChangesAsync();
+                return new ResponseModel { remarks = "Office removed successfully.", success = true };
             }
             catch (Exception ex)
             {
-                return new ResponseModel()
-                {
-                    remarks = $"There was a fatal error",
-                    success = false
-                };
+                return new ResponseModel { remarks = $"There was a fatal error: {ex.Message}", success = false };
             }
         }
     }

@@ -33,7 +33,9 @@
 //using EMO.Repositories.SubUserTypeServicesRepo;
 //using EMO.Repositories.SuperAdminDashboardServicesRepo;
 //using EMO.Repositories.TenantServicesRepo;
+using EMO.Repositories.TenantDashboardRepo;
 //using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.UserAccessRepo;
 //using EMO.Repositories.UserTypeServicesRepo;
 //using EMO.Repositories.UtilityServicesRepo;
 
@@ -164,7 +166,9 @@ using EMO.Repositories.SingalPhaseDataServicesRepo;
 using EMO.Repositories.SubUserTypeServicesRepo;
 using EMO.Repositories.SuperAdminDashboardServicesRepo;
 using EMO.Repositories.TenantServicesRepo;
+using EMO.Repositories.TenantDashboardRepo;
 using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.UserAccessRepo;
 using EMO.Repositories.UserTypeServicesRepo;
 using EMO.Repositories.UtilityServicesRepo;
 
@@ -298,7 +302,9 @@ namespace EMO.Extensions
 //using EMO.Repositories.SubUserTypeServicesRepo;
 //using EMO.Repositories.SuperAdminDashboardServicesRepo;
 //using EMO.Repositories.TenantServicesRepo;
+using EMO.Repositories.TenantDashboardRepo;
 //using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.UserAccessRepo;
 //using EMO.Repositories.UserTypeServicesRepo;
 //using EMO.Repositories.UtilityServicesRepo;
 
@@ -431,11 +437,12 @@ using EMO.Repositories.SingalPhaseDataServicesRepo;
 using EMO.Repositories.SubUserTypeServicesRepo;
 using EMO.Repositories.SuperAdminDashboardServicesRepo;
 using EMO.Repositories.TenantServicesRepo;
+using EMO.Repositories.TenantDashboardRepo;
 using EMO.Repositories.UserServicesRepo;
+using EMO.Repositories.UserAccessRepo;
 using EMO.Repositories.UserTypeServicesRepo;
 using EMO.Repositories.UtilityServicesRepo;
 
-using EnergyMonitor.Services;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -482,6 +489,7 @@ namespace EMO.Extensions
             services.AddHostedService<HvacLoopRedisStartupCacheService>();
             services.AddHostedService<DemandManagementRedisStartupCacheService>();
             services.AddHostedService<DashboardAggregateWorker>();
+            services.AddHostedService<AgreementStatusWorker>();
             services.AddAutoMapper(typeof(Program).Assembly);
             services.AddTransient<IJWTUtils, JWTUtils>();
             services.AddTransient<IApiKeyService, ApiKeyService>();
@@ -492,6 +500,7 @@ namespace EMO.Extensions
             services.AddTransient<OtherServices>();
             services.AddHttpClient();
             services.AddScoped<ISensorCommandService, SensorCommandService>();
+            services.AddScoped<IUserAccessService, UserAccessService>();
             services.AddTransient<IUserServices, UserServices>();
             services.AddTransient<IAuthServices, AuthServices>();
             services.AddTransient<IInnerServices, InnerServices>();
@@ -511,6 +520,7 @@ namespace EMO.Extensions
             services.AddTransient<IContactPersonServices, ContactPersonServices>();
             services.AddTransient<ISingalPhaseDataService, SingalPhaseDataService>();
             services.AddTransient<ITenantServices, TenantServices>();
+            services.AddScoped<ITenantDashboardService, TenantDashboardService>();
             services.AddTransient<IUtilityServices, UtilityServices>();
             services.AddTransient<ISuperAdminDashboardServices, SuperAdminDashboardServices>();
             services.AddTransient<IAgreementServices, AgreementServices>();

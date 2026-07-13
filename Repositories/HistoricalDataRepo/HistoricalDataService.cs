@@ -20,6 +20,20 @@ public interface IHistoricalDataService
         Guid id,
         HistoricalDataQueryDto query,
         CancellationToken cancellationToken = default);
+
+    Task<HistoricalDataResponseDto?> GetTenantAsync(
+        string level,
+        Guid id,
+        HistoricalDataQueryDto query,
+        IReadOnlyCollection<Guid> allowedOfficeIds,
+        CancellationToken cancellationToken = default);
+
+    Task<(byte[] Content, string FileName)> ExportTenantCsvAsync(
+        string level,
+        Guid id,
+        HistoricalDataQueryDto query,
+        IReadOnlyCollection<Guid> allowedOfficeIds,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class HistoricalDataService : IHistoricalDataService
@@ -36,11 +50,27 @@ public sealed class HistoricalDataService : IHistoricalDataService
         _aggregateStore = aggregateStore;
     }
 
-    public async Task<HistoricalDataResponseDto?> GetAsync(
+    public Task<HistoricalDataResponseDto?> GetAsync(
         string level,
         Guid id,
         HistoricalDataQueryDto query,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GetCoreAsync(level, id, query, null, cancellationToken);
+
+    public Task<HistoricalDataResponseDto?> GetTenantAsync(
+        string level,
+        Guid id,
+        HistoricalDataQueryDto query,
+        IReadOnlyCollection<Guid> allowedOfficeIds,
+        CancellationToken cancellationToken = default) =>
+        GetCoreAsync(level, id, query, allowedOfficeIds, cancellationToken);
+
+    private async Task<HistoricalDataResponseDto?> GetCoreAsync(
+        string level,
+        Guid id,
+        HistoricalDataQueryDto query,
+        IReadOnlyCollection<Guid>? allowedOfficeIds,
+        CancellationToken cancellationToken)
     {
         level = NormalizeLevel(level);
         var interval = NormalizeInterval(query.Interval);
@@ -53,7 +83,7 @@ public sealed class HistoricalDataService : IHistoricalDataService
         var entityName = await ResolveEntityNameAsync(level, id, cancellationToken);
         if (entityName is null) return null;
 
-        var sensorIds = await ResolveSensorIdsAsync(level, id, cancellationToken);
+        var sensorIds = await ResolveSensorIdsAsync(level, id, allowedOfficeIds, cancellationToken);
         var rows = await _aggregateStore.LoadAsync(sensorIds, fromUtc, toUtc, cancellationToken);
         var points = BuildPoints(rows, interval, timeZone, fromUtc, toUtc);
 
@@ -80,7 +110,23 @@ public sealed class HistoricalDataService : IHistoricalDataService
     {
         var response = await GetAsync(level, id, query, cancellationToken)
             ?? throw new KeyNotFoundException("The requested dashboard scope was not found.");
+        return BuildCsv(response);
+    }
 
+    public async Task<(byte[] Content, string FileName)> ExportTenantCsvAsync(
+        string level,
+        Guid id,
+        HistoricalDataQueryDto query,
+        IReadOnlyCollection<Guid> allowedOfficeIds,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await GetTenantAsync(level, id, query, allowedOfficeIds, cancellationToken)
+            ?? throw new KeyNotFoundException("The requested dashboard scope was not found.");
+        return BuildCsv(response);
+    }
+
+    private static (byte[] Content, string FileName) BuildCsv(HistoricalDataResponseDto response)
+    {
         var csv = new StringBuilder();
         // UTF-8 BOM helps Excel display names and symbols correctly.
         csv.Append('\uFEFF');
@@ -179,8 +225,10 @@ public sealed class HistoricalDataService : IHistoricalDataService
     private async Task<List<Guid>> ResolveSensorIdsAsync(
         string level,
         Guid id,
+        IReadOnlyCollection<Guid>? allowedOfficeIds,
         CancellationToken cancellationToken)
     {
+        var officeScope = allowedOfficeIds?.Distinct().ToArray();
         IQueryable<Guid> query = level switch
         {
             "business" => _db.tbl_sensor
@@ -213,6 +261,18 @@ public sealed class HistoricalDataService : IHistoricalDataService
                 .Select(x => x.sensor_id),
             _ => throw new ArgumentException("Unknown level.")
         };
+
+        if (officeScope is { Length: > 0 })
+        {
+            query = from sensorId in query
+                    join sensor in _db.tbl_sensor.AsNoTracking() on sensorId equals sensor.sensor_id
+                    where officeScope.Contains(sensor.device.fk_office)
+                    select sensorId;
+        }
+        else if (allowedOfficeIds is not null)
+        {
+            return new List<Guid>();
+        }
 
         return await query.Distinct().ToListAsync(cancellationToken);
     }

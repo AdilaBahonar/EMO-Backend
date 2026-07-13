@@ -5,6 +5,8 @@ using EMO.Models.DTOs.ResponseDTO;
 using EMO.Models.DTOs.SensorDTOs;
 using EMO.Repositories.AgreementServicesRepo;
 using EMO.Repositories.SensorServicesRepo;
+using EMO.Repositories.UserAccessRepo;
+using EMO.Models.DTOs.UserDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -17,11 +19,16 @@ namespace EMO.Controllers
     {
         private readonly IAgreementServices AgreementServices;
         private readonly OtherServices otherServices;
+        private readonly IUserAccessService userAccessService;
 
-        public AgreementController(IAgreementServices AgreementServices, OtherServices otherServices)
+        public AgreementController(
+            IAgreementServices AgreementServices,
+            OtherServices otherServices,
+            IUserAccessService userAccessService)
         {
             this.AgreementServices = AgreementServices;
             this.otherServices = otherServices;
+            this.userAccessService = userAccessService;
         }
 
         [HttpPost]
@@ -105,20 +112,37 @@ namespace EMO.Controllers
         [HttpGet("GetOfficesByTenantId")]
         public async Task<ActionResult<ResponseModel<List<OfficeResponseDTO>>>> GetOfficesByTenantId(string id)
         {
-            if (otherServices.Check(id))
+            if (!otherServices.Check(id) || !Guid.TryParse(id, out var requestedTenantId))
             {
-                var Response = AgreementServices.GetOfficeByTenantId(id);
-                return Ok(await Response);
-            }
-            else
-            {
-                var Response = new ResponseModel<List<OfficeResponseDTO>>()
+                return BadRequest(new ResponseModel<List<OfficeResponseDTO>>
                 {
                     remarks = "No record found.",
                     success = false
-                };
-                return BadRequest(Response);
+                });
             }
+
+            var currentUser = HttpContext.Items["User"] as UserResponseDTO;
+            UserAccessScope? access = null;
+            if (currentUser is not null && Guid.TryParse(currentUser.userId, out var currentUserId))
+                access = await userAccessService.GetByUserIdAsync(currentUserId, HttpContext.RequestAborted);
+
+            if (access is not null)
+            {
+                if (!access.IsLoginAllowed) return Unauthorized();
+                if (access.IsTenant && access.UserId != requestedTenantId) return Forbid();
+            }
+
+            var response = await AgreementServices.GetOfficeByTenantId(id);
+            if (access is not null && !access.HasGlobalAccess && response.data is not null)
+            {
+                response.data = response.data
+                    .Where(x => Guid.TryParse(x.fkBusiness, out var businessId) && access.BusinessIds.Contains(businessId))
+                    .GroupBy(x => x.officeId)
+                    .Select(x => x.First())
+                    .ToList();
+            }
+
+            return Ok(response);
         }
 
         [HttpGet("GetByBusinessId")]

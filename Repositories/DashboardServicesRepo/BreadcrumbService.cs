@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using EnergyMonitor.DTOs;
 
-namespace EnergyMonitor.Services;
+namespace EMO.Repositories.DashboardServicesRepo;
 
 // Breadcrumb chain resolvers — partial class extension of DashboardService
 public partial class DashboardService

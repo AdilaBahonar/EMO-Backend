@@ -5,6 +5,6 @@ namespace EMO.Repositories.OptimizationDashboardRepo
 {
     public interface IOptimizationDashboardService
     {
-        Task<ResponseModel<OptimizationDashboardResponseDTO>> GetOptimizationDashboardAsync(string level, Guid id, OptimizationQueryParams q);
+        Task<ResponseModel<OptimizationDashboardResponseDTO>> GetOptimizationDashboardAsync(string level, Guid id, OptimizationQueryParams q, bool includeBusinessSuggestions = true);
     }
 }

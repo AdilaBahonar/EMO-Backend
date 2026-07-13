@@ -1090,14 +1090,14 @@ namespace EMO.Repositories.EnergyDashboardRepo
                     && x.reason_code.StartsWith("LIVE_")
                     && x.to_time > now);
 
-            // Optimization Worker stores business-level suggestions once. Tenant users may see
-            // business-level items plus suggestions for offices assigned to their agreement.
+            // Tenant suggestions must be traceable to an office covered by a currently
+            // active agreement. Business-wide suggestions are reserved for business admins.
             if (tenantId.HasValue)
             {
                 var allowedOfficeIds = officeIds ?? new List<Guid>();
                 query = query.Where(x =>
-                    x.fk_office == null
-                    || allowedOfficeIds.Contains(x.fk_office.Value));
+                    x.fk_office.HasValue
+                    && allowedOfficeIds.Contains(x.fk_office.Value));
             }
 
             var rows = await query
@@ -1115,6 +1115,8 @@ namespace EMO.Repositories.EnergyDashboardRepo
             };
 
             return rows
+                .GroupBy(x => x.reason_code)
+                .Select(x => x.OrderByDescending(y => y.updated_at).First())
                 .OrderByDescending(x => SeverityRank(x.severity))
                 .ThenByDescending(x => x.updated_at)
                 .Take(30)
@@ -1744,12 +1746,20 @@ namespace EMO.Repositories.EnergyDashboardRepo
 
         private async Task<List<Guid>> GetTenantOfficeIdsAsync(Guid tenantId, Guid? businessId)
         {
+            var today = DateTime.Today;
             var query =
                 from agreement in db.tbl_agreement.AsNoTracking()
                 join officeAgreement in db.tbl_office_agreement.AsNoTracking() on agreement.agreement_id equals officeAgreement.fk_agreement
+                join office in db.tbl_office.AsNoTracking() on officeAgreement.fk_office equals office.office_id
                 where !agreement.is_deleted
                       && agreement.is_active
+                      && agreement.agreement_start_date.Date <= today
+                      && agreement.agreement_end_date.Date >= today
                       && !officeAgreement.is_deleted
+                      && office.is_active
+                      && !office.is_deleted
+                      && office.business.is_active
+                      && !office.business.is_deleted
                       && agreement.fk_tenant == tenantId
                       && (!businessId.HasValue || agreement.fk_business == businessId.Value)
                 select officeAgreement.fk_office;
@@ -1766,7 +1776,11 @@ namespace EMO.Repositories.EnergyDashboardRepo
 
             var businessId = await db.tbl_agreement
                 .AsNoTracking()
-                .Where(x => x.fk_tenant == tenantId.Value && x.is_active && !x.is_deleted)
+                .Where(x => x.fk_tenant == tenantId.Value
+                            && x.is_active
+                            && !x.is_deleted
+                            && x.agreement_start_date.Date <= DateTime.Today
+                            && x.agreement_end_date.Date >= DateTime.Today)
                 .Select(x => (Guid?)x.fk_business)
                 .FirstOrDefaultAsync();
 

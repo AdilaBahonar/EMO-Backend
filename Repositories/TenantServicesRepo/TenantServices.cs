@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.BusinessDTOs;
@@ -29,25 +29,23 @@ namespace EMO.Repositories.TenantServicesRepo
 
             try
             {
-                if (!DateTime.TryParse(requestDto.agreement.agreementStartDate, out DateTime startDate))
+                if (!DateTime.TryParse(
+                        requestDto.agreement.agreementStartDate,
+                        out var startDate) ||
+                    !DateTime.TryParse(
+                        requestDto.agreement.agreementEndDate,
+                        out var endDate))
                 {
                     return new ResponseModel
                     {
                         success = false,
-                        remarks = "Invalid agreement start date."
+                        remarks = "Invalid agreement date."
                     };
                 }
 
-                if (!DateTime.TryParse(requestDto.agreement.agreementEndDate, out DateTime endDate))
-                {
-                    return new ResponseModel
-                    {
-                        success = false,
-                        remarks = "Invalid agreement end date."
-                    };
-                }
+                startDate = startDate.Date;
+                endDate = endDate.Date;
 
-                // Business rule: start date must be <= end date
                 if (startDate > endDate)
                 {
                     return new ResponseModel
@@ -59,10 +57,97 @@ namespace EMO.Repositories.TenantServicesRepo
 
                 var officeIds = requestDto.fkOffices
                     .Select(Guid.Parse)
+                    .Distinct()
                     .ToList();
 
+                if (officeIds.Count == 0)
+                {
+                    return new ResponseModel
+                    {
+                        success = false,
+                        remarks = "Select at least one office."
+                    };
+                }
+
+                Guid tenantId;
+                Guid businessId;
+
+                if (!string.IsNullOrWhiteSpace(requestDto.fkTenant))
+                {
+                    tenantId = Guid.Parse(requestDto.fkTenant);
+
+                    var existingTenant = await db.tbl_user
+                        .Where(x =>
+                            x.user_id == tenantId &&
+                            !x.is_deleted)
+                        .Select(x => new
+                        {
+                            x.fk_business
+                        })
+                        .FirstOrDefaultAsync();
+
+                    if (existingTenant is null ||
+                        !existingTenant.fk_business.HasValue)
+                    {
+                        return new ResponseModel
+                        {
+                            success = false,
+                            remarks = "Tenant or tenant business was not found."
+                        };
+                    }
+
+                    businessId = existingTenant.fk_business.Value;
+                }
+                else
+                {
+                    if (!Guid.TryParse(
+                            requestDto.tenant.fkBusiness,
+                            out businessId))
+                    {
+                        return new ResponseModel
+                        {
+                            success = false,
+                            remarks = "A valid business is required."
+                        };
+                    }
+
+                    var tenantSubUserTypeId = await db.tbl_sub_user_type
+                        .Where(x =>
+                            x.user_type.user_type_name.ToLower() == "tenant" &&
+                            x.is_active &&
+                            !x.is_deleted)
+                        .Select(x => x.sub_user_type_id)
+                        .FirstOrDefaultAsync();
+
+                    if (tenantSubUserTypeId == Guid.Empty)
+                    {
+                        return new ResponseModel
+                        {
+                            success = false,
+                            remarks = "Tenant user type is not configured."
+                        };
+                    }
+
+                    requestDto.tenant.fkSubUserType =
+                        tenantSubUserTypeId.ToString();
+
+                    var newTenant = mapper.Map<tbl_user>(
+                        requestDto.tenant);
+
+                    newTenant.fk_business = businessId;
+
+                    await db.tbl_user.AddAsync(newTenant);
+                    await db.SaveChangesAsync();
+
+                    tenantId = newTenant.user_id;
+                }
+
                 var offices = await db.tbl_office
-                    .Where(x => officeIds.Contains(x.office_id))
+                    .Where(x =>
+                        officeIds.Contains(x.office_id) &&
+                        x.fk_business == businessId &&
+                        x.is_active &&
+                        !x.is_deleted)
                     .ToListAsync();
 
                 if (offices.Count != officeIds.Count)
@@ -70,83 +155,95 @@ namespace EMO.Repositories.TenantServicesRepo
                     return new ResponseModel
                     {
                         success = false,
-                        remarks = "One or more office IDs are invalid."
+                        remarks = "One or more offices are invalid, inactive, or belong to another business."
                     };
                 }
 
-                var occupiedOffice = offices.Where(x => x.is_occupied).ToList();
+                // Expired agreements do not block an office from being assigned again.
+                // Only enabled agreements with overlapping dates block assignment.
+                var overlappingOfficeIds = await (
+                    from existingAgreement in db.tbl_agreement.AsNoTracking()
+                    join officeAgreement in db.tbl_office_agreement.AsNoTracking()
+                        on existingAgreement.agreement_id
+                        equals officeAgreement.fk_agreement
+                    where existingAgreement.fk_business == businessId
+                          && existingAgreement.is_active
+                          && !existingAgreement.is_deleted
+                          && !officeAgreement.is_deleted
+                          && officeIds.Contains(officeAgreement.fk_office)
+                          && existingAgreement.agreement_start_date.Date <= endDate
+                          && existingAgreement.agreement_end_date.Date >= startDate
+                    select officeAgreement.fk_office)
+                    .Distinct()
+                    .ToListAsync();
 
-                if (occupiedOffice.Any())
+                if (overlappingOfficeIds.Count > 0)
                 {
+                    var overlappingOfficeNames = offices
+                        .Where(x =>
+                            overlappingOfficeIds.Contains(x.office_id))
+                        .Select(x => x.office_name)
+                        .ToList();
+
                     return new ResponseModel
                     {
                         success = false,
-                        remarks = "One or more selected Offices are already in use."
+                        remarks =
+                            $"Agreement dates overlap for: {string.Join(", ", overlappingOfficeNames)}."
                     };
                 }
 
+                var newAgreement = mapper.Map<tbl_agreement>(
+                    requestDto.agreement);
 
-                var fkBusiness = Guid.Parse(requestDto.tenant.fkBusiness);
-                Guid tenantId;
+                newAgreement.fk_tenant = tenantId;
+                newAgreement.fk_business = businessId;
+                newAgreement.agreement_start_date = startDate;
+                newAgreement.agreement_end_date = endDate;
+                newAgreement.is_active = true;
+                newAgreement.updated_at = DateTime.Now;
 
-                if (!string.IsNullOrWhiteSpace(requestDto.fkTenant))
-                {
-                 
-                    tenantId = Guid.Parse(requestDto.fkTenant);
-                }
-                else
-                {
-               
-                    var tenantFk = await db.tbl_sub_user_type
-                        .Where(x => x.user_type.user_type_name.ToLower() == "tenant")
-                        .Select(x => x.sub_user_type_id)
-                        .FirstOrDefaultAsync();
+                await db.tbl_agreement.AddAsync(newAgreement);
 
-                    requestDto.tenant.fkSubUserType = tenantFk.ToString();
-                    var newTenant = mapper.Map<tbl_user>(requestDto.tenant);
-                    
-
-                    await db.tbl_user.AddAsync(newTenant);
-                    await db.SaveChangesAsync();
-
-                    tenantId = newTenant.user_id;
-                }
-                var agreement = mapper.Map<tbl_agreement>(requestDto.agreement);
-
-                agreement.fk_tenant = tenantId;
-                agreement.fk_business = fkBusiness;
-
-                await db.tbl_agreement.AddAsync(agreement);
-                var officeList = new List<tbl_office_agreement>();
-                foreach (var officeId in officeIds)
-                {
-                    var officeAgreement = new tbl_office_agreement
+                var officeAgreements = officeIds
+                    .Select(officeId => new tbl_office_agreement
                     {
-                        fk_agreement = agreement.agreement_id,
+                        fk_agreement = newAgreement.agreement_id,
                         fk_office = officeId
-                    };
-                    officeList.Add(officeAgreement);
-                }
-                await db.tbl_office_agreement.AddRangeAsync(officeList);
+                    })
+                    .ToList();
 
-                if (requestDto.contactPerson != null && requestDto.contactPerson.Any())
+                await db.tbl_office_agreement.AddRangeAsync(
+                    officeAgreements);
+
+                if (requestDto.contactPerson?.Any() == true)
                 {
-                    foreach (var cp in requestDto.contactPerson)
+                    foreach (var contactPersonDto in requestDto.contactPerson)
                     {
-                        cp.fkAgreement = agreement.agreement_id.ToString();
-                        var contact = mapper.Map<tbl_contact_person>(cp);
+                        contactPersonDto.fkAgreement =
+                            newAgreement.agreement_id.ToString();
 
-                        await db.tbl_contact_person.AddAsync(contact);
+                        var contactPerson =
+                            mapper.Map<tbl_contact_person>(
+                                contactPersonDto);
+
+                        await db.tbl_contact_person.AddAsync(
+                            contactPerson);
                     }
                 }
 
-                foreach (var office in offices)
+                var today = DateTime.Today;
+
+                if (startDate <= today && endDate >= today)
                 {
-                    office.is_occupied = true;
+                    foreach (var office in offices)
+                    {
+                        office.is_occupied = true;
+                        office.updated_at = DateTime.Now;
+                    }
                 }
 
                 await db.SaveChangesAsync();
-
                 await transaction.CommitAsync();
 
                 return new ResponseModel

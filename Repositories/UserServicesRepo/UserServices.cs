@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using EMO.Models.DBModels;
 using EMO.Models.DBModels.DBTables;
 using EMO.Models.DTOs.ResponseDTO;
@@ -6,17 +6,20 @@ using EMO.Models.DTOs.UserDTOs;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
+using EMO.Repositories.UserAccessRepo;
 namespace EMO.Repositories.UserServicesRepo
 {
     public class UserServices : IUserServices
     {
         private readonly DBUserManagementContext db;
         private readonly IMapper mapper;
+        private readonly IUserAccessService userAccessService;
 
-        public UserServices(DBUserManagementContext db, IMapper mapper)
+        public UserServices(DBUserManagementContext db, IMapper mapper, IUserAccessService userAccessService)
         {
             this.db = db;
             this.mapper = mapper;
+            this.userAccessService = userAccessService;
         }
 
         public async Task<ResponseModel<UserResponseDTO>> AddUser(AddUserDTO requestDto)
@@ -449,39 +452,55 @@ namespace EMO.Repositories.UserServicesRepo
         {
             try
             {
-                var existingUser = await db.tbl_user.Where(x => x.user_name == username && x.is_deleted == false).FirstOrDefaultAsync();
-                if (existingUser != null)
+                var access = await userAccessService.GetByUsernameAsync(username);
+                if (access is null)
                 {
-
-                    var response = new ValidateUserDTO()
-                    {
-                        userName = existingUser.user_name,
-                        userToken = existingUser.user_token,
-                        userId = existingUser.user_id.ToString()
-
-                    };
-                    return new ResponseModel<ValidateUserDTO>()
-                    {
-                        data = response,
-                        remarks = "Successfull",
-                        success = true,
-                    };
-                }
-                else
-                {
-                    return new ResponseModel<ValidateUserDTO>()
+                    return new ResponseModel<ValidateUserDTO>
                     {
                         remarks = "User not found",
-                        success = false,
+                        success = false
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                return new ResponseModel<ValidateUserDTO>()
+
+                if (!access.IsLoginAllowed)
                 {
-                    remarks = $"Internal Server Error",
-                    success = false,
+                    return new ResponseModel<ValidateUserDTO>
+                    {
+                        remarks = access.DenialReason,
+                        success = false
+                    };
+                }
+
+                return new ResponseModel<ValidateUserDTO>
+                {
+                    data = new ValidateUserDTO
+                    {
+                        userName = access.UserName,
+                        userToken = access.StoredTokenHash,
+                        userId = access.UserId.ToString(),
+                        userTypeName = access.UserTypeName,
+                        userTypeLevel = access.UserTypeLevel,
+                        hasGlobalAccess = access.HasGlobalAccess,
+                        isLoginAllowed = access.IsLoginAllowed,
+                        businessIds = access.BusinessIds.Select(x => x.ToString()).ToList(),
+                        facilityIds = access.FacilityIds.Select(x => x.ToString()).ToList(),
+                        buildingIds = access.BuildingIds.Select(x => x.ToString()).ToList(),
+                        floorIds = access.FloorIds.Select(x => x.ToString()).ToList(),
+                        sectionIds = access.SectionIds.Select(x => x.ToString()).ToList(),
+                        officeIds = access.OfficeIds.Select(x => x.ToString()).ToList(),
+                        deviceIds = access.DeviceIds.Select(x => x.ToString()).ToList(),
+                        sensorIds = access.SensorIds.Select(x => x.ToString()).ToList()
+                    },
+                    remarks = "Successful",
+                    success = true
+                };
+            }
+            catch
+            {
+                return new ResponseModel<ValidateUserDTO>
+                {
+                    remarks = "Internal Server Error",
+                    success = false
                 };
             }
         }

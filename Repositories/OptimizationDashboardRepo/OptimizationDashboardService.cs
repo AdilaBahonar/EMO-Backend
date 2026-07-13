@@ -32,7 +32,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
             redisKeys = redisKeysOptions.Value;
         }
 
-        public async Task<ResponseModel<OptimizationDashboardResponseDTO>> GetOptimizationDashboardAsync(string level, Guid id, OptimizationQueryParams q)
+        public async Task<ResponseModel<OptimizationDashboardResponseDTO>> GetOptimizationDashboardAsync(string level, Guid id, OptimizationQueryParams q, bool includeBusinessSuggestions = true)
         {
             try
             {
@@ -132,7 +132,7 @@ namespace EMO.Repositories.OptimizationDashboardRepo
                 response.Alerts = BuildInitialAlertsSnapshot(response);
                 // Suggestions are created continuously by the Optimization Worker and stored in
                 // tbl_dashboard_suggestion. This API only reads the active worker output.
-                response.Suggestions = await ReadLiveSuggestionsAsync(businessId, sensorIds);
+                response.Suggestions = await ReadLiveSuggestionsAsync(businessId, sensorIds, includeBusinessSuggestions);
 
                 return new ResponseModel<OptimizationDashboardResponseDTO>
                 {
@@ -316,19 +316,25 @@ namespace EMO.Repositories.OptimizationDashboardRepo
 
         private async Task<List<OptimizationSuggestionDTO>> ReadLiveSuggestionsAsync(
             Guid businessId,
-            List<Guid> sensorIds)
+            List<Guid> sensorIds,
+            bool includeBusinessSuggestions)
         {
             if (businessId == Guid.Empty) return new List<OptimizationSuggestionDTO>();
 
             var now = DateTime.UtcNow;
-            var rows = await db.tbl_dashboard_suggestion
+            var query = db.tbl_dashboard_suggestion
                 .AsNoTracking()
                 .Where(x => x.fk_business == businessId
                     && x.reason_code.StartsWith("LIVE_")
-                    && x.to_time > now
-                    && (x.fk_sensor == null || sensorIds.Contains(x.fk_sensor.Value)))
+                    && x.to_time > now);
+
+            query = includeBusinessSuggestions
+                ? query.Where(x => x.fk_sensor == null || sensorIds.Contains(x.fk_sensor.Value))
+                : query.Where(x => x.fk_sensor.HasValue && sensorIds.Contains(x.fk_sensor.Value));
+
+            var rows = await query
                 .OrderByDescending(x => x.updated_at)
-                .Take(50)
+                .Take(100)
                 .ToListAsync();
 
             static int SeverityRank(string? severity) => (severity ?? string.Empty).Trim().ToLowerInvariant() switch
@@ -341,6 +347,8 @@ namespace EMO.Repositories.OptimizationDashboardRepo
             };
 
             return rows
+                .GroupBy(x => x.reason_code)
+                .Select(x => x.OrderByDescending(y => y.updated_at).First())
                 .OrderByDescending(x => SeverityRank(x.severity))
                 .ThenByDescending(x => x.updated_at)
                 .Take(30)
