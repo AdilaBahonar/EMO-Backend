@@ -160,6 +160,14 @@ public class DeepDiveService : IDeepDiveService
             .Select(x => x.SensorId)
             .Distinct()
             .Count();
+        var breadcrumbs = await BuildBreadcrumbsAsync(level, id);
+        if (allowedOfficeIds is not null)
+        {
+            breadcrumbs = breadcrumbs
+                .Where(x => x.Level is "office" or "device" or "sensor")
+                .ToList();
+        }
+
         var dataStatus = new DeepDiveDataStatusDto
         {
             HasReadings = sensorsWithReadings > 0,
@@ -192,7 +200,7 @@ public class DeepDiveService : IDeepDiveService
             DataStatus = dataStatus,
             Configuration = config.Status,
             Features = config.Features,
-            Breadcrumbs = await BuildBreadcrumbsAsync(level, id),
+            Breadcrumbs = breadcrumbs,
             Summary = new DeepDiveSummaryDto
             {
                 EnergyKwh = Round(energy),

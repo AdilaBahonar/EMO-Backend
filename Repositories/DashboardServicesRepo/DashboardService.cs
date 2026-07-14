@@ -23,39 +23,45 @@ public partial class DashboardService
     {
         var custom = q.From.HasValue || q.To.HasValue;
         var rawTo = EnsureUtc(q.To ?? DateTime.UtcNow);
+        var responseTo = custom
+            ? rawTo
+            : new DateTime(
+                rawTo.Year, rawTo.Month, rawTo.Day,
+                rawTo.Hour, rawTo.Minute, 0, DateTimeKind.Utc);
         var range = (q.Range ?? "24h").Trim().ToLowerInvariant();
 
-        // Keep named ranges stable and aligned with the Deep Dive endpoint/cache.
-        var hourlyAnchor = rawTo.Minute < 10 ? rawTo.AddHours(-1) : rawTo;
-        var dailyAnchor = rawTo.TimeOfDay < TimeSpan.FromMinutes(10)
-            ? rawTo.AddDays(-1)
-            : rawTo;
+        if (custom)
+        {
+            var customFrom = q.From.HasValue
+                ? EnsureUtc(q.From.Value)
+                : responseTo.AddHours(-24);
+            return (customFrom, responseTo);
+        }
 
-        var to = custom
-            ? rawTo
-            : range switch
-            {
-                "1y" or "12m" or "365d" => dailyAnchor.Date,
-                "90d" => new DateTime(
-                    hourlyAnchor.Year, hourlyAnchor.Month, hourlyAnchor.Day,
-                    hourlyAnchor.Hour - hourlyAnchor.Hour % 6, 0, 0, DateTimeKind.Utc),
-                _ => new DateTime(
-                    hourlyAnchor.Year, hourlyAnchor.Month, hourlyAnchor.Day,
-                    hourlyAnchor.Hour, 0, 0, DateTimeKind.Utc)
-            };
+        // Use the same closed-history anchor as Deep Dive, but keep the response
+        // end at the current minute. SensorEnergyAggregateStore reads persisted
+        // aggregate buckets and appends only the small unfinished raw tail.
+        var aggregateAnchor = range switch
+        {
+            "1y" or "12m" or "365d" => rawTo.Date,
+            "90d" => new DateTime(
+                rawTo.Year, rawTo.Month, rawTo.Day,
+                rawTo.Hour - rawTo.Hour % 6, 0, 0, DateTimeKind.Utc),
+            _ => new DateTime(
+                rawTo.Year, rawTo.Month, rawTo.Day,
+                rawTo.Hour, 0, 0, DateTimeKind.Utc)
+        };
 
-        var from = q.From.HasValue
-            ? EnsureUtc(q.From.Value)
-            : range switch
-            {
-                "7d" => to.AddDays(-7),
-                "30d" => to.AddDays(-30),
-                "90d" => to.AddDays(-90),
-                "1y" or "12m" or "365d" => to.AddYears(-1),
-                _ => to.AddHours(-24)
-            };
+        var from = range switch
+        {
+            "7d" => aggregateAnchor.AddDays(-7),
+            "30d" => aggregateAnchor.AddDays(-30),
+            "90d" => aggregateAnchor.AddDays(-90),
+            "1y" or "12m" or "365d" => aggregateAnchor.AddYears(-1),
+            _ => aggregateAnchor.AddHours(-24)
+        };
 
-        return (from, to);
+        return (from, responseTo);
     }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind switch

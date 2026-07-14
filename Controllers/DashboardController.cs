@@ -141,12 +141,9 @@ public class DashboardController : ControllerBase
             _ => new List<BreadcrumbDto>()
         };
 
-        var result = new List<BreadcrumbDto>
-        {
-            new() { Id = access.BusinessIds.FirstOrDefault(), Name = "My assigned offices", Level = "business" }
-        };
-        result.AddRange(source.Where(x => x.Level is "office" or "device" or "sensor"));
-        return Ok(result);
+        return Ok(source
+            .Where(x => x.Level is "office" or "device" or "sensor")
+            .ToList());
     }
 
     private async Task<UserAccessScope?> CurrentAccessAsync()
