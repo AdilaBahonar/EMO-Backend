@@ -66,6 +66,9 @@ namespace EMO.Repositories.SensorCommandRepo
                 var mac = CleanMac(chain.MacAddress);
                 var client = httpClientFactory.CreateClient();
 
+                var manualOverrideSeconds = configuration.GetValue<int?>("NodeHelper:ManualOverrideSeconds") ?? 300;
+                manualOverrideSeconds = Math.Clamp(manualOverrideSeconds, 1, 86400);
+
                 var payload = new
                 {
                     sensorId = sensorId.ToString(),
@@ -73,7 +76,8 @@ namespace EMO.Repositories.SensorCommandRepo
                     address = chain.SerialAddress,
                     relay = command,
                     state = command == "ON",
-                    reason = string.IsNullOrWhiteSpace(requestDto.Reason) ? "dashboard_command" : requestDto.Reason,
+                    reason = string.IsNullOrWhiteSpace(requestDto.Reason) ? "manual_dashboard_command" : requestDto.Reason,
+                    manualOverrideSeconds,
                     ts = DateTime.UtcNow.ToString("O")
                 };
 

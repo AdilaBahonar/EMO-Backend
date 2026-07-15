@@ -120,7 +120,7 @@ namespace EMO.Repositories.HvacLoopSettingServicesRepo
                 }
 
                 var newSetting = mapper.Map<tbl_hvac_loop_setting>(requestDto);
-                newSetting.loop_started_at = requestDto.loopEnabled ? DateTime.UtcNow : null;
+                newSetting.loop_started_at = requestDto.loopEnabled && requestDto.isActive ? DateTime.UtcNow : null;
                 newSetting.created_at = DateTime.Now;
                 newSetting.updated_at = DateTime.Now;
 
@@ -237,18 +237,39 @@ namespace EMO.Repositories.HvacLoopSettingServicesRepo
                     };
                 }
 
+                var previousSensorId = existingSetting.fk_sensor;
                 var wasEnabled = existingSetting.loop_enabled;
+                var wasActive = existingSetting.is_active;
+                var previousOnSeconds = existingSetting.loop_on_seconds;
+                var previousOffSeconds = existingSetting.loop_off_seconds;
+
                 mapper.Map(requestDto, existingSetting);
 
-                if (requestDto.loopEnabled && !wasEnabled)
-                    existingSetting.loop_started_at = DateTime.UtcNow;
+                var loopDefinitionChanged =
+                    previousSensorId != existingSetting.fk_sensor ||
+                    previousOnSeconds != existingSetting.loop_on_seconds ||
+                    previousOffSeconds != existingSetting.loop_off_seconds;
 
-                if (!requestDto.loopEnabled)
+                // Start a fresh, deterministic cycle whenever the user enables,
+                // reactivates, retimes, or moves the loop to another HVAC sensor.
+                if (existingSetting.loop_enabled && existingSetting.is_active &&
+                    (!wasEnabled || !wasActive || loopDefinitionChanged))
+                {
+                    existingSetting.loop_started_at = DateTime.UtcNow;
+                }
+
+                if (!existingSetting.loop_enabled || !existingSetting.is_active)
                     existingSetting.loop_started_at = null;
 
                 existingSetting.updated_at = DateTime.Now;
 
                 await db.SaveChangesAsync();
+
+                // If the setting was moved, remove the old Redis loop key/set
+                // membership so the previous HVAC cannot continue as a ghost loop.
+                if (previousSensorId != existingSetting.fk_sensor)
+                    await hvacLoopRedisCacheService.DeleteLoopSettingAsync(previousSensorId);
+
                 await hvacLoopRedisCacheService.SetLoopSettingAsync(existingSetting.fk_sensor);
                 var updated = await BaseQuery()
                     .Where(x => x.hvac_loop_setting_id == existingSetting.hvac_loop_setting_id)
